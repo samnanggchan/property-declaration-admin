@@ -46,8 +46,8 @@ const data = {
       icon: <LayoutDashboardIcon />,
     },
     {
-      title: "Records",
-      url: "/records",
+      title: "Land Declarations",
+      url: "/declarations",
       icon: <FileTextIcon />,
     },
     {

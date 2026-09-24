@@ -126,3 +126,28 @@
     @apply font-sans;
     }
 }
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  header,
+  aside,
+  nav,
+  .no-print,
+  [data-slot="sidebar"],
+  [data-slot="sidebar-wrapper"],
+  [data-slot="site-header"] {
+    display: none !important;
+  }
+  #printable-document {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+  }
+}
