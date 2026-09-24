@@ -230,8 +230,7 @@ export function NaturalPersonModal({
         saved = await declarationsApi.update(currentDeclaration.id, payload)
         toast.success("បានកែប្រែទិន្នន័យជោគជ័យ!")
       } else {
-        saved = await declarationsApi.create()
-        saved = await declarationsApi.update(saved.id, payload)
+        saved = await declarationsApi.create(payload)
         toast.success("បានបន្ថែមទិន្នន័យជោគជ័យ!")
       }
       onOpenChange(false)

@@ -127,12 +127,11 @@ export function DeclarationsView() {
 
   const handleDuplicate = async (declaration: LandDeclaration) => {
     try {
-      const copy = await declarationsApi.create()
-      const updated = await declarationsApi.update(copy.id, {
+      const copy = await declarationsApi.create({
         ...declaration,
         certNumber: `${declaration.certNumber} (Copy)`,
       })
-      setDeclarations((prev) => [updated, ...prev])
+      setDeclarations((prev) => [copy, ...prev])
       toast.success("បានចម្លងទិន្នន័យជោគជ័យ")
     } catch {
       toast.error("មានបញ្ហាក្នុងការចម្លងទិន្នន័យ")
