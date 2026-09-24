@@ -196,12 +196,11 @@ const columns = columnHelper.columns([
   columnHelper.accessor("status", {
     header: "Status",
     cell: ({ row }) => (
-      <Badge variant="outline" className="px-1.5 text-muted-foreground">
+      <Badge variant="outline" className="px-1.5 gap-1.5 text-muted-foreground font-normal">
         {row.original.status === "Done" ? (
-          <CircleCheckIcon className="fill-green-500 dark:fill-green-400" />
+          <span className="size-2 rounded-full bg-emerald-500 inline-block shrink-0" />
         ) : (
-          <LoaderIcon
-          />
+          <LoaderIcon className="size-3 text-muted-foreground shrink-0" />
         )}
         {row.original.status}
       </Badge>
@@ -295,7 +294,7 @@ const columns = columnHelper.columns([
   }),
   columnHelper.display({
     id: "actions",
-    cell: () => (
+    cell: ({ row, table }) => (
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
@@ -306,16 +305,42 @@ const columns = columnHelper.columns([
             />
           }
         >
-          <EllipsisVerticalIcon
-          />
+          <EllipsisVerticalIcon />
           <span className="sr-only">Open menu</span>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
-          <DropdownMenuItem>Favorite</DropdownMenuItem>
+        <DropdownMenuContent align="end" className="w-36">
+          <DropdownMenuItem
+            onClick={() => {
+              toast.info(`Editing ${row.original.header}`)
+            }}
+          >
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (table.options.meta as any)?.duplicateRow?.(row.original)
+            }}
+          >
+            Make a copy
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              toast.success(`Saved "${row.original.header}" to favorites`)
+            }}
+          >
+            Favorite
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (table.options.meta as any)?.deleteRow?.(row.original.id)
+            }}
+          >
+            Delete
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     ),
@@ -385,6 +410,27 @@ export function DataTable({
       rowSelection,
       columnFilters,
       pagination,
+    },
+    meta: {
+      deleteRow: (id: number) => {
+        setData((prev) => prev.filter((item) => item.id !== id))
+        toast.success("Section deleted")
+      },
+      duplicateRow: (item: z.infer<typeof schema>) => {
+        const nextId =
+          (data.length > 0 ? Math.max(...data.map((d) => d.id)) : 0) + 1
+        const copy = { ...item, id: nextId, header: `${item.header} (Copy)` }
+        setData((prev) => {
+          const idx = prev.findIndex((d) => d.id === item.id)
+          if (idx !== -1) {
+            const next = [...prev]
+            next.splice(idx + 1, 0, copy)
+            return next
+          }
+          return [...prev, copy]
+        })
+        toast.success("Section duplicated")
+      },
     },
     getRowId: (row) => row.id.toString(),
     enableRowSelection: true,
@@ -481,9 +527,26 @@ export function DataTable({
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm">
-            <PlusIcon
-            />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const nextId =
+                (data.length > 0 ? Math.max(...data.map((d) => d.id)) : 0) + 1
+              const newSection: z.infer<typeof schema> = {
+                id: nextId,
+                header: `New Section ${nextId}`,
+                type: "Narrative",
+                status: "In Process",
+                target: "10",
+                limit: "10",
+                reviewer: "Assign reviewer",
+              }
+              setData((prev) => [newSection, ...prev])
+              toast.success("New section added")
+            }}
+          >
+            <PlusIcon />
             <span className="hidden lg:inline">Add Section</span>
           </Button>
         </div>
