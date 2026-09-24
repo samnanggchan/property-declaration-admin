@@ -24,16 +24,26 @@ export type JointFields = {
   repRole: string
 }
 
-export type CoupleRecord = {
+export type PartyFields = {
+  husband: PersonFields
+  wife: PersonFields
+}
+
+export type LandDeclaration = {
   id: string
+  certNumber: string
+  location: string
+  seller: PartyFields
+  buyer: PartyFields
   husband: PersonFields
   wife: PersonFields
   joint: JointFields
-  certNumber: string
-  location: string
   createdAt: string
   updatedAt: string
 }
+
+export type CoupleRecord = LandDeclaration
+export type DeclarationRecord = LandDeclaration
 
 export const personFields: Array<{ key: keyof PersonFields; khmer: string; english: string }> = [
   { key: "idNumber", khmer: "អត្តសញ្ញាណប័ណ្ណលេខ", english: "ID CARD NO." },
@@ -61,5 +71,33 @@ export const jointFields: Array<{ key: keyof JointFields; khmer: string; english
   { key: "repRole", khmer: "មុខងារ", english: "POSITION", group: "representative" },
 ]
 
-export const emptyPerson = (): PersonFields => ({ idNumber: "", name: "", dob: "", birthPlace: "", nationality: "ខ្មែរ", status: "", fatherName: "", motherName: "", address: "" })
-export const emptyJoint = (): JointFields => ({ propertyType: "", area: "", landUse: "", usageNature: "", possessionSource: "", date: "", charter: "", entity: "", officeAddress: "", repName: "", repRole: "" })
+export const emptyPerson = (): PersonFields => ({
+  idNumber: "",
+  name: "",
+  dob: "",
+  birthPlace: "",
+  nationality: "ខ្មែរ",
+  status: "",
+  fatherName: "",
+  motherName: "",
+  address: "",
+})
+
+export const emptyParty = (): PartyFields => ({
+  husband: emptyPerson(),
+  wife: emptyPerson(),
+})
+
+export const emptyJoint = (): JointFields => ({
+  propertyType: "ទ្រព្យសម្បត្តិរួម (ទ្រព្យសម្បត្តិប្រពន្ធ)",
+  area: "",
+  landUse: "សាងសង់",
+  usageNature: "ឯកជន",
+  possessionSource: "ទិញ",
+  date: new Date().getFullYear().toString(),
+  charter: "",
+  entity: "",
+  officeAddress: "",
+  repName: "",
+  repRole: "",
+})
