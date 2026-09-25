@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { toast } from "sonner"
+import * as React from "react";
+import { toast } from "sonner";
 import {
   PlusIcon,
   Columns3Icon,
@@ -16,19 +16,20 @@ import {
   SearchIcon,
   EyeIcon,
   XIcon,
-} from "lucide-react"
+  LayersIcon,
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableHeader,
@@ -36,58 +37,70 @@ import {
   TableHead,
   TableRow,
   TableCell,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog"
-import { NaturalPersonModal } from "@/components/natural-person-modal"
-import { OfficialDeclarationDocument } from "@/components/official-declaration-document"
-import { declarationsApi } from "@/lib/api"
-import { LandDeclaration } from "@/lib/types"
+} from "@/components/ui/dialog";
+import { NaturalPersonModal } from "@/components/natural-person-modal";
+import { OfficialDeclarationDocument } from "@/components/official-declaration-document";
+import { OfficialCadastralCertificate } from "@/components/official-cadastral-certificate";
+import { declarationsApi } from "@/lib/api";
+import { LandDeclaration } from "@/lib/types";
 
 export function DeclarationsView() {
-  const [declarations, setDeclarations] = React.useState<LandDeclaration[]>([])
-  const [loading, setLoading] = React.useState(true)
-  const [searchQuery, setSearchQuery] = React.useState("")
+  const [declarations, setDeclarations] = React.useState<LandDeclaration[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   // Modal & Detail states (HIDDEN BY DEFAULT until user clicks detail one by one)
-  const [selectedDeclaration, setSelectedDeclaration] = React.useState<LandDeclaration | null>(null)
-  const [modalOpen, setModalOpen] = React.useState(false)
-  const [editingDeclaration, setEditingDeclaration] = React.useState<LandDeclaration | null>(null)
-  const [selectedIds, setSelectedIds] = React.useState<string[]>([])
+  const [selectedDeclaration, setSelectedDeclaration] =
+    React.useState<LandDeclaration | null>(null);
+  const [docMode, setDocMode] = React.useState<"declaration" | "certificate">(
+    "declaration",
+  );
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [editingDeclaration, setEditingDeclaration] =
+    React.useState<LandDeclaration | null>(null);
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
   // Load declarations from API
   const loadDeclarations = React.useCallback(async () => {
     try {
-      const data = await declarationsApi.list()
-      setDeclarations(data)
+      const data = await declarationsApi.list();
+      setDeclarations(data);
     } catch {
-      toast.error("មិនអាចទាញយកទិន្នន័យបានទេ")
+      toast.error("មិនអាចទាញយកទិន្នន័យបានទេ");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   React.useEffect(() => {
-    loadDeclarations()
-  }, [loadDeclarations])
+    loadDeclarations();
+  }, [loadDeclarations]);
 
   // Filter declarations by search query
   const filteredDeclarations = React.useMemo(() => {
     return declarations.filter((r) => {
-      const query = searchQuery.toLowerCase().trim()
-      if (!query) return true
+      const query = searchQuery.toLowerCase().trim();
+      if (!query) return true;
 
-      const sellerH = r.seller?.husband?.name?.toLowerCase() || r.husband?.name?.toLowerCase() || ""
-      const sellerW = r.seller?.wife?.name?.toLowerCase() || r.wife?.name?.toLowerCase() || ""
-      const buyerH = r.buyer?.husband?.name?.toLowerCase() || ""
-      const buyerW = r.buyer?.wife?.name?.toLowerCase() || ""
-      const cert = r.certNumber?.toLowerCase() || ""
-      const loc = r.location?.toLowerCase() || ""
+      const sellerH =
+        r.seller?.husband?.name?.toLowerCase() ||
+        r.husband?.name?.toLowerCase() ||
+        "";
+      const sellerW =
+        r.seller?.wife?.name?.toLowerCase() ||
+        r.wife?.name?.toLowerCase() ||
+        "";
+      const buyerH = r.buyer?.husband?.name?.toLowerCase() || "";
+      const buyerW = r.buyer?.wife?.name?.toLowerCase() || "";
+      const cert = r.certNumber?.toLowerCase() || "";
+      const loc = r.location?.toLowerCase() || "";
 
       return (
         sellerH.includes(query) ||
@@ -96,74 +109,76 @@ export function DeclarationsView() {
         buyerW.includes(query) ||
         cert.includes(query) ||
         loc.includes(query)
-      )
-    })
-  }, [declarations, searchQuery])
+      );
+    });
+  }, [declarations, searchQuery]);
 
   // Handlers
   const handleAddNew = () => {
-    setEditingDeclaration(null)
-    setModalOpen(true)
-  }
+    setEditingDeclaration(null);
+    setModalOpen(true);
+  };
 
   const handleEdit = (declaration: LandDeclaration) => {
-    setEditingDeclaration(declaration)
-    setModalOpen(true)
-  }
+    setEditingDeclaration(declaration);
+    setModalOpen(true);
+  };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("តើអ្នកពិតជាចង់លុបទិន្នន័យនេះមែនទេ?")) return
+    if (!window.confirm("តើអ្នកពិតជាចង់លុបទិន្នន័យនេះមែនទេ?")) return;
     try {
-      await declarationsApi.remove(id)
-      setDeclarations((prev) => prev.filter((r) => r.id !== id))
+      await declarationsApi.remove(id);
+      setDeclarations((prev) => prev.filter((r) => r.id !== id));
       if (selectedDeclaration?.id === id) {
-        setSelectedDeclaration(null)
+        setSelectedDeclaration(null);
       }
-      toast.success("បានលុបទិន្នន័យជោគជ័យ")
+      toast.success("បានលុបទិន្នន័យជោគជ័យ");
     } catch {
-      toast.error("មានបញ្ហាក្នុងការលុបទិន្នន័យ")
+      toast.error("មានបញ្ហាក្នុងការលុបទិន្នន័យ");
     }
-  }
+  };
 
   const handleDuplicate = async (declaration: LandDeclaration) => {
     try {
       const copy = await declarationsApi.create({
         ...declaration,
         certNumber: `${declaration.certNumber} (Copy)`,
-      })
-      setDeclarations((prev) => [copy, ...prev])
-      toast.success("បានចម្លងទិន្នន័យជោគជ័យ")
+      });
+      setDeclarations((prev) => [copy, ...prev]);
+      toast.success("បានចម្លងទិន្នន័យជោគជ័យ");
     } catch {
-      toast.error("មានបញ្ហាក្នុងការចម្លងទិន្នន័យ")
+      toast.error("មានបញ្ហាក្នុងការចម្លងទិន្នន័យ");
     }
-  }
+  };
 
   const handleSuccess = (saved: LandDeclaration) => {
     setDeclarations((prev) => {
-      const idx = prev.findIndex((r) => r.id === saved.id)
+      const idx = prev.findIndex((r) => r.id === saved.id);
       if (idx !== -1) {
-        const next = [...prev]
-        next[idx] = saved
-        return next
+        const next = [...prev];
+        next[idx] = saved;
+        return next;
       }
-      return [saved, ...prev]
-    })
-    setSelectedDeclaration(saved)
-  }
+      return [saved, ...prev];
+    });
+    setSelectedDeclaration(saved);
+  };
 
   const toggleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(filteredDeclarations.map((r) => r.id))
+      setSelectedIds(filteredDeclarations.map((r) => r.id));
     } else {
-      setSelectedIds([])
+      setSelectedIds([]);
     }
-  }
+  };
 
   const toggleSelectOne = (id: string) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    )
-  }
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
 
   return (
     <div className="flex flex-col gap-5 px-4 lg:px-6">
@@ -174,12 +189,16 @@ export function DeclarationsView() {
             <h2 className="text-xl font-bold tracking-tight text-foreground">
               ចុះបញ្ជីក្បាលដី
             </h2>
-            <Badge variant="secondary" className="px-2 py-0.5 text-xs font-semibold">
+            <Badge
+              variant="secondary"
+              className="px-2 py-0.5 text-xs font-semibold"
+            >
               {filteredDeclarations.length} ឯកសារ
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Land Declarations — ព័ត៌មានក្បាលដី និងរូបវន្តបុគ្គល: ភាគីអ្នកលក់ (Seller) & ភាគីអ្នកទិញ (Buyer)
+            Land Declarations — ព័ត៌មានក្បាលដី និងរូបវន្តបុគ្គល: ភាគីអ្នកលក់
+            (Seller) & ភាគីអ្នកទិញ (Buyer)
           </p>
         </div>
 
@@ -205,7 +224,13 @@ export function DeclarationsView() {
 
           <DropdownMenu>
             <DropdownMenuTrigger
-              render={<Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs" />}
+              render={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 gap-1.5 text-xs"
+                />
+              }
             >
               <Columns3Icon className="size-3.5" />
               Columns
@@ -271,13 +296,19 @@ export function DeclarationsView() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={9} className="h-28 text-center text-sm text-muted-foreground">
+                <TableCell
+                  colSpan={9}
+                  className="h-28 text-center text-sm text-muted-foreground"
+                >
                   កំពុងផ្ទុកទិន្នន័យ...
                 </TableCell>
               </TableRow>
             ) : filteredDeclarations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="h-32 text-center text-sm text-muted-foreground">
+                <TableCell
+                  colSpan={9}
+                  className="h-32 text-center text-sm text-muted-foreground"
+                >
                   <p>មិនទាន់មានទិន្នន័យក្បាលដីនៅឡើយទេ។</p>
                   <Button
                     variant="outline"
@@ -292,23 +323,24 @@ export function DeclarationsView() {
               </TableRow>
             ) : (
               filteredDeclarations.map((r) => {
-                const isChecked = selectedIds.includes(r.id)
+                const isChecked = selectedSet.has(r.id);
 
                 // Seller names
-                const sellerH = r.seller?.husband?.name || r.husband?.name || ""
-                const sellerW = r.seller?.wife?.name || r.wife?.name || ""
+                const sellerH =
+                  r.seller?.husband?.name || r.husband?.name || "";
+                const sellerW = r.seller?.wife?.name || r.wife?.name || "";
                 const sellerTitle =
                   sellerH && sellerW
                     ? `${sellerH} & ${sellerW}`
-                    : sellerH || sellerW || "មិនទាន់មាន"
+                    : sellerH || sellerW || "មិនទាន់មាន";
 
                 // Buyer names
-                const buyerH = r.buyer?.husband?.name || ""
-                const buyerW = r.buyer?.wife?.name || ""
+                const buyerH = r.buyer?.husband?.name || "";
+                const buyerW = r.buyer?.wife?.name || "";
                 const buyerTitle =
                   buyerH && buyerW
                     ? `${buyerH} & ${buyerW}`
-                    : buyerH || buyerW || "មិនទាន់មាន"
+                    : buyerH || buyerW || "មិនទាន់មាន";
 
                 return (
                   <TableRow
@@ -392,7 +424,10 @@ export function DeclarationsView() {
                       {r.location || "—"}
                     </TableCell>
 
-                    <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
+                    <TableCell
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-right"
+                    >
                       <DropdownMenu>
                         <DropdownMenuTrigger
                           render={
@@ -406,9 +441,15 @@ export function DeclarationsView() {
                           <EllipsisVerticalIcon className="size-4" />
                           <span className="sr-only">Open menu</span>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52 text-xs shadow-lg">
+                        <DropdownMenuContent
+                          align="end"
+                          className="w-52 text-xs shadow-lg"
+                        >
                           <DropdownMenuItem
-                            onClick={() => setSelectedDeclaration(r)}
+                            onClick={() => {
+                              setSelectedDeclaration(r);
+                              setDocMode("declaration");
+                            }}
                             className="gap-2 font-medium"
                           >
                             <FileTextIcon className="size-4 text-primary" />
@@ -416,8 +457,18 @@ export function DeclarationsView() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
-                              setSelectedDeclaration(r)
-                              setTimeout(() => window.print(), 350)
+                              setSelectedDeclaration(r);
+                              setDocMode("certificate");
+                            }}
+                            className="gap-2 font-medium text-emerald-600 dark:text-emerald-400"
+                          >
+                            <LayersIcon className="size-4" />
+                            តារាងសម្រង់វិញ្ញាបនប័ត្រ (Extract Table)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedDeclaration(r);
+                              setTimeout(() => window.print(), 350);
                             }}
                             className="gap-2"
                           >
@@ -451,7 +502,7 @@ export function DeclarationsView() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                )
+                );
               })
             )}
           </TableBody>
@@ -461,37 +512,72 @@ export function DeclarationsView() {
       {/* Table Footer */}
       <div className="flex items-center justify-between text-xs text-muted-foreground px-1 pb-4">
         <div>
-          ជ្រើសរើសបាន {selectedIds.length} នៃ {filteredDeclarations.length} ជួរដេក
+          ជ្រើសរើសបាន {selectedIds.length} នៃ {filteredDeclarations.length}{" "}
+          ជួរដេក
         </div>
-        <div>
-          ចុចលើជួរដេកណាមួយដើម្បីមើលឯកសារផ្លូវការ និងបោះពុម្ព
-        </div>
+        <div>ចុចលើជួរដេកណាមួយដើម្បីមើលឯកសារផ្លូវការ និងបោះពុម្ព</div>
       </div>
 
       {/* One-by-One Detail View Dialog */}
       <Dialog
         open={!!selectedDeclaration}
         onOpenChange={(open) => {
-          if (!open) setSelectedDeclaration(null)
+          if (!open) setSelectedDeclaration(null);
         }}
       >
-        <DialogContent className="max-h-[94vh] max-w-5xl overflow-y-auto p-4 sm:p-6 border border-border/80 shadow-2xl rounded-2xl">
+        <DialogContent className="max-h-[95vh] max-w-5xl overflow-y-auto p-4 sm:p-6 border border-border/80 shadow-2xl rounded-2xl">
           <DialogHeader className="sr-only">
             <DialogTitle>
               ឯកសារក្បាលដីលេខ: {selectedDeclaration?.certNumber}
             </DialogTitle>
             <DialogDescription>
-              ព័ត៌មានលម្អិតអ្នកលក់ និងអ្នកទិញ
+              ព័ត៌មានលម្អិតអ្នកលក់ និងអ្នកទិញ ឬតារាងសម្រង់វិញ្ញាបនប័ត្រ
             </DialogDescription>
           </DialogHeader>
 
-          {selectedDeclaration && (
-            <OfficialDeclarationDocument
-              declaration={selectedDeclaration}
-              onClose={() => setSelectedDeclaration(null)}
-              onEdit={handleEdit}
-            />
-          )}
+          {/* Top Document Mode Tabs */}
+          <div className="no-print mb-2 flex items-center justify-between border-b pb-3">
+            <div className="inline-flex rounded-lg border bg-muted/40 p-1 text-xs">
+              <button
+                onClick={() => setDocMode("declaration")}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors ${
+                  docMode === "declaration"
+                    ? "bg-background text-foreground shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <FileTextIcon className="size-3.5 text-primary" />
+                លិខិតប្រកាសផ្ទេរសិទ្ធិ (Declaration)
+              </button>
+              <button
+                onClick={() => setDocMode("certificate")}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors ${
+                  docMode === "certificate"
+                    ? "bg-emerald-600 text-white shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LayersIcon className="size-3.5" />
+                តារាងសម្រង់វិញ្ញាបនប័ត្រ (Extract Table - LMAP & HOUSE)
+              </button>
+            </div>
+          </div>
+
+          {selectedDeclaration &&
+            (docMode === "certificate" ? (
+              <OfficialCadastralCertificate
+                declaration={selectedDeclaration}
+                onClose={() => setSelectedDeclaration(null)}
+                onUpdated={handleSuccess}
+              />
+            ) : (
+              <OfficialDeclarationDocument
+                declaration={selectedDeclaration}
+                onClose={() => setSelectedDeclaration(null)}
+                onEdit={handleEdit}
+                onSwitchToCertificate={() => setDocMode("certificate")}
+              />
+            ))}
         </DialogContent>
       </Dialog>
 
@@ -503,5 +589,5 @@ export function DeclarationsView() {
         onSuccess={handleSuccess}
       />
     </div>
-  )
+  );
 }

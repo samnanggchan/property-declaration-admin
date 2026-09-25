@@ -1,4 +1,4 @@
-import { LandDeclaration, emptyParty, emptyJoint } from "@/lib/types"
+import { LandDeclaration, emptyParty, emptyJoint } from "@/lib/types";
 
 const sampleDeclaration: LandDeclaration = {
   id: "decl-001",
@@ -14,7 +14,8 @@ const sampleDeclaration: LandDeclaration = {
       status: "មានប្រពន្ធ",
       fatherName: "ឈូ ម៉េងហោ",
       motherName: "ហម ហៃឡេង",
-      address: "ផ្ទះលេខ១២E ផ្លូវ១៩៣ ភូមិ៤ សង្កាត់ទួលស្វាយព្រៃទី១ ខណ្ឌបឹងកេងកង រាជធានីភ្នំពេញ",
+      address:
+        "ផ្ទះលេខ១២E ផ្លូវ១៩៣ ភូមិ៤ សង្កាត់ទួលស្វាយព្រៃទី១ ខណ្ឌបឹងកេងកង រាជធានីភ្នំពេញ",
     },
     wife: {
       idNumber: "011017556(01)/20.05.2025",
@@ -25,7 +26,8 @@ const sampleDeclaration: LandDeclaration = {
       status: "មានប្ដី",
       fatherName: "លាង ឆេង",
       motherName: "សៀម ហ៊ាង",
-      address: "ផ្ទះលេខ១២E ផ្លូវ១៩៣ ភូមិ៤ សង្កាត់ទួលស្វាយព្រៃទី១ ខណ្ឌបឹងកេងកង រាជធានីភ្នំពេញ",
+      address:
+        "ផ្ទះលេខ១២E ផ្លូវ១៩៣ ភូមិ៤ សង្កាត់ទួលស្វាយព្រៃទី១ ខណ្ឌបឹងកេងកង រាជធានីភ្នំពេញ",
     },
   },
   buyer: {
@@ -61,7 +63,8 @@ const sampleDeclaration: LandDeclaration = {
     status: "មានប្រពន្ធ",
     fatherName: "ឈូ ម៉េងហោ",
     motherName: "ហម ហៃឡេង",
-    address: "ផ្ទះលេខ១២E ផ្លូវ១៩៣ ភូមិ៤ សង្កាត់ទួលស្វាយព្រៃទី១ ខណ្ឌបឹងកេងកង រាជធានីភ្នំពេញ",
+    address:
+      "ផ្ទះលេខ១២E ផ្លូវ១៩៣ ភូមិ៤ សង្កាត់ទួលស្វាយព្រៃទី១ ខណ្ឌបឹងកេងកង រាជធានីភ្នំពេញ",
   },
   wife: {
     idNumber: "011017556(01)/20.05.2025",
@@ -72,7 +75,8 @@ const sampleDeclaration: LandDeclaration = {
     status: "មានប្ដី",
     fatherName: "លាង ឆេង",
     motherName: "សៀម ហ៊ាង",
-    address: "ផ្ទះលេខ១២E ផ្លូវ១៩៣ ភូមិ៤ សង្កាត់ទួលស្វាយព្រៃទី១ ខណ្ឌបឹងកេងកង រាជធានីភ្នំពេញ",
+    address:
+      "ផ្ទះលេខ១២E ផ្លូវ១៩៣ ភូមិ៤ សង្កាត់ទួលស្វាយព្រៃទី១ ខណ្ឌបឹងកេងកង រាជធានីភ្នំពេញ",
   },
   joint: {
     propertyType: "ទ្រព្យសម្បត្តិរួម (ទ្រព្យសម្បត្តិប្រពន្ធ)",
@@ -89,55 +93,72 @@ const sampleDeclaration: LandDeclaration = {
   },
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
-}
+};
 
-const declarations: LandDeclaration[] = [sampleDeclaration]
+const declarations: LandDeclaration[] = [sampleDeclaration];
 
 export function listDeclarations() {
-  return declarations
+  return declarations;
 }
 
-export function createDeclaration(initial?: Partial<LandDeclaration>): LandDeclaration {
-  const now = new Date().toISOString()
-  const seller = initial?.seller || emptyParty()
-  const buyer = initial?.buyer || emptyParty()
+export function createDeclaration(
+  initial?: Partial<LandDeclaration>,
+): LandDeclaration {
+  const now = new Date().toISOString();
+  const seller = initial?.seller || emptyParty();
+  const buyer = initial?.buyer || emptyParty();
   const declaration: LandDeclaration = {
     id: crypto.randomUUID(),
     certNumber: initial?.certNumber || "១២០៩០៦០៥- ០០០១",
     location: initial?.location || "រាជធានីភ្នំពេញ",
     seller,
     buyer,
-    husband: seller.husband.name ? seller.husband : (buyer.husband.name ? buyer.husband : seller.husband),
-    wife: seller.wife.name ? seller.wife : (buyer.wife.name ? buyer.wife : seller.wife),
+    husband: seller.husband.name
+      ? seller.husband
+      : buyer.husband.name
+        ? buyer.husband
+        : seller.husband,
+    wife: seller.wife.name
+      ? seller.wife
+      : buyer.wife.name
+        ? buyer.wife
+        : seller.wife,
     joint: initial?.joint || emptyJoint(),
     createdAt: now,
     updatedAt: now,
-  }
-  declarations.unshift(declaration)
-  return declaration
+  };
+  declarations.unshift(declaration);
+  return declaration;
 }
 
 export function findDeclaration(id: string) {
-  return declarations.find((d) => d.id === id)
+  return declarations.find((d) => d.id === id);
 }
 
 export function updateDeclaration(id: string, input: Partial<LandDeclaration>) {
-  const declaration = findDeclaration(id)
-  if (!declaration) return undefined
-  if (input.certNumber) declaration.certNumber = input.certNumber
-  if (input.location) declaration.location = input.location
-  if (input.seller) declaration.seller = { ...declaration.seller, ...input.seller }
-  if (input.buyer) declaration.buyer = { ...declaration.buyer, ...input.buyer }
-  if (input.husband) declaration.husband = { ...declaration.husband, ...input.husband }
-  if (input.wife) declaration.wife = { ...declaration.wife, ...input.wife }
-  if (input.joint) declaration.joint = { ...declaration.joint, ...input.joint }
-  declaration.updatedAt = new Date().toISOString()
-  return declaration
+  const declaration = findDeclaration(id);
+  if (!declaration) return undefined;
+  if (input.certNumber) declaration.certNumber = input.certNumber;
+  if (input.location) declaration.location = input.location;
+  if (input.seller)
+    declaration.seller = { ...declaration.seller, ...input.seller };
+  if (input.buyer) declaration.buyer = { ...declaration.buyer, ...input.buyer };
+  if (input.husband)
+    declaration.husband = { ...declaration.husband, ...input.husband };
+  if (input.wife) declaration.wife = { ...declaration.wife, ...input.wife };
+  if (input.joint) declaration.joint = { ...declaration.joint, ...input.joint };
+  if (input.cadastral)
+    declaration.cadastral = {
+      ...(declaration.cadastral || {}),
+      ...input.cadastral,
+    };
+  declaration.updatedAt = new Date().toISOString();
+  return declaration;
 }
 
 export function deleteDeclaration(id: string) {
-  const index = declarations.findIndex((d) => d.id === id)
-  if (index === -1) return false
-  declarations.splice(index, 1)
-  return true
+  const index = declarations.findIndex((d) => d.id === id);
+  if (index === -1) return false;
+  declarations.splice(index, 1);
+  return true;
 }

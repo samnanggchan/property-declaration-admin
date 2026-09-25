@@ -10,6 +10,7 @@ interface OfficialDeclarationDocumentProps {
   record?: LandDeclaration
   onClose?: () => void
   onEdit?: (declaration: LandDeclaration) => void
+  onSwitchToCertificate?: () => void
 }
 
 export function OfficialDeclarationDocument({
@@ -17,6 +18,7 @@ export function OfficialDeclarationDocument({
   record,
   onClose,
   onEdit,
+  onSwitchToCertificate,
 }: OfficialDeclarationDocumentProps) {
   const currentDoc = (declaration || record)!
 
@@ -206,6 +208,16 @@ export function OfficialDeclarationDocument({
         </div>
 
         <div className="flex items-center gap-2">
+          {onSwitchToCertificate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onSwitchToCertificate}
+              className="gap-1.5 border-emerald-600/30 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30 text-xs"
+            >
+              តារាងសម្រង់វិញ្ញាបនប័ត្រ (Extract Table)
+            </Button>
+          )}
           {onEdit && (
             <Button
               variant="outline"
