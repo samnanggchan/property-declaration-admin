@@ -27,7 +27,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { declarationsApi } from "@/lib/api"
-import { LandDeclaration, PersonFields, emptyPerson } from "@/lib/types"
+import {
+  LandDeclaration,
+  PersonFields,
+  emptyPerson,
+  WitnessPerson,
+  emptyWitnessPerson,
+  emptyRepresentativePerson,
+} from "@/lib/types"
+import { getAgeDetails } from "@/lib/utils"
 
 interface NaturalPersonModalProps {
   open: boolean
@@ -68,12 +76,17 @@ export function NaturalPersonModal({
   const [possessionSource, setPossessionSource] = React.useState("ទិញ")
   const [date, setDate] = React.useState("2005")
 
-  // Legal state
+  // Legal & Company Representative state
   const [charter, setCharter] = React.useState("")
   const [entity, setEntity] = React.useState("")
   const [officeAddress, setOfficeAddress] = React.useState("")
   const [repName, setRepName] = React.useState("")
   const [repRole, setRepRole] = React.useState("")
+  const [repPerson, setRepPerson] = React.useState<PersonFields>(emptyPerson())
+
+  // Witnesses state (2 persons)
+  const [witness1, setWitness1] = React.useState<WitnessPerson>(emptyWitnessPerson())
+  const [witness2, setWitness2] = React.useState<WitnessPerson>(emptyWitnessPerson())
 
   // Sync state with currentDeclaration or defaults
   React.useEffect(() => {
@@ -99,9 +112,42 @@ export function NaturalPersonModal({
       setOfficeAddress(currentDeclaration.joint?.officeAddress || "")
       setRepName(currentDeclaration.joint?.repName || "")
       setRepRole(currentDeclaration.joint?.repRole || "")
+
+      const existingRep = currentDeclaration.joint?.repPerson || currentDeclaration.joint?.representativePerson
+      setRepPerson({
+        name: existingRep?.name || currentDeclaration.joint?.repName || "",
+        idNumber: existingRep?.idNumber || "",
+        dob: existingRep?.dob || "",
+        birthPlace: existingRep?.birthPlace || "",
+        nationality: existingRep?.nationality || "ខ្មែរ",
+        status: existingRep?.status || "",
+        fatherName: existingRep?.fatherName || "",
+        motherName: existingRep?.motherName || "",
+        address: existingRep?.address || "",
+      })
+
+      const rawW1 = currentDeclaration.joint?.witness1 || currentDeclaration.joint?.witnesses?.[0] || currentDeclaration.joint?.rep1 || currentDeclaration.joint?.representatives?.[0]
+      const rawW2 = currentDeclaration.joint?.witness2 || currentDeclaration.joint?.witnesses?.[1] || currentDeclaration.joint?.rep2 || currentDeclaration.joint?.representatives?.[1]
+
+      setWitness1({
+        name: rawW1?.name || "",
+        dob: rawW1?.dob || "",
+        idNumber: rawW1?.idNumber || "",
+        address: rawW1?.address || "",
+      })
+
+      setWitness2({
+        name: rawW2?.name || "",
+        dob: rawW2?.dob || "",
+        idNumber: rawW2?.idNumber || "",
+        address: rawW2?.address || "",
+      })
     } else {
       setCertNumber("១២០៩០៦០៥- ៤៥៧៥")
       setLocation("រាជធានីភ្នំពេញ ខណ្ឌពោធិ៍សែនជ័យ សង្កាត់ចោមចៅទី១ ភូមិត្រពាំងថ្លឹង១")
+      setRepPerson(emptyPerson())
+      setWitness1(emptyWitnessPerson())
+      setWitness2(emptyWitnessPerson())
     }
   }, [currentDeclaration, open])
 
@@ -167,7 +213,39 @@ export function NaturalPersonModal({
     setPossessionSource("ទិញ")
     setDate("2005")
 
-    toast.success("បានបំពេញទិន្នន័យគំរូអ្នកលក់ និងអ្នកទិញរួចរាល់!")
+    // Company Representative (នីតិបុគ្គល)
+    setCharter("លក្ខន្តិកៈក្រុមហ៊ុន លេខ ០១២៣")
+    setEntity("ក្រុមហ៊ុន អង្គរ អភិវឌ្ឍន៍ ឯ.ក")
+    setOfficeAddress("អគារលេខ ១២ វិថីព្រះមុនីវង្ស សង្កាត់វត្តភ្នំ ខណ្ឌដូនពេញ រាជធានីភ្នំពេញ")
+    setRepName("ឡឹក សុផា")
+    setRepRole("នាយករង")
+    setRepPerson({
+      name: "ឡឹក សុផា",
+      idNumber: "០៩០ ២០៣ ៥៦៤ (០១) / ២៧.១០.២០២២",
+      dob: "23.10.2004",
+      birthPlace: "ឃុំចក្រី ស្រុករមាសហែក ខេត្តស្វាយរៀង",
+      nationality: "ខ្មែរ",
+      status: "មានប្រពន្ធ",
+      fatherName: "ឡឹក ឈិន",
+      motherName: "សុខ គា",
+      address: "១ឃុំ ចក្រី ស្រុក រមាសហែក ខេត្ត ស្វាយរៀង",
+    })
+
+    // Witnesses (សាក្សី - ២ នាក់)
+    setWitness1({
+      name: "ឡឹក សុផា",
+      dob: "23.10.2004",
+      idNumber: "០៩០ ២០៣ ៥៦៤ (០១) / ២៧.១០.២០២២",
+      address: "១ឃុំ ចក្រី ស្រុក រមាសហែក ខេត្ត ស្វាយរៀង",
+    })
+    setWitness2({
+      name: "នួន ឌីណា",
+      dob: "15.08.1997",
+      idNumber: "០១១ ១០៦ ០៣៩ / ៣១.១២.២០១៥",
+      address: "១ឃុំ ស្ទឹងមានជ័យទី១ ស្រុក មានជ័យ ខេត្ត ភ្នំពេញ",
+    })
+
+    toast.success("បានបំពេញទិន្នន័យគំរូអ្នកលក់ អ្នកទិញ និងសាក្សីរួចរាល់!")
   }
 
   const copySellerAddress = () => {
@@ -186,6 +264,15 @@ export function NaturalPersonModal({
     }
     setBuyerWife((prev) => ({ ...prev, address: buyerHusband.address }))
     toast.info("បានចម្លងអាសយដ្ឋានប្ដីអ្នកទិញទៅប្រពន្ធ")
+  }
+
+  const copyWitnessAddress = () => {
+    if (!witness1.address) {
+      toast.error("សូមបញ្ចូលអាសយដ្ឋានសាក្សីទី១ជាមុន")
+      return
+    }
+    setWitness2((prev) => ({ ...prev, address: witness1.address }))
+    toast.info("បានចម្លងអាសយដ្ឋានសាក្សីទី១ ទៅសាក្សីទី២")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -219,8 +306,16 @@ export function NaturalPersonModal({
         charter,
         entity,
         officeAddress,
-        repName,
-        repRole,
+        repName: repPerson.name || repName || "",
+        repRole: repRole || "",
+        repPerson,
+        representativePerson: repPerson,
+        witness1,
+        witness2,
+        witnesses: [witness1, witness2],
+        rep1: witness1,
+        rep2: witness2,
+        representatives: [witness1, witness2],
       },
     }
 
@@ -372,6 +467,87 @@ export function NaturalPersonModal({
     )
   }
 
+  const renderWitnessForm = (
+    witness: WitnessPerson,
+    setWitness: React.Dispatch<React.SetStateAction<WitnessPerson>>,
+    label: string,
+    badgeText: string,
+    accentColor: string
+  ) => {
+    const ageDetails = getAgeDetails(witness.dob)
+
+    return (
+      <div className="rounded-xl border border-border/70 bg-card p-4 shadow-xs space-y-3">
+        <div className="flex items-center justify-between border-b border-border/50 pb-2">
+          <div className="flex items-center gap-2">
+            <span className={`size-2.5 rounded-full ${accentColor}`} />
+            <span className="font-semibold text-sm text-foreground">{label}</span>
+          </div>
+          <Badge variant="secondary" className="text-[11px] font-normal">
+            {badgeText}
+          </Badge>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs font-medium text-foreground/80">ឈ្មោះពេញ (Full Name) *</Label>
+          <Input
+            value={witness.name}
+            onChange={(e) => setWitness((prev) => ({ ...prev, name: e.target.value }))}
+            placeholder="ឧ. ឡឹក សុផា"
+            className="h-9 text-sm"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-foreground/80">លេខអត្តសញ្ញាណប័ណ្ណ (ID Card No.)</Label>
+            <Input
+              value={witness.idNumber}
+              onChange={(e) => setWitness((prev) => ({ ...prev, idNumber: e.target.value }))}
+              placeholder="090 203 564 (01) / 27.10.2022"
+              className="h-9 text-xs font-mono"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-foreground/80">
+                ថ្ងៃខែឆ្នាំកំណើត / អាយុ (DOB / Age)
+              </Label>
+              {ageDetails.ageText && (
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                  {ageDetails.ageText}
+                </span>
+              )}
+            </div>
+            <Input
+              value={witness.dob}
+              onChange={(e) => setWitness((prev) => ({ ...prev, dob: e.target.value }))}
+              placeholder="23.10.2004"
+              className="h-9 text-xs"
+            />
+            {ageDetails.isCalculated && (
+              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
+                <CheckCircle2Icon className="size-3 shrink-0" />
+                គណនាអាយុស្វ័យប្រវត្តិតាមពេលបច្ចុប្បន្ន ({ageDetails.ageText})
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs font-medium text-foreground/80">ទីលំនៅ / អាសយដ្ឋានបច្ចុប្បន្ន (Address / Residence)</Label>
+          <Input
+            value={witness.address}
+            onChange={(e) => setWitness((prev) => ({ ...prev, address: e.target.value }))}
+            placeholder="១ឃុំ ចក្រី ស្រុក រមាសហែក ខេត្ត ស្វាយរៀង"
+            className="h-9 text-xs"
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] max-w-4xl overflow-hidden p-0 border border-border/80 shadow-2xl rounded-2xl">
@@ -455,7 +631,7 @@ export function NaturalPersonModal({
               }`}
             >
               <Building2Icon className="size-3.5 text-muted-foreground" />
-              ៤. នីតិបុគ្គល (Legal Entity)
+              ៤. នីតិបុគ្គល (Legal & Witnesses)
             </button>
           </div>
         </div>
@@ -626,63 +802,144 @@ export function NaturalPersonModal({
 
             {/* Tab 4: នីតិបុគ្គល (Legal Entity) */}
             {activeTab === "legal" && (
-              <div className="rounded-xl border border-border/70 bg-card p-4 shadow-xs space-y-3">
-                <div className="flex items-center gap-2 border-b border-border/50 pb-2">
-                  <Building2Icon className="size-4 text-primary" />
-                  <span className="font-semibold text-sm text-foreground">
-                    នីតិបុគ្គល និងអ្នកតំណាង (Legal Entity & Representative)
-                  </span>
+              <div className="space-y-5">
+                {/* 1. នីតិបុគ្គល (Legal Entity / Company) */}
+                <div className="rounded-xl border border-border/70 bg-card p-4 shadow-xs space-y-3">
+                  <div className="flex items-center gap-2 border-b border-border/50 pb-2">
+                    <Building2Icon className="size-4 text-primary" />
+                    <div>
+                      <span className="font-semibold text-sm text-foreground">
+                        នីតិបុគ្គល (Legal Entity / Company)
+                      </span>
+                      <p className="text-[11px] text-muted-foreground">
+                        ព័ត៌មានក្រុមហ៊ុន និងអ្នកតំណាង ឬអ្នកគ្រប់គ្រង
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-foreground/80">លក្ខន្តិកៈ (Charter)</Label>
+                      <Input
+                        value={charter}
+                        onChange={(e) => setCharter(e.target.value)}
+                        placeholder="លក្ខន្តិកៈក្រុមហ៊ុន លេខ..."
+                        className="h-9 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-foreground/80">អង្គភាព (Entity Name)</Label>
+                      <Input
+                        value={entity}
+                        onChange={(e) => setEntity(e.target.value)}
+                        placeholder="ឈ្មោះក្រុមហ៊ុន ឬអង្គភាព"
+                        className="h-9 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1 md:col-span-2">
+                      <Label className="text-xs font-medium text-foreground/80">
+                        អាសយដ្ឋាន (ទីស្នាក់ការ) (Head Office Address)
+                      </Label>
+                      <Input
+                        value={officeAddress}
+                        onChange={(e) => setOfficeAddress(e.target.value)}
+                        placeholder="ទីស្នាក់ការក្រុមហ៊ុន..."
+                        className="h-9 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-foreground/80">
+                        អ្នកតំណាង ឬអ្នកគ្រប់គ្រង (Representative / Manager Name)
+                      </Label>
+                      <Input
+                        value={repName}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setRepName(val)
+                          setRepPerson((prev) => ({ ...prev, name: val }))
+                        }}
+                        placeholder="ឈ្មោះអ្នកតំណាង ឬអ្នកគ្រប់គ្រង..."
+                        className="h-9 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-foreground/80">
+                        មុខងារ (Position / Role)
+                      </Label>
+                      <Input
+                        value={repRole}
+                        onChange={(e) => setRepRole(e.target.value)}
+                        placeholder="ឧ. នាយកប្រតិបត្តិ, នាយករង..."
+                        className="h-9 text-xs"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">លក្ខន្តិកៈ (Charter)</Label>
-                    <Input
-                      value={charter}
-                      onChange={(e) => setCharter(e.target.value)}
-                      placeholder="លក្ខន្តិកៈ..."
-                      className="h-9 text-xs"
-                    />
+                {/* 1.1 ព័ត៌មានអ្នកតំណាង ឬអ្នកគ្រប់គ្រង (Representative 1 Person Form) */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 border-b border-border/50 pb-2">
+                    <UserCheckIcon className="size-4 text-indigo-600 dark:text-indigo-400" />
+                    <div>
+                      <span className="font-semibold text-sm text-foreground">
+                        ព័ត៌មានអ្នកតំណាង ឬអ្នកគ្រប់គ្រង (Company Representative Form)
+                      </span>
+                      <p className="text-[11px] text-muted-foreground">
+                        ព័ត៌មានអត្តសញ្ញាណប័ណ្ណ និងទីលំនៅអ្នកតំណាងនីតិបុគ្គល (១ នាក់)
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">អង្គភាព (Entity)</Label>
-                    <Input
-                      value={entity}
-                      onChange={(e) => setEntity(e.target.value)}
-                      placeholder="ឈ្មោះក្រុមហ៊ុន ឬអង្គភាព"
-                      className="h-9 text-xs"
-                    />
+                  {renderPersonForm(
+                    repPerson,
+                    (updater) => {
+                      setRepPerson((prev) => {
+                        const next = typeof updater === "function" ? updater(prev) : updater
+                        if (next.name !== repName) {
+                          setRepName(next.name)
+                        }
+                        return next
+                      })
+                    },
+                    `អ្នកតំណាង ឬអ្នកគ្រប់គ្រង: ${repPerson.name || repName || "..."}`,
+                    repRole || "អ្នកតំណាង",
+                    "bg-indigo-500"
+                  )}
+                </div>
+
+                {/* 2. សាក្សី (Witnesses - ២ នាក់) */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                    <div className="flex items-center gap-2">
+                      <UserCheckIcon className="size-4 text-emerald-600 dark:text-emerald-400" />
+                      <div>
+                        <span className="font-semibold text-sm text-foreground">
+                          សាក្សី (Witnesses - ២ នាក់)
+                        </span>
+                        <p className="text-[11px] text-muted-foreground">
+                          បានអានសេចក្តីនៃលិខិតនេះឱ្យគូភាគីស្តាប់ចំពោះមុខ
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={copyWitnessAddress}
+                      className="h-6 text-[11px] text-primary gap-1"
+                    >
+                      <CopyIcon className="size-3" />
+                      ចម្លងអាសយដ្ឋានសាក្សីទី១ ទៅសាក្សីទី២
+                    </Button>
                   </div>
 
-                  <div className="space-y-1 md:col-span-2">
-                    <Label className="text-xs font-medium text-foreground/80">អាសយដ្ឋានទីស្នាក់ការ</Label>
-                    <Input
-                      value={officeAddress}
-                      onChange={(e) => setOfficeAddress(e.target.value)}
-                      placeholder="ទីស្នាក់ការក្រុមហ៊ុន..."
-                      className="h-9 text-xs"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">ឈ្មោះអ្នកតំណាង</Label>
-                    <Input
-                      value={repName}
-                      onChange={(e) => setRepName(e.target.value)}
-                      placeholder="ឈ្មោះអ្នកតំណាងស្របច្បាប់"
-                      className="h-9 text-xs"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">មុខងារ (Position)</Label>
-                    <Input
-                      value={repRole}
-                      onChange={(e) => setRepRole(e.target.value)}
-                      placeholder="ឧ. អគ្គនាយក"
-                      className="h-9 text-xs"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {renderWitnessForm(witness1, setWitness1, "សាក្សីទី១ (Witness 1)", "សាក្សី", "bg-blue-500")}
+                    {renderWitnessForm(witness2, setWitness2, "សាក្សីទី២ (Witness 2)", "សាក្សី", "bg-purple-500")}
                   </div>
                 </div>
               </div>

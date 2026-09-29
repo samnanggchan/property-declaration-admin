@@ -44,6 +44,15 @@ export type CadastralDetails = {
   boundaries?: CadastralBoundaries;
 };
 
+export type WitnessPerson = {
+  name: string;
+  dob: string;
+  idNumber: string;
+  address: string;
+};
+
+export type RepresentativePerson = WitnessPerson;
+
 export type JointFields = {
   propertyType: string;
   area: string;
@@ -54,8 +63,16 @@ export type JointFields = {
   charter: string;
   entity: string;
   officeAddress: string;
-  repName: string;
-  repRole: string;
+  repName?: string;
+  repRole?: string;
+  repPerson?: Partial<PersonFields>;
+  representativePerson?: Partial<PersonFields>;
+  witness1?: WitnessPerson;
+  witness2?: WitnessPerson;
+  witnesses?: WitnessPerson[];
+  rep1?: WitnessPerson;
+  rep2?: WitnessPerson;
+  representatives?: WitnessPerson[];
   cadastral?: CadastralDetails;
 };
 
@@ -163,6 +180,16 @@ export const emptyPerson = (): PersonFields => ({
   address: "",
 });
 
+export const emptyWitnessPerson = (): WitnessPerson => ({
+  name: "",
+  dob: "",
+  idNumber: "",
+  address: "",
+});
+
+export const emptyRepresentativePerson = (): RepresentativePerson =>
+  emptyWitnessPerson();
+
 export const emptyParty = (): PartyFields => ({
   husband: emptyPerson(),
   wife: emptyPerson(),
@@ -180,4 +207,12 @@ export const emptyJoint = (): JointFields => ({
   officeAddress: "",
   repName: "",
   repRole: "",
+  repPerson: emptyPerson(),
+  representativePerson: emptyPerson(),
+  witness1: emptyWitnessPerson(),
+  witness2: emptyWitnessPerson(),
+  witnesses: [],
+  rep1: emptyWitnessPerson(),
+  rep2: emptyWitnessPerson(),
+  representatives: [],
 });

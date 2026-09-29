@@ -1,9 +1,15 @@
 "use client"
 
-import * as React from "react"
 import { PrinterIcon, XIcon, PencilIcon, CheckCircle2Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { LandDeclaration, PersonFields } from "@/lib/types"
+import {
+  LandDeclaration,
+  PersonFields,
+  emptyWitnessPerson,
+  emptyPerson,
+  emptyJoint,
+} from "@/lib/types"
+import { calculateAgeFromDob } from "@/lib/utils"
 
 interface OfficialDeclarationDocumentProps {
   declaration?: LandDeclaration
@@ -20,18 +26,24 @@ export function OfficialDeclarationDocument({
   onEdit,
   onSwitchToCertificate,
 }: OfficialDeclarationDocumentProps) {
-  const currentDoc = (declaration || record)!
+  const currentDoc = declaration || record
 
   const handlePrint = () => {
     window.print()
   }
 
-  // Parties data
-  const sellerHusband = currentDoc.seller?.husband || currentDoc.husband
-  const sellerWife = currentDoc.seller?.wife || currentDoc.wife
-  const buyerHusband = currentDoc.buyer?.husband
-  const buyerWife = currentDoc.buyer?.wife
-  const hasBuyer = Boolean(buyerHusband?.name || buyerWife?.name)
+  if (!currentDoc) {
+    return null
+  }
+
+  const joint = currentDoc.joint || emptyJoint()
+
+  // Parties data with clean fallbacks
+  const sellerHusband = currentDoc.seller?.husband || currentDoc.husband || emptyPerson()
+  const sellerWife = currentDoc.seller?.wife || currentDoc.wife || emptyPerson()
+  const buyerHusband = currentDoc.buyer?.husband || emptyPerson()
+  const buyerWife = currentDoc.buyer?.wife || emptyPerson()
+  const hasBuyer = Boolean(buyerHusband.name || buyerWife.name)
 
   const renderPartyTable = (
     husband: PersonFields,
@@ -295,8 +307,8 @@ export function OfficialDeclarationDocument({
         {/* Section 2: ភាគីអ្នកទិញ (Buyer) if filled */}
         {hasBuyer &&
           renderPartyTable(
-            buyerHusband!,
-            buyerWife!,
+            buyerHusband,
+            buyerWife,
             "២. រូបវន្តបុគ្គល - ភាគីអ្នកទិញ (Buyer / Transferee)",
             "អ្នកទិញ"
           )}
@@ -309,27 +321,27 @@ export function OfficialDeclarationDocument({
           <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
             <div className="flex items-baseline justify-between border-b border-dotted border-neutral-400 pb-1">
               <span className="font-semibold text-neutral-800">ប្រភេទទ្រព្យ:</span>
-              <span className="font-medium">{currentDoc.joint.propertyType || "—"}</span>
+              <span className="font-medium">{joint.propertyType || "—"}</span>
             </div>
             <div className="flex items-baseline justify-between border-b border-dotted border-neutral-400 pb-1">
               <span className="font-semibold text-neutral-800">ក្រឡាផ្ទៃ:</span>
-              <span className="font-medium">{currentDoc.joint.area || "—"}</span>
+              <span className="font-medium">{joint.area || "—"}</span>
             </div>
             <div className="flex items-baseline justify-between border-b border-dotted border-neutral-400 pb-1">
               <span className="font-semibold text-neutral-800">រូបភាពប្រើប្រាស់ដី:</span>
-              <span className="font-medium">{currentDoc.joint.landUse || "—"}</span>
+              <span className="font-medium">{joint.landUse || "—"}</span>
             </div>
             <div className="flex items-baseline justify-between border-b border-dotted border-neutral-400 pb-1">
               <span className="font-semibold text-neutral-800">លក្ខណៈនៃការប្រើប្រាស់:</span>
-              <span className="font-medium">{currentDoc.joint.usageNature || "—"}</span>
+              <span className="font-medium">{joint.usageNature || "—"}</span>
             </div>
             <div className="flex items-baseline justify-between border-b border-dotted border-neutral-400 pb-1">
               <span className="font-semibold text-neutral-800">ប្រភពនៃការកាន់កាប់:</span>
-              <span className="font-medium">{currentDoc.joint.possessionSource || "—"}</span>
+              <span className="font-medium">{joint.possessionSource || "—"}</span>
             </div>
             <div className="flex items-baseline justify-between border-b border-dotted border-neutral-400 pb-1">
               <span className="font-semibold text-neutral-800">កាលបរិច្ឆេទ:</span>
-              <span className="font-medium">{currentDoc.joint.date || "—"}</span>
+              <span className="font-medium">{joint.date || "—"}</span>
             </div>
           </div>
         </div>
@@ -340,24 +352,201 @@ export function OfficialDeclarationDocument({
           <div className="grid grid-cols-3 gap-2 text-xs text-neutral-700">
             <div>
               <span className="font-semibold">លក្ខន្តិកៈ:</span>{" "}
-              {currentDoc.joint.charter || "..................."}
+              {joint.charter || "..................."}
             </div>
             <div>
               <span className="font-semibold">អង្គភាព:</span>{" "}
-              {currentDoc.joint.entity || "..................."}
+              {joint.entity || "..................."}
             </div>
             <div>
               <span className="font-semibold">អាសយដ្ឋាន (ទីស្នាក់ការ):</span>{" "}
-              {currentDoc.joint.officeAddress || "..................."}
+              {joint.officeAddress || "..................."}
             </div>
           </div>
-          <div className="mt-2 text-center text-xs">
+          <div className="mt-2 text-center text-xs text-neutral-800">
             <span className="font-bold">អ្នកតំណាង ឬអ្នកគ្រប់គ្រង:</span>{" "}
-            {currentDoc.joint.repName
-              ? `${currentDoc.joint.repName} (${currentDoc.joint.repRole || ""})`
+            {joint.repName
+              ? `${joint.repName}${joint.repRole ? ` (${joint.repRole})` : ""}`
               : "ឈ្មោះអ្នកតំណាង .................................... មុខងារ ...................................."}
           </div>
+
+          {/* 1-Person Table for Company Representative (អ្នកតំណាង ឬអ្នកគ្រប់គ្រង) matching Image 2 */}
+          {(() => {
+            const rep = joint.repPerson || joint.representativePerson || emptyPerson()
+            const hasRep = Boolean(
+              rep.name || joint.repName || rep.idNumber || rep.dob || rep.address || joint.entity || joint.charter
+            )
+
+            if (!hasRep) return null
+
+            return (
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full border-collapse border-2 border-neutral-800 text-sm">
+                  <thead>
+                    <tr className="bg-neutral-100 text-center font-bold">
+                      <th className="w-[30%] border border-neutral-800 px-3 py-1.5 text-left">
+                        ប្រភេទទិន្នន័យ
+                      </th>
+                      <th className="w-[70%] border border-neutral-800 px-3 py-1.5 text-center">
+                        អ្នកតំណាង ឬអ្នកគ្រប់គ្រង{joint.repRole ? ` (${joint.repRole})` : ""}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border border-neutral-800 px-3 py-1 font-semibold">
+                        អត្តសញ្ញាណប័ណ្ណ
+                      </td>
+                      <td className="border border-neutral-800 px-3 py-1 text-center font-mono text-xs">
+                        {rep.idNumber || "—"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-neutral-800 px-3 py-1 font-semibold">
+                        ឈ្មោះ
+                      </td>
+                      <td className="border border-neutral-800 px-3 py-1 text-center font-bold">
+                        {rep.name || joint.repName || "—"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-neutral-800 px-3 py-1 font-semibold">
+                        ថ្ងៃ ខែ ឆ្នាំ កំណើត
+                      </td>
+                      <td className="border border-neutral-800 px-3 py-1 text-center">
+                        {rep.dob || "—"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-neutral-800 px-3 py-1 font-semibold">
+                        ទីកន្លែងកំណើត
+                      </td>
+                      <td className="border border-neutral-800 px-3 py-1 text-center">
+                        {rep.birthPlace || "—"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-neutral-800 px-3 py-1 font-semibold">
+                        សញ្ជាតិ
+                      </td>
+                      <td className="border border-neutral-800 px-3 py-1 text-center">
+                        {rep.nationality || "ខ្មែរ"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-neutral-800 px-3 py-1 font-semibold">
+                        ស្ថានភាព
+                      </td>
+                      <td className="border border-neutral-800 px-3 py-1 text-center">
+                        {rep.status || "—"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-neutral-800 px-3 py-1 font-semibold">
+                        ឈ្មោះឪពុក
+                      </td>
+                      <td className="border border-neutral-800 px-3 py-1 text-center">
+                        {rep.fatherName || "—"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-neutral-800 px-3 py-1 font-semibold">
+                        ឈ្មោះម្តាយ
+                      </td>
+                      <td className="border border-neutral-800 px-3 py-1 text-center">
+                        {rep.motherName || "—"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-neutral-800 px-3 py-1 font-semibold align-top">
+                        អាសយដ្ឋាន
+                      </td>
+                      <td className="border border-neutral-800 px-3 py-1 text-center">
+                        {rep.address || "—"}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )
+          })()}
         </div>
+
+        {/* Witnesses Block (សាក្សី - ២ នាក់) matching authentic document scan & Image 2 */}
+        {(() => {
+          const w1 = joint.witness1 || joint.witnesses?.[0] || joint.rep1 || joint.representatives?.[0] || emptyWitnessPerson()
+          const w2 = joint.witness2 || joint.witnesses?.[1] || joint.rep2 || joint.representatives?.[1] || emptyWitnessPerson()
+          
+          const age1 = calculateAgeFromDob(w1.dob) || "............."
+          const age2 = calculateAgeFromDob(w2.dob) || "............."
+
+          return (
+            <div className="mt-4 border-t border-neutral-300 pt-3 text-xs text-neutral-800">
+              <p className="mb-2 text-center font-bold">
+                បានអានសេចក្តីនៃលិខិតនេះឱ្យគូភាគីស្តាប់ចំពោះមុខ
+              </p>
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="font-bold">សាក្សី  ឈ្មោះ:</span>
+                  <span className="font-bold text-neutral-900 border-b border-dotted border-neutral-400 min-w-28 inline-block">
+                    {w1.name || "...................................."}
+                  </span>
+                  <span className="font-medium">អាយុ/ថ្ងៃកំណើត:</span>
+                  <span className="border-b border-dotted border-neutral-400 min-w-16 inline-block text-center font-semibold text-neutral-900">
+                    {age1}
+                  </span>
+                  <span className="font-medium">ទីលំនៅ:</span>
+                  <span className="border-b border-dotted border-neutral-400 flex-1 min-w-48 inline-block">
+                    {w1.address || "......................................................."}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-baseline gap-x-2 pl-6 sm:pl-10">
+                  <span className="font-bold">ឈ្មោះ:</span>
+                  <span className="font-bold text-neutral-900 border-b border-dotted border-neutral-400 min-w-28 inline-block">
+                    {w2.name || "...................................."}
+                  </span>
+                  <span className="font-medium">អាយុ/ថ្ងៃកំណើត:</span>
+                  <span className="border-b border-dotted border-neutral-400 min-w-16 inline-block text-center font-semibold text-neutral-900">
+                    {age2}
+                  </span>
+                  <span className="font-medium">ទីលំនៅ:</span>
+                  <span className="border-b border-dotted border-neutral-400 flex-1 min-w-48 inline-block">
+                    {w2.address || "......................................................."}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 text-[11px] text-neutral-700">
+                  <div className="space-y-0.5">
+                    {w1.idNumber && (
+                      <div>
+                        <span className="font-semibold">អត្ត:</span>{" "}
+                        <span className="font-mono text-neutral-900">{w1.idNumber}</span>
+                      </div>
+                    )}
+                    {w2.idNumber && (
+                      <div>
+                        <span className="font-semibold">អត្ត:</span>{" "}
+                        <span className="font-mono text-neutral-900">{w2.idNumber}</span>
+                      </div>
+                    )}
+                    {!w1.idNumber && !w2.idNumber && (
+                      <div>
+                        <span className="font-semibold">អត្ត:</span> ....................................................
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <span className="font-semibold">បញ្ជាក់ចុះលេខ...</span>{" "}
+                    <span className="border-b border-dotted border-neutral-400 px-3 font-semibold text-neutral-900">
+                      {currentDoc.certNumber ? currentDoc.certNumber.split("-")[1]?.trim() || "៤៥៧៥" : "៤៥៧៥"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Footer / Official Signatures & Stamps matching scanned document */}
         <div className="mt-10 grid grid-cols-2 gap-8 text-center text-xs">
