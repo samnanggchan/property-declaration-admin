@@ -42,6 +42,7 @@ export type CadastralDetails = {
   usableArea?: string;
   builtArea?: string;
   boundaries?: CadastralBoundaries;
+  registrationDate?: string;
 };
 
 export type WitnessPerson = {
@@ -73,6 +74,13 @@ export type JointFields = {
   rep1?: WitnessPerson;
   rep2?: WitnessPerson;
   representatives?: WitnessPerson[];
+  boundaryNorth?: string;
+  boundarySouth?: string;
+  boundaryEast?: string;
+  boundaryWest?: string;
+  registrationDate?: string;
+  registeredDate?: string;
+  boundaries?: CadastralBoundaries;
   cadastral?: CadastralDetails;
 };
 
@@ -215,4 +223,16 @@ export const emptyJoint = (): JointFields => ({
   rep1: emptyWitnessPerson(),
   rep2: emptyWitnessPerson(),
   representatives: [],
+  boundaryNorth: "",
+  boundarySouth: "",
+  boundaryEast: "",
+  boundaryWest: "",
+  registrationDate: "",
+  registeredDate: "",
+  boundaries: {
+    north: "",
+    south: "",
+    east: "",
+    west: "",
+  },
 });
