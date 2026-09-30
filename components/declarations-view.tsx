@@ -48,6 +48,7 @@ import {
 import { NaturalPersonModal } from "@/components/natural-person-modal";
 import { OfficialDeclarationDocument } from "@/components/official-declaration-document";
 import { OfficialCadastralCertificate } from "@/components/official-cadastral-certificate";
+import { OfficialTransferApplication } from "@/components/official-transfer-application";
 import { declarationsApi } from "@/lib/api";
 import { LandDeclaration } from "@/lib/types";
 
@@ -59,7 +60,7 @@ export function DeclarationsView() {
   // Modal & Detail states (HIDDEN BY DEFAULT until user clicks detail one by one)
   const [selectedDeclaration, setSelectedDeclaration] =
     React.useState<LandDeclaration | null>(null);
-  const [docMode, setDocMode] = React.useState<"declaration" | "certificate">(
+  const [docMode, setDocMode] = React.useState<"declaration" | "certificate" | "application">(
     "declaration",
   );
   const [modalOpen, setModalOpen] = React.useState(false);
@@ -468,6 +469,16 @@ export function DeclarationsView() {
                           <DropdownMenuItem
                             onClick={() => {
                               setSelectedDeclaration(r);
+                              setDocMode("application");
+                            }}
+                            className="gap-2 font-medium text-blue-600 dark:text-blue-400"
+                          >
+                            <FileTextIcon className="size-4" />
+                            ពាក្យសុំចុះបញ្ជីផ្ទេរសិទ្ធិ (Transfer App PDF)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedDeclaration(r);
                               setTimeout(() => window.print(), 350);
                             }}
                             className="gap-2"
@@ -537,7 +548,7 @@ export function DeclarationsView() {
 
           {/* Top Document Mode Tabs */}
           <div className="no-print mb-2 flex items-center justify-between border-b pb-3">
-            <div className="inline-flex rounded-lg border bg-muted/40 p-1 text-xs">
+            <div className="inline-flex flex-wrap gap-1 rounded-lg border bg-muted/40 p-1 text-xs">
               <button
                 onClick={() => setDocMode("declaration")}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors ${
@@ -558,7 +569,18 @@ export function DeclarationsView() {
                 }`}
               >
                 <LayersIcon className="size-3.5" />
-                តារាងសម្រង់វិញ្ញាបនប័ត្រ (Extract Table - LMAP & HOUSE)
+                តារាងសម្រង់វិញ្ញាបនប័ត្រ (Extract Table)
+              </button>
+              <button
+                onClick={() => setDocMode("application")}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors ${
+                  docMode === "application"
+                    ? "bg-blue-600 text-white shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <FileTextIcon className="size-3.5" />
+                ពាក្យសុំចុះបញ្ជីផ្ទេរសិទ្ធិ (Transfer Form PDF)
               </button>
             </div>
           </div>
@@ -569,6 +591,13 @@ export function DeclarationsView() {
                 declaration={selectedDeclaration}
                 onClose={() => setSelectedDeclaration(null)}
                 onUpdated={handleSuccess}
+              />
+            ) : docMode === "application" ? (
+              <OfficialTransferApplication
+                declaration={selectedDeclaration}
+                onClose={() => setSelectedDeclaration(null)}
+                onSwitchToDeclaration={() => setDocMode("declaration")}
+                onSwitchToCertificate={() => setDocMode("certificate")}
               />
             ) : (
               <OfficialDeclarationDocument
