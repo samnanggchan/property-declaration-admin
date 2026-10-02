@@ -1,6 +1,18 @@
-import { LandDeclaration } from "./types";
+import { LandDeclaration, PaginatedResponse, PaginationParams } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3003";
+
+function buildQuery(params?: PaginationParams): string {
+  if (!params) return "";
+  const q = new URLSearchParams();
+  if (params.page !== undefined) q.set("page", String(params.page));
+  if (params.limit !== undefined) q.set("limit", String(params.limit));
+  if (params.search) q.set("search", params.search);
+  if (params.sortBy) q.set("sortBy", params.sortBy);
+  if (params.order) q.set("order", params.order);
+  const s = q.toString();
+  return s ? `?${s}` : "";
+}
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   try {
@@ -32,7 +44,8 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export const declarationsApi = {
-  list: () => request<LandDeclaration[]>(`${API_BASE}/declarations`),
+  list: (params?: PaginationParams) =>
+    request<PaginatedResponse<LandDeclaration>>(`${API_BASE}/declarations${buildQuery(params)}`),
   get: (id: string) =>
     request<LandDeclaration>(`${API_BASE}/declarations/${id}`),
   create: (initial?: Partial<LandDeclaration>) =>
@@ -48,3 +61,19 @@ export const declarationsApi = {
   remove: (id: string) =>
     request<void>(`${API_BASE}/declarations/${id}`, { method: "DELETE" }),
 };
+
+export interface UserSummary {
+  id: string;
+  email: string;
+  roles: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const usersApi = {
+  list: (params?: PaginationParams) =>
+    request<PaginatedResponse<UserSummary>>(`${API_BASE}/users${buildQuery(params)}`),
+  get: (id: string) =>
+    request<UserSummary>(`${API_BASE}/users/${id}`),
+};
+

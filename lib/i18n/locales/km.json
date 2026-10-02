@@ -1,0 +1,68 @@
+{
+  "common": {
+    "search": "ស្វែងរក...",
+    "notifications": "ការជូនដំណឹង",
+    "toggleTheme": "ប្ដូរស្បែក",
+    "switchToLight": "ប្ដូរទៅភ្លឺ",
+    "switchToDark": "ប្ដូរទៅងងឹត",
+    "selectTheme": "ជ្រើសរើសស្បែក:",
+    "language": "ខ្មែរ",
+    "languageFull": "ភាសាខ្មែរ"
+  },
+  "nav": {
+    "dashboard": "ផ្ទាំងគ្រប់គ្រង",
+    "declarations": "លិខិតប្រកាសដី",
+    "lifecycle": "វដ្តជីវិត",
+    "analytics": "វិភាគទិន្នន័យ",
+    "projects": "គម្រោង",
+    "team": "ក្រុម",
+    "documents": "ឯកសារ"
+  },
+  "sidebar": {
+    "account": "គណនី",
+    "billing": "វិក្កយបត្រ",
+    "notifications": "ការជូនដំណឹង",
+    "logout": "ចាកចេញ"
+  },
+  "theme": {
+    "default": "លំនាំដើម",
+    "blue": "ខៀវ",
+    "green": "បៃតង",
+    "amber": "លឿងទុំ",
+    "scaled": "ធ្វើមាត្រដ្ឋាន",
+    "monospaced": "ពុម្ពអក្សរថេរ",
+    "mono": "ម៉ូណូ"
+  },
+  "declarations": {
+    "title": "លិខិតប្រកាសដី",
+    "addNew": "បន្ថែមថ្មី",
+    "search": "ស្វែងរកលិខិតប្រកាស...",
+    "noResults": "រកមិនឃើញលទ្ធផល",
+    "seller": "អ្នកលក់",
+    "buyer": "អ្នកទិញ",
+    "location": "ទីតាំង",
+    "status": "ស្ថានភាព",
+    "date": "កាលបរិច្ឆេទ",
+    "actions": "សកម្មភាព",
+    "view": "មើល",
+    "edit": "កែសម្រួល",
+    "delete": "លុប",
+    "print": "បោះពុម្ព / PDF",
+    "declaration": "លិខិតប្រកាស",
+    "certificate": "វិញ្ញាបនប័ត្រ",
+    "transferApplication": "ពាក្យសុំផ្ទេរ"
+  },
+  "dashboard": {
+    "totalDeclarations": "លិខិតប្រកាសទាំងអស់",
+    "categories": "ប្រភេទ",
+    "totalBooks": "សៀវភៅសរុប",
+    "popularBooks": "សៀវភៅពេញនិយម"
+  },
+  "auth": {
+    "login": "ចូល",
+    "email": "អ៊ីមែល",
+    "password": "ពាក្យសម្ងាត់",
+    "forgotPassword": "ភ្លេចពាក្យសម្ងាត់?",
+    "loginButton": "ចូលប្រើ"
+  }
+}

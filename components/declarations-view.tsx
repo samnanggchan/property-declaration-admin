@@ -17,12 +17,25 @@ import {
   EyeIcon,
   XIcon,
   LayersIcon,
+  ChevronsLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronsRightIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -56,6 +69,14 @@ export function DeclarationsView() {
   const [declarations, setDeclarations] = React.useState<LandDeclaration[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
+  const [meta, setMeta] = React.useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 1,
+  });
 
   // Modal & Detail states (HIDDEN BY DEFAULT until user clicks detail one by one)
   const [selectedDeclaration, setSelectedDeclaration] =
@@ -68,51 +89,55 @@ export function DeclarationsView() {
     React.useState<LandDeclaration | null>(null);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
-  // Load declarations from API
-  const loadDeclarations = React.useCallback(async () => {
-    try {
-      const data = await declarationsApi.list();
-      setDeclarations(data);
-    } catch {
-      toast.error("មិនអាចទាញយកទិន្នន័យបានទេ");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Load declarations from API with pagination & search
+  const loadDeclarations = React.useCallback(
+    async (pageNum = page, limitNum = pageSize, search = searchQuery) => {
+      setLoading(true);
+      try {
+        const res = await declarationsApi.list({
+          page: pageNum,
+          limit: limitNum,
+          search: search.trim() || undefined,
+          sortBy: "createdAt",
+          order: "desc",
+        });
+
+        if (res && res.data) {
+          setDeclarations(res.data);
+          setMeta(
+            res.meta ?? {
+              total: res.data.length,
+              page: pageNum,
+              limit: limitNum,
+              totalPages: Math.ceil(res.data.length / limitNum) || 1,
+            },
+          );
+        } else if (Array.isArray(res)) {
+          setDeclarations(res);
+          setMeta({
+            total: (res as any).length,
+            page: 1,
+            limit: limitNum,
+            totalPages: Math.ceil((res as any).length / limitNum) || 1,
+          });
+        }
+      } catch {
+        toast.error("មិនអាចទាញយកទិន្នន័យបានទេ");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [page, pageSize, searchQuery],
+  );
 
   React.useEffect(() => {
-    loadDeclarations();
-  }, [loadDeclarations]);
+    const timer = setTimeout(() => {
+      loadDeclarations(page, pageSize, searchQuery);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [page, pageSize, searchQuery, loadDeclarations]);
 
-  // Filter declarations by search query
-  const filteredDeclarations = React.useMemo(() => {
-    return declarations.filter((r) => {
-      const query = searchQuery.toLowerCase().trim();
-      if (!query) return true;
-
-      const sellerH =
-        r.seller?.husband?.name?.toLowerCase() ||
-        r.husband?.name?.toLowerCase() ||
-        "";
-      const sellerW =
-        r.seller?.wife?.name?.toLowerCase() ||
-        r.wife?.name?.toLowerCase() ||
-        "";
-      const buyerH = r.buyer?.husband?.name?.toLowerCase() || "";
-      const buyerW = r.buyer?.wife?.name?.toLowerCase() || "";
-      const cert = r.certNumber?.toLowerCase() || "";
-      const loc = r.location?.toLowerCase() || "";
-
-      return (
-        sellerH.includes(query) ||
-        sellerW.includes(query) ||
-        buyerH.includes(query) ||
-        buyerW.includes(query) ||
-        cert.includes(query) ||
-        loc.includes(query)
-      );
-    });
-  }, [declarations, searchQuery]);
+  const filteredDeclarations = declarations;
 
   // Handlers
   const handleAddNew = () => {
@@ -194,7 +219,7 @@ export function DeclarationsView() {
               variant="secondary"
               className="px-2 py-0.5 text-xs font-semibold"
             >
-              {filteredDeclarations.length} ឯកសារ
+              {meta.total} ឯកសារ
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
@@ -208,14 +233,20 @@ export function DeclarationsView() {
           <div className="relative w-64">
             <SearchIcon className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
             <Input
-              placeholder="ស្វែងរកក្បាលដី ឬឈ្មោះ..."
+              placeholder="ស្វែងរកក្បាលដី ឬទីតាំង..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
               className="h-9 pl-8 text-xs"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery("")}
+                onClick={() => {
+                  setSearchQuery("");
+                  setPage(1);
+                }}
                 className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
               >
                 <XIcon className="size-3.5" />
@@ -520,13 +551,97 @@ export function DeclarationsView() {
         </Table>
       </div>
 
-      {/* Table Footer */}
-      <div className="flex items-center justify-between text-xs text-muted-foreground px-1 pb-4">
-        <div>
-          ជ្រើសរើសបាន {selectedIds.length} នៃ {filteredDeclarations.length}{" "}
-          ជួរដេក
+      {/* Table Footer with Dashboard Style Pagination */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-3 border-t text-sm">
+        <div className="text-xs text-muted-foreground">
+          {selectedIds.length > 0 ? (
+            <span>
+              ជ្រើសរើសបាន {selectedIds.length} នៃ {meta.total} ជួរដេក ({selectedIds.length} of {meta.total} selected)
+            </span>
+          ) : (
+            <span>សរុប {meta.total} ឯកសារ (Total {meta.total} records)</span>
+          )}
         </div>
-        <div>ចុចលើជួរដេកណាមួយដើម្បីមើលឯកសារផ្លូវការ និងបោះពុម្ព</div>
+
+        <div className="flex flex-wrap items-center gap-4 lg:gap-6">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="rows-per-page" className="text-xs font-medium text-muted-foreground">
+              Rows per page
+            </Label>
+            <Select
+              value={`${pageSize}`}
+              onValueChange={(val) => {
+                const nextSize = Number(val);
+                setPageSize(nextSize);
+                setPage(1);
+              }}
+              items={[10, 20, 30, 40, 50].map((size) => ({
+                label: `${size}`,
+                value: `${size}`,
+              }))}
+            >
+              <SelectTrigger size="sm" className="h-8 w-20 text-xs" id="rows-per-page">
+                <SelectValue placeholder={pageSize} />
+              </SelectTrigger>
+              <SelectContent side="top">
+                <SelectGroup>
+                  {[10, 20, 30, 40, 50].map((size) => (
+                    <SelectItem key={size} value={`${size}`} className="text-xs">
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-center text-xs font-medium">
+            Page {meta.page} of {meta.totalPages || 1}
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="hidden size-8 lg:flex"
+              onClick={() => setPage(1)}
+              disabled={meta.page <= 1 || loading}
+              aria-label="First page"
+            >
+              <ChevronsLeftIcon className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={meta.page <= 1 || loading}
+              aria-label="Previous page"
+            >
+              <ChevronLeftIcon className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8"
+              onClick={() => setPage((p) => Math.min(meta.totalPages || 1, p + 1))}
+              disabled={meta.page >= (meta.totalPages || 1) || loading}
+              aria-label="Next page"
+            >
+              <ChevronRightIcon className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="hidden size-8 lg:flex"
+              onClick={() => setPage(meta.totalPages || 1)}
+              disabled={meta.page >= (meta.totalPages || 1) || loading}
+              aria-label="Last page"
+            >
+              <ChevronsRightIcon className="size-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* One-by-One Detail View Dialog */}

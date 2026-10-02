@@ -3,6 +3,7 @@ import { Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import ReduxProvider from "@/lib/redux/ReduxProvider"
+import { I18nProvider } from "@/lib/i18n"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils";
 
@@ -27,8 +28,10 @@ export default function RootLayout({
       <body>
         <ReduxProvider>
           <ThemeProvider>
-            {children}
-            <Toaster position="top-right" richColors />
+            <I18nProvider>
+              {children}
+              <Toaster position="top-right" richColors />
+            </I18nProvider>
           </ThemeProvider>
         </ReduxProvider>
       </body>

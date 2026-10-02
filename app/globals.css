@@ -1,5 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&family=Moul&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
+
+/* ─── Khmer font class toggled by i18n locale ─── */
+html.font-khmer {
+  font-family: 'Battambang', 'Khmer OS Battambang', 'Khmer OS', sans-serif;
+}
+html.font-khmer * {
+  font-family: inherit;
+}
 
 @custom-variant dark (&:is(.dark *));
 
@@ -129,6 +138,100 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* ─── Color Theme: Blue ─── */
+.theme-blue {
+    --primary: oklch(0.488 0.243 264.376);
+    --primary-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.488 0.243 264.376);
+    --chart-1: oklch(0.588 0.2 260);
+    --chart-2: oklch(0.488 0.18 270);
+    --chart-3: oklch(0.388 0.15 260);
+    --chart-4: oklch(0.688 0.12 250);
+    --chart-5: oklch(0.788 0.08 240);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-ring: oklch(0.488 0.243 264.376);
+}
+.dark.theme-blue,
+.theme-blue.dark {
+    --primary: oklch(0.628 0.22 264.376);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.628 0.22 264.376);
+    --sidebar-primary: oklch(0.628 0.22 264.376);
+}
+
+/* ─── Color Theme: Green ─── */
+.theme-green {
+    --primary: oklch(0.527 0.185 152.59);
+    --primary-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.527 0.185 152.59);
+    --chart-1: oklch(0.627 0.15 145);
+    --chart-2: oklch(0.527 0.12 155);
+    --chart-3: oklch(0.427 0.1 150);
+    --chart-4: oklch(0.727 0.08 140);
+    --chart-5: oklch(0.327 0.06 160);
+    --sidebar-primary: oklch(0.527 0.185 152.59);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-ring: oklch(0.527 0.185 152.59);
+}
+.dark.theme-green,
+.theme-green.dark {
+    --primary: oklch(0.667 0.17 152.59);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.667 0.17 152.59);
+    --sidebar-primary: oklch(0.667 0.17 152.59);
+}
+
+/* ─── Color Theme: Amber ─── */
+.theme-amber {
+    --primary: oklch(0.669 0.17 75.836);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.669 0.17 75.836);
+    --chart-1: oklch(0.769 0.14 70);
+    --chart-2: oklch(0.669 0.12 80);
+    --chart-3: oklch(0.569 0.1 75);
+    --chart-4: oklch(0.469 0.08 85);
+    --chart-5: oklch(0.869 0.06 65);
+    --sidebar-primary: oklch(0.669 0.17 75.836);
+    --sidebar-primary-foreground: oklch(0.145 0 0);
+    --sidebar-ring: oklch(0.669 0.17 75.836);
+}
+.dark.theme-amber,
+.theme-amber.dark {
+    --primary: oklch(0.769 0.15 75.836);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.769 0.15 75.836);
+    --sidebar-primary: oklch(0.769 0.15 75.836);
+}
+
+/* ─── Scaled: Default ─── */
+.theme-scaled-default {
+    --radius: 0.5rem;
+}
+
+/* ─── Scaled: Blue ─── */
+.theme-scaled-blue {
+    --primary: oklch(0.488 0.243 264.376);
+    --primary-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.488 0.243 264.376);
+    --radius: 0.5rem;
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+}
+.dark.theme-scaled-blue,
+.theme-scaled-blue.dark {
+    --primary: oklch(0.628 0.22 264.376);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.628 0.22 264.376);
+    --sidebar-primary: oklch(0.628 0.22 264.376);
+}
+
+/* ─── Monospaced ─── */
+.theme-mono {
+    --font-sans: var(--font-mono);
+    --font-heading: var(--font-mono);
 }
 
 @layer base {

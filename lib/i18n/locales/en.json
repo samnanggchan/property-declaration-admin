@@ -1,0 +1,68 @@
+{
+  "common": {
+    "search": "Search...",
+    "notifications": "Notifications",
+    "toggleTheme": "Toggle theme",
+    "switchToLight": "Switch to Light",
+    "switchToDark": "Switch to Dark",
+    "selectTheme": "Select a theme:",
+    "language": "EN",
+    "languageFull": "English"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "declarations": "Land Declarations",
+    "lifecycle": "Lifecycle",
+    "analytics": "Analytics",
+    "projects": "Projects",
+    "team": "Team",
+    "documents": "Documents"
+  },
+  "sidebar": {
+    "account": "Account",
+    "billing": "Billing",
+    "notifications": "Notifications",
+    "logout": "Log out"
+  },
+  "theme": {
+    "default": "Default",
+    "blue": "Blue",
+    "green": "Green",
+    "amber": "Amber",
+    "scaled": "Scaled",
+    "monospaced": "Monospaced",
+    "mono": "Mono"
+  },
+  "declarations": {
+    "title": "Land Declarations",
+    "addNew": "Add New",
+    "search": "Search declarations...",
+    "noResults": "No results found",
+    "seller": "Seller",
+    "buyer": "Buyer",
+    "location": "Location",
+    "status": "Status",
+    "date": "Date",
+    "actions": "Actions",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "print": "Print / PDF",
+    "declaration": "Declaration",
+    "certificate": "Certificate",
+    "transferApplication": "Transfer Application"
+  },
+  "dashboard": {
+    "totalDeclarations": "Total Declarations",
+    "categories": "Categories",
+    "totalBooks": "Total Books",
+    "popularBooks": "Popular Books"
+  },
+  "auth": {
+    "login": "Login",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "loginButton": "Sign In"
+  }
+}
