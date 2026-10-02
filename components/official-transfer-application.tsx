@@ -340,21 +340,29 @@ export function OfficialTransferApplication({
       <div className="application-sheet font-battambang mx-auto min-h-[297mm] w-full max-w-[210mm] border border-neutral-300 bg-white p-8 sm:px-12 sm:py-10 text-neutral-900 shadow-md transition-all text-[14px] leading-[1.85] flex flex-col justify-between mb-8">
         <div className="space-y-3">
           {/* Header: Kingdom of Cambodia */}
-          <div className="text-center">
+          <div className="relative text-center">
             <h1 className="font-moul text-base sm:text-lg tracking-wide text-neutral-950">
               ព្រះរាជាណាចក្រកម្ពុជា
             </h1>
-            <h2 className="font-moul text-sm sm:text-base tracking-wide text-neutral-950 mt-1">
+            <h2 className="font-moul text-sm sm:text-lg tracking-wide text-neutral-950 mt-1">
               ជាតិ សាសនា ព្រះមហាក្សត្រ
             </h2>
-            <div className="my-1.5 flex items-center justify-center text-xs tracking-widest text-neutral-700">
-              ‹--•-•--›
+            <div className="my-1.5 flex items-center justify-center">
+              <img
+                src="/symbol-3.png"
+                alt="symbol"
+                className="h-auto sm:h-8 w-auto object-contain"
+              />
             </div>
-          </div>
 
-          {/* Top Right Reference Code */}
-          <div className="text-right text-[11px] font-semibold text-neutral-800 -mt-2">
-            លិខិត ជ.ដ.ភ.អ រាជធានីភ្នំពេញ
+            {/* Top Right Reference Code */}
+            <div className="absolute right-2 bottom-0 flex justify-end">
+              <img
+                src="/mtpp.png"
+                alt="មន្ទីរ ដ.ន.ស.ស រាជធានីភ្នំពេញ"
+                className="h-8 sm:h-8 w-auto object-contain"
+              />
+            </div>
           </div>
 
           {/* Document Main Title */}
@@ -647,9 +655,7 @@ export function OfficialTransferApplication({
             <div className="ml-8 mt-1 space-y-1">
               <div className="flex flex-wrap items-center gap-1">
                 <span className="font-bold">-</span>
-                <span className="font-normal text-neutral-950">
-                  ការលក់ទិញ
-                </span>
+                <span className="font-normal text-neutral-950">ការលក់ទិញ</span>
                 <span>ចុះថ្ងៃទី</span>
                 <DottedLeader value={transferDate.day || "២០"} minDots={6} />
                 <span>ខែ</span>
@@ -688,7 +694,9 @@ export function OfficialTransferApplication({
         <div className="mt-6 pt-1 text-[12px] leading-[1.6] text-neutral-700 space-y-1.5">
           <div className="w-36 border-t-[1.5px] border-neutral-900 mb-2" />
           <div className="flex items-start gap-1">
-            <span className="shrink-0 font-bold">- <sup>(១)</sup> និង <sup>(២)</sup></span>
+            <span className="shrink-0 font-bold">
+              - <sup>(១)</sup> និង <sup>(២)</sup>
+            </span>
             <span>
               ក្នុងករណីបុគ្គលមានសិទ្ធិចុះបញ្ជី
               ឬបុគ្គលមានកាតព្វកិច្ចចុះបញ្ជីជានីតិបុគ្គល ត្រូវសរសេរនាមករណ៍
@@ -696,7 +704,9 @@ export function OfficialTransferApplication({
             </span>
           </div>
           <div className="flex items-start gap-1">
-            <span className="shrink-0 font-bold">- <sup>(៣)</sup></span>
+            <span className="shrink-0 font-bold">
+              - <sup>(៣)</sup>
+            </span>
             <span>
               ក្នុងករណីពាក្យសុំចុះបញ្ជីដាក់នៅរដ្ឋបាលសុរិយោដី ក្រុង/ស្រុក/ខណ្ឌ
               ត្រូវសរសេរបន្ថែមថា : "តាមរយៈ លោកប្រធាន ការិយាល័យរៀបចំដែនដី
@@ -910,7 +920,7 @@ export function OfficialTransferApplication({
 
             {/* Transferee / Buyer */}
             <h4 className="font-normal text-neutral-950 mt-4 mb-1">
-              - បុគ្គលមានកាតព្វកិច្ចចុះបញ្ជី 
+              - បុគ្គលមានកាតព្វកិច្ចចុះបញ្ជី
             </h4>
 
             {/* Individual 1 (Buyer Husband / Primary) */}
@@ -998,13 +1008,14 @@ export function OfficialTransferApplication({
           {/* Section ឃ: ចំណុចផ្សេងៗទៀតដែលត្រូវចុះបញ្ជី */}
           <div className="mt-4 text-[14px] leading-[2.0]">
             <h4 className="font-normal text-neutral-950 mb-1">
-              ឃ- ចំណុចផ្សេងៗទៀតដែលត្រូវចុះបញ្ជី 
+              ឃ- ចំណុចផ្សេងៗទៀតដែលត្រូវចុះបញ្ជី
             </h4>
             <div className="ml-8">
               <div className="flex flex-wrap items-center">
                 <span className="font-bold mr-2">-</span>
                 <span>
-                  ចំណែករបស់អ្នកសុំសិទ្ធិអវិភាគ (ប្រសិនបើជាកម្មសិទ្ធិអវិភាគ){" "}
+                  ចំណែករបស់អ្នកសុំសិទ្ធិអវិភាគថ្មី
+                  (ប្រសិនបើជាកម្មសិទ្ធិអវិភាគ){" "}
                 </span>
                 <DottedLeader value={null} minDots={12} />
               </div>
@@ -1014,12 +1025,12 @@ export function OfficialTransferApplication({
           {/* Section ង: អត្តសញ្ញាណ នៃអចលនវត្ថុ */}
           <div className="mt-4 text-[14px] leading-[2.0]">
             <h4 className="font-normal text-neutral-950 mb-1">
-              ង- អត្តសញ្ញាណ នៃអចលនវត្ថុ 
+              ង- អត្តសញ្ញាណ នៃអចលនវត្ថុ
             </h4>
             <div className="ml-8 space-y-1">
               <div className="flex flex-wrap items-center">
                 <span className="font-bold mr-2">-</span>
-                <span>ទីតាំងដី: </span>
+                <span>ទីតាំងដី </span>
                 <DottedLeader
                   value={currentDoc.location || null}
                   minDots={45}
@@ -1028,7 +1039,7 @@ export function OfficialTransferApplication({
 
               <div className="flex flex-wrap items-center">
                 <span className="font-bold mr-2">-</span>
-                <span>លេខក្បាលដី ឬលេខសំបុត្រ: </span>
+                <span>លេខក្បាលដី ឬលេខសំបុត្រ </span>
                 <DottedLeader
                   value={
                     currentDoc.certNumber
@@ -1037,29 +1048,24 @@ export function OfficialTransferApplication({
                   }
                   minDots={35}
                 />
-                <span className="ml-3">ទំហំដី: </span>
-                <DottedLeader
-                  value={joint.area ? toKhmerNum(joint.area) : null}
-                  minDots={15}
-                />
               </div>
             </div>
           </div>
 
           {/* Closing Request */}
-          <div className="mt-6 text-[14px] text-justify leading-relaxed indent-8">
-            អាស្រ័យហេតុនេះ សូមលោកប្រធានមន្ទីរ មេត្តាពិនិត្យ
-            និងសម្រេចអនុញ្ញាតចុះបញ្ជីតាមសំណើខាងលើដោយអនុគ្រោះ។
+          <div className="mt-6 text-[14px] text-justify leading-relaxed indent-8 tracking-[1px]">
+            អាស្រ័យហេតុនេះ សូមលោក<span className="font-moul">ប្រធានមន្ទីរ</span>{" "}
+            មេត្តាពិនិត្យ និងសម្រេចអនុញ្ញាតចុះបញ្ជីតាមសំណើខាងលើដោយអនុគ្រោះ។
           </div>
 
           {/* Signature and Thumbprints Section */}
           <div className="mt-8 grid grid-cols-2 gap-4 text-xs leading-relaxed">
             {/* Left: Transferor / Seller */}
             <div className="text-center">
-              <p className="font-bold text-neutral-950 text-[14px]">
-                បុគ្គលមានសិទ្ធិចុះបញ្ជី ឬតំណាង
+              <p className="font-normal text-neutral-950 text-[11.5px]">
+                អ្នកមានសិទ្ធិចុះបញ្ជី ឬតំណាង
               </p>
-              <p className="italic text-neutral-600 text-[11px] mt-0.5">
+              <p className="italic text-neutral-600 text-[11.5px] mt-0.5">
                 (ស្នាមមេដៃស្តាំ)
               </p>
 
@@ -1082,10 +1088,10 @@ export function OfficialTransferApplication({
                 ថ្ងៃ {transferDate.day ? transferDate.day : "..............."}{" "}
                 ខែ {transferDate.month ? transferDate.month : "..............."}{" "}
                 ឆ្នាំ{" "}
-                {transferDate.year ? transferDate.year : "................"}{" "}
-                ព្រះពុទ្ធសករាជ...
+                {transferDate.year ? transferDate.year : "................"} ព.ស
+                ២៥.....
               </p>
-              <p className="text-neutral-900 font-medium text-[14px] mt-0.5">
+              <p className="text-neutral-900 font-medium text-[11.5px] mt-0.5">
                 រាជធានីភ្នំពេញ ថ្ងៃទី{" "}
                 {transferDate.day ? transferDate.day : "........."} ខែ{" "}
                 {transferDate.month ? transferDate.month : "..........."}{" "}
@@ -1093,10 +1099,10 @@ export function OfficialTransferApplication({
                 {transferDate.year ? transferDate.year.slice(-2) : "......."}
               </p>
 
-              <p className="font-bold text-neutral-950 text-[14px] mt-2">
-                បុគ្គលមានកាតព្វកិច្ចចុះបញ្ជី ឬតំណាង
+              <p className="font-normal text-neutral-950 text-[11.5px] mt-2">
+                អ្នកមានកាតព្វកិច្ចចុះបញ្ជី ឬតំណាង
               </p>
-              <p className="italic text-neutral-600 text-[11px] mt-0.5">
+              <p className="italic text-neutral-600 text-[11.5px] mt-0.5">
                 (ស្នាមមេដៃស្តាំ)
               </p>
 
@@ -1115,12 +1121,10 @@ export function OfficialTransferApplication({
           </div>
 
           {/* Enclosures / Attachments (ឯកសារភ្ជាប់) */}
-          <div className="mt-8 border-t border-dotted border-neutral-400 pt-3 text-[14px]">
-            <span className="font-bold text-neutral-950">ឯកសារភ្ជាប់ : </span>
-            <span className="text-neutral-700">
-              {currentDoc.certNumber
-                ? `វិញ្ញាបនប័ត្រសម្គាល់ម្ចាស់អចលនវត្ថុលេខ ${toKhmerNum(currentDoc.certNumber)}, អត្តសញ្ញាណប័ណ្ណភាគីទាំងសងខាង, សៀវភៅគ្រួសារ/សៀវភៅស្នាក់នៅ`
-                : "...................................................................................................................................................................."}
+          <div className="mt-8 border-t border-dotted border-neutral-400 pt-3 text-[11.5px]">
+            <span className="font-normal text-neutral-950">
+              ឯកសារភ្ជាប់ ​៖
+              ................................................................................................
             </span>
           </div>
         </div>
