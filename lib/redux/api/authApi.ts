@@ -19,7 +19,7 @@ export interface AuthResponse {
 export const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getMe: builder.query<AuthResponse, void>({
-      query: () => '/api/auth/me',
+      query: () => '/auth/me',
       providesTags: ['User'],
       async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
         try {
@@ -32,7 +32,7 @@ export const authApi = apiSlice.injectEndpoints({
     }),
     login: builder.mutation<AuthResponse, LoginRequest>({
       query: (credentials) => ({
-        url: '/api/auth/login',
+        url: '/auth/login',
         method: 'POST',
         body: credentials,
       }),
@@ -48,7 +48,7 @@ export const authApi = apiSlice.injectEndpoints({
     }),
     register: builder.mutation<AuthResponse, RegisterRequest>({
       query: (credentials) => ({
-        url: '/api/auth/register',
+        url: '/auth/register',
         method: 'POST',
         body: credentials,
       }),
@@ -64,7 +64,7 @@ export const authApi = apiSlice.injectEndpoints({
     }),
     logout: builder.mutation<void, void>({
       query: () => ({
-        url: '/api/auth/logout',
+        url: '/auth/logout',
         method: 'POST',
       }),
       invalidatesTags: ['User'],

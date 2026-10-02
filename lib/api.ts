@@ -1,6 +1,9 @@
 import { LandDeclaration, PaginatedResponse, PaginationParams } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3003";
+const rawBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3003";
+const API_BASE = rawBase.endsWith("/api/v1")
+  ? rawBase
+  : `${rawBase.replace(/\/+$/, "")}/api/v1`;
 
 function buildQuery(params?: PaginationParams): string {
   if (!params) return "";
@@ -25,7 +28,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   } catch (err) {
     if (url.startsWith(API_BASE)) {
       try {
-        const fallbackUrl = url.replace(API_BASE, "/api");
+        const fallbackUrl = url.replace(API_BASE, "/api/v1");
         const fallbackResp = await fetch(fallbackUrl, {
           ...options,
           headers: { "Content-Type": "application/json", ...options?.headers },
@@ -65,6 +68,7 @@ export const declarationsApi = {
 export interface UserSummary {
   id: string;
   email: string;
+  avatar?: string | null;
   roles: string[];
   createdAt: string;
   updatedAt: string;

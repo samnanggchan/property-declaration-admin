@@ -10,8 +10,10 @@ import { logoutUser } from '../slices/authSlice';
 // Mutex prevents race conditions and multiple parallel calls to /api/auth/refresh
 const mutex = new Mutex();
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3003';
+const rawBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3003';
+const API_BASE_URL = rawBase.endsWith('/api/v1')
+  ? rawBase
+  : `${rawBase.replace(/\/+$/, '')}/api/v1`;
 
 /**
  * Base fetchBaseQuery instance configured with credentials: 'include'.
@@ -36,7 +38,7 @@ export const baseQuery = fetchBaseQuery({
  * 2. Executes request with HttpOnly cookies.
  * 3. On 401 Unauthorized:
  *    a. Pauses/locks subsequent incoming queries via Mutex.
- *    b. Hits POST /api/auth/refresh (browser automatically attaches refresh_token cookie).
+ *    b. Hits POST /auth/refresh (browser automatically attaches refresh_token cookie).
  *    c. If refresh succeeds:
  *       - Backend responds with new rotated tokens in Set-Cookie headers.
  *       - Mutex unlocks.
@@ -62,7 +64,7 @@ export const baseQueryWithReauth: BaseQueryFn<
       try {
         const refreshResult = await baseQuery(
           {
-            url: '/api/auth/refresh',
+            url: '/auth/refresh',
             method: 'POST',
           },
           api,

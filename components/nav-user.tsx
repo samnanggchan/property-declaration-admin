@@ -40,6 +40,7 @@ export function NavUser({
   const displayName = authUser ? authUser.email.split('@')[0] : user.name
   const displayEmail = authUser ? authUser.email : user.email
   const displayRole = authUser?.roles?.length ? authUser.roles.join(', ') : 'User'
+  const displayAvatar = authUser?.avatar || user.avatar
 
   const handleLogout = async () => {
     try {
@@ -57,9 +58,11 @@ export function NavUser({
               <SidebarMenuButton size="lg" className="aria-expanded:bg-muted" />
             }
           >
-            <Avatar className="size-8 rounded-lg grayscale">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+            <Avatar className="size-8 rounded-lg">
+              <AvatarImage src={displayAvatar} alt={displayName} />
+              <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold text-xs">
+                {displayName.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{displayName}</span>
@@ -79,7 +82,7 @@ export function NavUser({
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <Avatar className="size-8">
-                    <AvatarImage src={user.avatar} alt={displayName} />
+                    <AvatarImage src={displayAvatar} alt={displayName} />
                     <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold">
                       {displayName.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
