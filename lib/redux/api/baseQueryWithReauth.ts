@@ -24,8 +24,18 @@ const API_BASE_URL = rawBase.endsWith('/api/v1')
 export const baseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   credentials: 'include',
-  prepareHeaders: (headers) => {
-    headers.set('Content-Type', 'application/json');
+  prepareHeaders: (headers, { arg }) => {
+    // Do not set Content-Type for FormData so fetch sets the multipart boundary automatically
+    const isFormData =
+      typeof arg === 'object' &&
+      arg !== null &&
+      'body' in arg &&
+      typeof FormData !== 'undefined' &&
+      arg.body instanceof FormData;
+
+    if (!isFormData && !headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
     return headers;
   },
 });

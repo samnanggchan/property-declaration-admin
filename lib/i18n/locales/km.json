@@ -54,9 +54,9 @@
   },
   "dashboard": {
     "totalDeclarations": "លិខិតប្រកាសទាំងអស់",
-    "categories": "ប្រភេទ",
-    "totalBooks": "សៀវភៅសរុប",
-    "popularBooks": "សៀវភៅពេញនិយម"
+    "totalUsers": "អ្នកប្រើប្រាស់សរុប",
+    "recentDeclarations": "លិខិតប្រកាសថ្មីៗ",
+    "pendingDeclarations": "លិខិតប្រកាសរង់ចាំ"
   },
   "auth": {
     "login": "ចូល",

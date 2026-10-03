@@ -66,7 +66,7 @@ const data = {
       icon: <FolderIcon />,
     },
     {
-      title: "Team",
+      title: "Users",
       url: "/team",
       icon: <UsersIcon />,
     },

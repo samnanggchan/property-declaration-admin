@@ -35,6 +35,7 @@ export function NavMain({
 }) {
   const [openItems, setOpenItems] = React.useState<Record<string, boolean>>({
     "Land Declarations": true,
+    "User Management": true,
   });
 
   const toggleOpen = (title: string) => {

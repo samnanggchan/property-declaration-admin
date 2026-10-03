@@ -54,9 +54,9 @@
   },
   "dashboard": {
     "totalDeclarations": "Total Declarations",
-    "categories": "Categories",
-    "totalBooks": "Total Books",
-    "popularBooks": "Popular Books"
+    "totalUsers": "Total Users",
+    "recentDeclarations": "Recent Declarations",
+    "pendingDeclarations": "Pending Declarations"
   },
   "auth": {
     "login": "Login",

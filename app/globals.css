@@ -4,10 +4,7 @@
 
 /* ─── Khmer font class toggled by i18n locale ─── */
 html.font-khmer {
-  font-family: 'Battambang', 'Khmer OS Battambang', 'Khmer OS', sans-serif;
-}
-html.font-khmer * {
-  font-family: inherit;
+  font-family: var(--font-sans), 'Battambang', 'Khmer OS Battambang', sans-serif;
 }
 
 @custom-variant dark (&:is(.dark *));
