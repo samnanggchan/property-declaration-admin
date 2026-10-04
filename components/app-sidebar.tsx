@@ -51,9 +51,9 @@ const data = {
       icon: <FileTextIcon />,
     },
     {
-      title: "Lifecycle",
-      url: "/lifecycle",
-      icon: <ListIcon />,
+      title: "Cadastral Information System",
+      url: "/cis",
+      icon: <FileTextIcon />,
     },
     {
       title: "Analytics",

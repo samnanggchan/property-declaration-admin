@@ -30,8 +30,13 @@ export function SiteHeader() {
     if (path === "/dashboard") return t("nav.dashboard");
     if (path === "/declarations" || path.startsWith("/declarations/"))
       return t("nav.declarations");
-    if (path === "/lifecycle" || path.startsWith("/lifecycle/"))
-      return t("nav.lifecycle");
+    if (
+      path === "/cis" ||
+      path.startsWith("/cis/") ||
+      path === "/lifecycle" ||
+      path.startsWith("/lifecycle/")
+    )
+      return t("nav.cis");
     if (path === "/analytics") return t("nav.analytics");
     if (path === "/projects") return t("nav.projects");
     if (path === "/team" || path.startsWith("/team/")) return t("nav.team");

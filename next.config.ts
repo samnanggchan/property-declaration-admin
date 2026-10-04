@@ -1,7 +1,20 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async redirects() {
+    return [
+      {
+        source: "/lifecycle",
+        destination: "/cis",
+        permanent: false,
+      },
+      {
+        source: "/lifecycle/:path*",
+        destination: "/cis/:path*",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

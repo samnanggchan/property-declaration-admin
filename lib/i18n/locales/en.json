@@ -12,7 +12,8 @@
   "nav": {
     "dashboard": "Dashboard",
     "declarations": "Land Declarations",
-    "lifecycle": "Lifecycle",
+    "cis": "Cadastral Information System",
+    "lifecycle": "Cadastral Information System",
     "analytics": "Analytics",
     "projects": "Projects",
     "team": "Team",
