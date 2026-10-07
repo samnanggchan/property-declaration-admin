@@ -214,6 +214,11 @@ export interface PortraitCadastralData {
   encumbrance?: string; // e.g. "គ្មាន"
   remarks?: string;
 
+  remarksRed?: string;
+  remarksBlue?: string;
+  page2Col1Text?: string;
+  page2Col3Text?: string;
+
   col2CustomText?: string;
 
   /** Whether to include weekday (អាទិត្យ, ចន្ទ...) in the date line */
@@ -265,9 +270,9 @@ export function PortraitCadastralDocument({
           loadedFp.line2Top = 8.5;
         }
         setCalibration((prev) => ({
-          ...prev,
-          ...parsed,
-          fillPos: { ...prev.fillPos, ...loadedFp },
+            ...prev,
+            ...parsed,
+            fillPos: { ...prev.fillPos, ...loadedFp },
         }));
       }
     } catch {}
@@ -747,7 +752,7 @@ export function PortraitCadastralDocument({
                 {docLunar ? (
                   calibration.fillMode ? (
                     <div
-                      className="relative font-medium text-neutral-950 text-[14px] print:text-[12pt] leading-relaxed tracking-wide whitespace-nowrap"
+                      className="relative font-medium text-blue-950 text-[14px] print:text-[12pt] leading-relaxed tracking-wide whitespace-nowrap"
                       style={{
                         width: `${FILL_BLOCK_WIDTH_MM}mm`,
                         height: `${fp.line2Top + 7}mm`,
@@ -949,31 +954,45 @@ export function PortraitCadastralDocument({
                     <tr className="border-b border-dashed border-neutral-400 align-top min-h-[64px]">
                       {/* Col 1: Names and Property Type */}
                       <td className="border-r border-neutral-900 p-2 text-[11px] leading-relaxed">
-                        <div className="font-semibold text-neutral-950">
-                          {ownerNames}
-                        </div>
-                        <div className="mt-0.5 text-neutral-600 text-[10px]">
-                          {data.propertyType || "ទ្រព្យសម្បត្តិរួម"}
-                        </div>
+                        {data.page2Col1Text ? (
+                          <div className="font-semibold text-neutral-950">
+                            {data.page2Col1Text}
+                          </div>
+                        ) : ownerNames ? (
+                          <>
+                            <div className="font-semibold text-neutral-950">
+                              {ownerNames}
+                            </div>
+                            {data.propertyType && (
+                              <div className="mt-0.5 text-neutral-600 text-[10px]">
+                                {data.propertyType}
+                              </div>
+                            )}
+                          </>
+                        ) : null}
                       </td>
 
-                      {/* Col 2: "មើលព័ត៌មាននៅខាងលើ" */}
+                      {/* Col 2: Custom Text */}
                       <td className="border-r border-neutral-900 p-2 text-center text-[10px] leading-relaxed">
-                        <div className="font-medium underline decoration-neutral-400 underline-offset-2">
-                          {data.col2CustomText || "មើលព័ត៌មាននៅខាងលើ"}
-                        </div>
+                        {data.col2CustomText && (
+                          <div className="font-medium underline decoration-neutral-400 underline-offset-2">
+                            {data.col2CustomText}
+                          </div>
+                        )}
                       </td>
 
                       {/* Col 3: Ancestry */}
                       <td className="border-r-2 border-neutral-900 p-2 text-[10px] whitespace-pre-line leading-relaxed">
-                        {ancestryText || "—"}
+                        {data.page2Col3Text || (ownerNames ? ancestryText : "")}
                       </td>
 
                       {/* Col 4: Acquisition Deed (e.g. "ទិញ") */}
                       <td className="border-r border-neutral-900 p-2 text-[11px] leading-relaxed">
-                        <div className="font-bold text-neutral-950">
-                          {data.transferType || "ទិញ"}
-                        </div>
+                        {data.transferType && (
+                          <div className="font-bold text-neutral-950">
+                            {data.transferType}
+                          </div>
+                        )}
                         {data.transferDetails && (
                           <div className="mt-0.5 text-[10px] text-neutral-700">
                             {data.transferDetails}
@@ -983,12 +1002,27 @@ export function PortraitCadastralDocument({
 
                       {/* Col 5: Encumbrance */}
                       <td className="border-r-2 border-neutral-900 p-2 text-center text-[10px]">
-                        {data.encumbrance || "គ្មាន"}
+                        {data.encumbrance || ""}
                       </td>
 
-                      {/* Col 6: Remarks */}
-                      <td className="p-2 text-center text-[10px] text-neutral-600">
-                        {data.remarks || "—"}
+                      {/* Col 6: Remarks (Line 1 Red, Line 2 Blue wrapped under) */}
+                      <td className="p-2 text-left text-[11px] leading-tight">
+                        {data.remarksRed || data.remarksBlue ? (
+                          <div className="flex flex-col gap-0.5">
+                            {data.remarksRed && (
+                              <span className="font-bold text-red-600">
+                                {data.remarksRed}
+                              </span>
+                            )}
+                            {data.remarksBlue && (
+                              <span className="font-semibold text-blue-700 whitespace-pre-line">
+                                {data.remarksBlue}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          data.remarks || ""
+                        )}
                       </td>
                     </tr>
 

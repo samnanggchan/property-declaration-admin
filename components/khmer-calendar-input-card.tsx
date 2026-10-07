@@ -57,10 +57,21 @@ export function KhmerCalendarInputCard({
     if (!lunar) return "";
     if (issueLocation) {
       const months = [
-        "", "មករា", "កុម្ភៈ", "មីនា", "មេសា", "ឧសភា", "មិថុនា",
-        "កក្កដា", "សីហា", "កញ្ញា", "តុលា", "វិច្ឆិកា", "ធ្នូ"
+        "",
+        "មករា",
+        "កុម្ភៈ",
+        "មីនា",
+        "មេសា",
+        "ឧសភា",
+        "មិថុនា",
+        "កក្កដា",
+        "សីហា",
+        "កញ្ញា",
+        "តុលា",
+        "វិច្ឆិកា",
+        "ធ្នូ",
       ];
-      return `ធ្វើនៅ${issueLocation} ថ្ងៃទី${toKhmerDigits(lunar.gregorianDay)} ខែ ${months[lunar.gregorianMonth]} ឆ្នាំ${toKhmerDigits(lunar.gregorianYear)}`;
+      return `ធ្វើនៅ${issueLocation} ថ្ងៃទី${toKhmerDigits(String(lunar.gregorianDay).padStart(2, "0"))} ខែ ${months[lunar.gregorianMonth]} ឆ្នាំ${toKhmerDigits(lunar.gregorianYear)}`;
     }
     return lunar.formattedBen;
   }, [lunar, issueLocation]);
@@ -85,7 +96,7 @@ export function KhmerCalendarInputCard({
             "focus-visible:ring-1 focus-visible:ring-primary focus-visible:bg-background",
             "dark:border-neutral-800 dark:bg-neutral-900/80 dark:text-neutral-100",
             "transition-all duration-150 shadow-2xs",
-            inputClassName
+            inputClassName,
           )}
         />
       </div>
@@ -95,7 +106,7 @@ export function KhmerCalendarInputCard({
         className={cn(
           "min-h-[76px] rounded-xl border border-neutral-200/80 bg-white p-3 shadow-xs",
           "dark:border-neutral-800 dark:bg-neutral-950",
-          "transition-all duration-200 flex flex-col justify-center"
+          "transition-all duration-200 flex flex-col justify-center",
         )}
       >
         {lunar ? (

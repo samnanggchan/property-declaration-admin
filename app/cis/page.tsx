@@ -3,7 +3,6 @@
 import * as React from "react";
 import {
   CalendarDaysIcon,
-  PrinterIcon,
   DownloadIcon,
   RotateCcwIcon,
   SparklesIcon,
@@ -23,50 +22,55 @@ import {
 } from "@/components/portrait-cadastral-document";
 import { cn } from "@/lib/utils";
 
-// Initial sample data matching user screenshot media_1791100916152.png
+// Initial sample data focused strictly on official print-fill requirements
 const DEFAULT_FORM_DATA: PortraitCadastralData = {
-  documentDate: "04.10.2026",
+  // Page 1: Official Issue Date (Dynamic Calculation)
+  documentDate: "08.10.2026",
   issueLocation: "រាជធានីភ្នំពេញ",
 
-  // Owner 1 (Husband)
-  owner1Name: "ស៊ុន ពិសិដ្ឋ",
-  owner1Dob: "15.08.1982",
-  owner1BirthPlace: "ភ្នំពេញ",
-  owner1IdNumber: "010884912(01)/15.03.20",
+  // Page 2: Dynamic Cadastral Register Data (All blank except active remarks)
+  remarksRed: "មកពី",
+  remarksBlue: "ក្បាលដីលេខ ៤២១ (បំបែកក្បាលដី)",
+  page2Col1Text: "",
+  col2CustomText: "",
+  page2Col3Text: "",
+  transferType: "",
+  transferDeedNo: "",
+  transferDeedDate: "",
+  transferDetails: "",
+  encumbrance: "",
+  remarks: "",
+
+  // Blank defaults for unused fields
+  owner1Name: "",
+  owner1Dob: "",
+  owner1BirthPlace: "",
+  owner1IdNumber: "",
   owner1Nationality: "ខ្មែរ",
-  owner1Status: "រៀបការ",
-  owner1Father: "ស៊ុន សុផល",
-  owner1Mother: "ម៉ម សុវណ្ណ",
+  owner1Status: "",
+  owner1Father: "",
+  owner1Mother: "",
 
-  // Owner 2 (Wife)
-  owner2Name: "កែវ សោភា",
-  owner2Dob: "10.11.1986",
-  owner2BirthPlace: "កណ្តាល",
-  owner2IdNumber: "010352372(02)/12.08.18",
+  owner2Name: "",
+  owner2Dob: "",
+  owner2BirthPlace: "",
+  owner2IdNumber: "",
   owner2Nationality: "ខ្មែរ",
-  owner2Status: "រៀបការ",
-  owner2Father: "កែវ គឹមសាន",
-  owner2Mother: "អ៊ុច ផល្លា",
+  owner2Status: "",
+  owner2Father: "",
+  owner2Mother: "",
 
-  // Property & Transaction
-  propertyType: "ទ្រព្យសម្បត្តិរួម (ទ្រព្យសម្បត្តិប្រពន្ធ)",
-  parcelNumber: "8480",
-  sheetNumber: "១២០៩០៦០៥",
-  location: "រាជធានីភ្នំពេញ ខណ្ឌពោធិ៍សែនជ័យ សង្កាត់ចោមចៅទី១",
-  transferType: "ទិញ",
-  transferDeedNo: "០១/២៦.ស.រ.អ",
-  transferDeedDate: "04.10.2026",
-  transferDetails: "កិច្ចសន្យាទិញ-លក់ផ្តាច់",
-  encumbrance: "គ្មាន",
-  remarks: "—",
-  col2CustomText: "មើលព័ត៌មាននៅខាងលើ",
+  propertyType: "",
+  parcelNumber: "",
+  sheetNumber: "",
+  location: "",
 };
 
 export default function CisPage() {
   const [formData, setFormData] =
     React.useState<PortraitCadastralData>(DEFAULT_FORM_DATA);
   const [viewMode, setViewMode] = React.useState<"split" | "form" | "preview">(
-    "split"
+    "split",
   );
 
   const updateField = (key: keyof PortraitCadastralData, value: string) => {
@@ -81,6 +85,17 @@ export default function CisPage() {
     setFormData({
       documentDate: "",
       issueLocation: "រាជធានីភ្នំពេញ",
+      remarksRed: "",
+      remarksBlue: "",
+      page2Col1Text: "",
+      col2CustomText: "",
+      page2Col3Text: "",
+      transferType: "",
+      transferDeedNo: "",
+      transferDeedDate: "",
+      transferDetails: "",
+      encumbrance: "",
+      remarks: "",
       owner1Name: "",
       owner1Dob: "",
       owner1BirthPlace: "",
@@ -97,17 +112,10 @@ export default function CisPage() {
       owner2Status: "",
       owner2Father: "",
       owner2Mother: "",
-      propertyType: "ទ្រព្យសម្បត្តិរួម",
+      propertyType: "",
       parcelNumber: "",
       sheetNumber: "",
       location: "",
-      transferType: "ទិញ",
-      transferDeedNo: "",
-      transferDeedDate: "",
-      transferDetails: "",
-      encumbrance: "គ្មាន",
-      remarks: "—",
-      col2CustomText: "មើលព័ត៌មាននៅខាងលើ",
     });
   };
 
@@ -128,7 +136,7 @@ export default function CisPage() {
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground font-khmer">
-            អត្រានុកូលដ្ឋានម្ចាស់អចលនវត្ថុ & ប្រតិទិនចន្ទគតិខ្មែរ
+            ទម្រង់បំពេញទិន្នន័យលើប័ណ្ណកម្មសិទ្ធិ & សៀវភៅគោលបញ្ជីដីធ្លី
           </p>
         </div>
 
@@ -210,166 +218,45 @@ export default function CisPage() {
             ? "grid-cols-1 lg:grid-cols-12"
             : viewMode === "form"
               ? "grid-cols-1 max-w-4xl mx-auto w-full"
-              : "grid-cols-1"
+              : "grid-cols-1",
         )}
       >
-        {/* ── Section 1: Form Inputs (Matching media_1791100916152.png) ──────── */}
+        {/* ── Section 1: Form Inputs ────────────────────────────────────────── */}
         {(viewMode === "split" || viewMode === "form") && (
           <div
             className={cn(
-              "space-y-6 rounded-xl border border-border/80 bg-card p-5 shadow-xs no-print",
-              viewMode === "split" ? "lg:col-span-6" : "w-full"
+              "space-y-5 rounded-xl border border-border/80 bg-card p-5 shadow-xs no-print",
+              viewMode === "split" ? "lg:col-span-6" : "w-full",
             )}
           >
+            {/* Header */}
             <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center gap-2">
                 <LayoutGridIcon className="size-4 text-primary" />
                 <h2 className="text-sm font-bold text-foreground font-khmer">
-                  ទម្រង់បញ្ចូលកាលបរិច្ឆេទ & អត្តសញ្ញាណ (Date & Owner Inputs)
+                  ទម្រង់បញ្ចូលទិន្នន័យបោះពុម្ព (Print Fill-In Form)
                 </h2>
               </div>
-              <span className="text-[11px] text-muted-foreground">
-                Live Dynamic Calculation
-              </span>
+              <Badge
+                variant="outline"
+                className="text-[10px] bg-primary/10 text-primary border-primary/20"
+              >
+                ទិន្នន័យជាក់ស្តែង
+              </Badge>
             </div>
 
-            {/* 3-Column Grid (Direct match of media_1791100916152.png) */}
-            <div className="space-y-4">
-              <div className="text-xs font-semibold text-primary uppercase tracking-wide">
-                ព័ត៌មានម្ចាស់កម្មសិទ្ធិ (កាលបរិច្ឆេទចន្ទគតិស្វ័យប្រវត្តិ)
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Column 1: Husband DOB + Status */}
-                <div className="space-y-3">
-                  <KhmerCalendarInputCard
-                    label="ថ្ងៃខែឆ្នាំកំណើត (ប្តី)"
-                    value={formData.owner1Dob || ""}
-                    onChange={(v) => updateField("owner1Dob", v)}
-                    placeholder="15.08.1982"
-                  />
-
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">
-                      ស្ថានភាព
-                    </Label>
-                    <Input
-                      value={formData.owner1Status || ""}
-                      onChange={(e) =>
-                        updateField("owner1Status", e.target.value)
-                      }
-                      placeholder="រៀបការ"
-                      className="h-10 rounded-full border-neutral-200/90 bg-neutral-100/80 px-4 text-xs dark:bg-neutral-900/80"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">
-                      ឈ្មោះប្តី (Husband Name)
-                    </Label>
-                    <Input
-                      value={formData.owner1Name || ""}
-                      onChange={(e) => updateField("owner1Name", e.target.value)}
-                      placeholder="ស៊ុន ពិសិដ្ឋ"
-                      className="h-10 rounded-full border-neutral-200/90 bg-neutral-100/80 px-4 text-xs font-medium dark:bg-neutral-900/80"
-                    />
-                  </div>
-                </div>
-
-                {/* Column 2: ID Number + Nationality + Issue Date */}
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
-                      អត្តសញ្ញាណប័ណ្ណលេខ
-                    </Label>
-                    <Input
-                      value={formData.owner1IdNumber || ""}
-                      onChange={(e) =>
-                        updateField("owner1IdNumber", e.target.value)
-                      }
-                      placeholder="010884912(01)/15.03.20"
-                      className="h-10 rounded-full border-neutral-200/90 bg-neutral-100/80 px-4 text-sm font-mono tracking-wide text-neutral-900 dark:bg-neutral-900/80 dark:text-neutral-100"
-                    />
-                    <div className="min-h-[76px] rounded-xl border border-dashed border-neutral-200 bg-neutral-50/50 p-2.5 flex items-center justify-center text-center dark:border-neutral-800 dark:bg-neutral-900/30">
-                      <p className="text-[11px] text-muted-foreground">
-                        លេខអត្តសញ្ញាណប័ណ្ណសញ្ជាតិខ្មែរ
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">
-                      សញ្ជាតិ
-                    </Label>
-                    <Input
-                      value={formData.owner1Nationality || ""}
-                      onChange={(e) =>
-                        updateField("owner1Nationality", e.target.value)
-                      }
-                      placeholder="ខ្មែរ"
-                      className="h-10 rounded-full border-neutral-200/90 bg-neutral-100/80 px-4 text-xs dark:bg-neutral-900/80"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">
-                      ទីតាំងធ្វើឯកសារ
-                    </Label>
-                    <Input
-                      value={formData.issueLocation || ""}
-                      onChange={(e) =>
-                        updateField("issueLocation", e.target.value)
-                      }
-                      placeholder="រាជធានីភ្នំពេញ"
-                      className="h-10 rounded-full border-neutral-200/90 bg-neutral-100/80 px-4 text-xs dark:bg-neutral-900/80"
-                    />
-                  </div>
-                </div>
-
-                {/* Column 3: Wife DOB + Status */}
-                <div className="space-y-3">
-                  <KhmerCalendarInputCard
-                    label="ថ្ងៃខែឆ្នាំកំណើត (ប្រពន្ធ)"
-                    value={formData.owner2Dob || ""}
-                    onChange={(v) => updateField("owner2Dob", v)}
-                    placeholder="10.11.1986"
-                  />
-
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">
-                      ស្ថានភាព
-                    </Label>
-                    <Input
-                      value={formData.owner2Status || ""}
-                      onChange={(e) =>
-                        updateField("owner2Status", e.target.value)
-                      }
-                      placeholder="រៀបការ"
-                      className="h-10 rounded-full border-neutral-200/90 bg-neutral-100/80 px-4 text-xs dark:bg-neutral-900/80"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">
-                      ឈ្មោះប្រពន្ធ (Wife Name)
-                    </Label>
-                    <Input
-                      value={formData.owner2Name || ""}
-                      onChange={(e) => updateField("owner2Name", e.target.value)}
-                      placeholder="កែវ សោភា"
-                      className="h-10 rounded-full border-neutral-200/90 bg-neutral-100/80 px-4 text-xs font-medium dark:bg-neutral-900/80"
-                    />
-                  </div>
+            {/* ── Card 1: Page 1 Document Issue Date (Matching User Screenshot) ── */}
+            <div className="rounded-xl border border-border/70 bg-neutral-50/60 dark:bg-neutral-900/40 p-4 space-y-3 font-khmer shadow-2xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CalendarDaysIcon className="size-4 text-primary" />
+                  <h3 className="text-xs font-bold text-foreground">
+                    កាលបរិច្ឆេទធ្វើលិខិតផ្លូវការ (Document Issue Date)
+                  </h3>
                 </div>
               </div>
-            </div>
 
-            {/* Document Date with Live Khmer Lunar Preview */}
-            <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-3">
-              <div className="text-xs font-semibold text-foreground">
-                កាលបរិច្ឆេទធ្វើលិខិតផ្លូវការ (Document Issue Date)
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-3">
                 <KhmerCalendarInputCard
                   label="កាលបរិច្ឆេទធ្វើលិខិត"
                   value={formData.documentDate || ""}
@@ -377,210 +264,77 @@ export default function CisPage() {
                   issueLocation={formData.issueLocation || "រាជធានីភ្នំពេញ"}
                   placeholder="04.10.2026"
                 />
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
-                    អត្ថបទជួរឈរទី២ (Col 2 Remark)
-                  </Label>
-                  <Input
-                    value={formData.col2CustomText || ""}
-                    onChange={(e) =>
-                      updateField("col2CustomText", e.target.value)
-                    }
-                    placeholder="មើលព័ត៌មាននៅខាងលើ"
-                    className="h-10 rounded-full border-neutral-200/90 bg-neutral-100/80 px-4 text-xs dark:bg-neutral-900/80"
-                  />
-                  <div className="min-h-[76px] rounded-xl border border-neutral-200/80 bg-white p-3 text-xs text-neutral-600 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400 flex items-center">
-                    <span>
-                      នឹងបង្ហាញក្នុងជួរឈរលេខ ២: «{formData.col2CustomText || "មើលព័ត៌មាននៅខាងលើ"}»
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
 
-            {/* Ancestry & Property Details */}
-            <div className="space-y-4 pt-2 border-t">
-              <div className="text-xs font-semibold text-primary uppercase tracking-wide">
-                សាវតារ និងព័ត៌មានកិច្ចសន្យា (Ancestry & Deed Info)
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium text-foreground/80">
-                    ឪពុក-ម្តាយប្តី (Father & Mother)
-                  </Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      value={formData.owner1Father || ""}
-                      onChange={(e) =>
-                        updateField("owner1Father", e.target.value)
-                      }
-                      placeholder="ឪពុក"
-                      className="h-9 text-xs"
-                    />
-                    <Input
-                      value={formData.owner1Mother || ""}
-                      onChange={(e) =>
-                        updateField("owner1Mother", e.target.value)
-                      }
-                      placeholder="ម្តាយ"
-                      className="h-9 text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium text-foreground/80">
-                    ឪពុក-ម្តាយប្រពន្ធ (Father & Mother)
-                  </Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      value={formData.owner2Father || ""}
-                      onChange={(e) =>
-                        updateField("owner2Father", e.target.value)
-                      }
-                      placeholder="ឪពុក"
-                      className="h-9 text-xs"
-                    />
-                    <Input
-                      value={formData.owner2Mother || ""}
-                      onChange={(e) =>
-                        updateField("owner2Mother", e.target.value)
-                      }
-                      placeholder="ម្តាយ"
-                      className="h-9 text-xs"
-                    />
-                  </div>
+            {/* ── Card 2: Page 2 Dynamic Cadastral Register Data ──────────────── */}
+            <div className="rounded-xl border border-border/70 bg-neutral-50/60 dark:bg-neutral-900/40 p-4 space-y-4 font-khmer shadow-2xs">
+              <div className="flex items-center justify-between border-b pb-2.5">
+                <div className="flex items-center gap-2">
+                  <FileTextIcon className="size-4 text-primary" />
+                  <h3 className="text-xs font-bold text-foreground">
+                    ទំព័រទី២ — សៀវភៅគោលបញ្ជីដីធ្លី
+                  </h3>
                 </div>
               </div>
 
-              {/* Parcel & Location Details (Shown on Page 1) */}
-              <div className="space-y-3 pt-2 border-t">
-                <div className="text-xs font-semibold text-primary uppercase tracking-wide">
-                  ព័ត៌មានក្បាលដី និងទីតាំង (Parcel & Location - Page 1)
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">
-                      វិញ្ញាបនបត្រលេខ
+              {/* ── Column 6: សេចក្តីផ្សេងៗ (Remarks: Red line + Blue line) ── */}
+              <div className="rounded-lg border border-border/80 bg-white dark:bg-neutral-950 p-3.5 space-y-3">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-xs font-bold text-foreground">
+                      ជួរឈរទី៦ — សេចក្តីផ្សេងៗ (Col 6 Remarks / Notes)
                     </Label>
-                    <Input
-                      value={formData.certNumber || ""}
-                      onChange={(e) => updateField("certNumber", e.target.value)}
-                      placeholder="១២០៩០៦០៥- ៤៥៧៥"
-                      className="h-9 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">
-                      ក្បាលដីលេខ
-                    </Label>
-                    <Input
-                      value={formData.parcelNumber || ""}
-                      onChange={(e) => updateField("parcelNumber", e.target.value)}
-                      placeholder="8480"
-                      className="h-9 text-xs font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">
-                      សន្លឹកផែនទីលេខ
-                    </Label>
-                    <Input
-                      value={formData.sheetNumber || ""}
-                      onChange={(e) => updateField("sheetNumber", e.target.value)}
-                      placeholder="១២០៩០៦០៥"
-                      className="h-9 text-xs font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">
-                      ទំហំដី
-                    </Label>
-                    <Input
-                      value={formData.area || ""}
-                      onChange={(e) => updateField("area", e.target.value)}
-                      placeholder="93 ម²"
-                      className="h-9 text-xs"
-                    />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">
-                      ប្រភេទដី
-                    </Label>
+                <div className="grid grid-cols-1 gap-3">
+                  {/* Line 1: Red Text */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-block size-2 rounded-full bg-red-600 ring-2 ring-red-200 dark:ring-red-950" />
+                        <Label className="text-xs font-semibold text-red-600 dark:text-red-400">
+                          បន្ទាត់ទី១ (ពណ៌ក្រហម • Bold Red Text)
+                        </Label>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        ជួរខាងលើគេ
+                      </span>
+                    </div>
                     <Input
-                      value={formData.landType || ""}
-                      onChange={(e) => updateField("landType", e.target.value)}
-                      placeholder="សាងសង់"
-                      className="h-9 text-xs"
+                      value={formData.remarksRed ?? ""}
+                      onChange={(e) =>
+                        updateField("remarksRed", e.target.value)
+                      }
+                      placeholder="ឧ. មកពី"
+                      className="h-9 text-xs border-red-300 dark:border-red-900/50 focus-visible:ring-red-500 font-bold text-red-600 dark:text-red-400 bg-red-50/20 dark:bg-neutral-950"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-foreground/80">
-                      ទីតាំងស្ថិតនៅ
-                    </Label>
-                    <Input
-                      value={formData.location || ""}
-                      onChange={(e) => updateField("location", e.target.value)}
-                      placeholder="រាជធានីភ្នំពេញ ខណ្ឌពោធិ៍សែនជ័យ សង្កាត់ចោមចៅទី១"
-                      className="h-9 text-xs"
-                    />
-                  </div>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium text-foreground/80">
-                    ប្រភេទទ្រព្យ (Property Type)
-                  </Label>
-                  <Input
-                    value={formData.propertyType || ""}
-                    onChange={(e) => updateField("propertyType", e.target.value)}
-                    placeholder="ទ្រព្យសម្បត្តិរួម"
-                    className="h-9 text-xs"
-                  />
+                  {/* Line 2: Blue Text (wraps under Red) */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-block size-2 rounded-full bg-blue-600 ring-2 ring-blue-200 dark:ring-blue-950" />
+                        <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                          បន្ទាត់ទី២ (ពណ៌ខៀវ រុំចុះក្រោម • Blue Text)
+                        </Label>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        រុំចុះក្រោមបន្ទាត់ទី១
+                      </span>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={formData.remarksBlue ?? ""}
+                      onChange={(e) =>
+                        updateField("remarksBlue", e.target.value)
+                      }
+                      placeholder="ឧ. ក្បាលដីលេខ ៤២១ (បំបែកក្បាលដី)"
+                      className="flex w-full rounded-md border border-blue-300 dark:border-blue-900/50 bg-blue-50/20 dark:bg-neutral-950 px-3 py-2 text-xs font-medium text-blue-600 dark:text-blue-400 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 resize-none font-khmer"
+                    />
+                  </div>
                 </div>
-
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium text-foreground/80">
-                    ការផ្លាស់ប្តូរ (Deed Type)
-                  </Label>
-                  <Input
-                    value={formData.transferType || ""}
-                    onChange={(e) => updateField("transferType", e.target.value)}
-                    placeholder="ទិញ"
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium text-foreground/80">
-                    បន្ទុកលើអចលនវត្ថុ
-                  </Label>
-                  <Input
-                    value={formData.encumbrance || ""}
-                    onChange={(e) => updateField("encumbrance", e.target.value)}
-                    placeholder="គ្មាន"
-                    className="h-9 text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-foreground/80">
-                  លេខចារឹកដោយសង្ខេបនៃលិខិតសញ្ញា ឬ សាលក្រមតុលាការ
-                </Label>
-                <Input
-                  value={formData.transferDetails || ""}
-                  onChange={(e) =>
-                    updateField("transferDetails", e.target.value)
-                  }
-                  placeholder="កិច្ចសន្យាទិញ-លក់ផ្តាច់"
-                  className="h-9 text-xs"
-                />
               </div>
             </div>
           </div>
@@ -594,7 +348,7 @@ export default function CisPage() {
               ? "lg:col-span-6"
               : viewMode === "preview"
                 ? "w-full"
-                : "hidden print:block print:w-full"
+                : "hidden print:block print:w-full",
           )}
         >
           <PortraitCadastralDocument

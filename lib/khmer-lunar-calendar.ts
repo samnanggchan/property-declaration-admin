@@ -80,8 +80,8 @@ export function gregorianToKhmerLunar(
   // 2. Full lunar line with weekday: ថ្ងៃអាទិត្យ ៨រោច ខែភទ្របទ ឆ្នាំមមី អដ្ឋស័ក ពុទ្ធសករាជ ២៥៧០
   const fullLunarLine = `ថ្ងៃ${k.dayOfWeekName} ${toKhmerDigits(k.day)}${k.moonPhaseName} ខែ${k.monthName} ឆ្នាំ${k.animalYearName} ${k.sakName} ពុទ្ធសករាជ ${toKhmerDigits(k.beYear)}`;
 
-  // 3. Full format with gregorian reference: ថ្ងៃអាទិត្យ ៨រោច... ត្រូវនឹងថ្ងៃទី៤ ខែ តុលា ឆ្នាំ២០២៦
-  const formatted = `${fullLunarLine} ត្រូវនឹងថ្ងៃទី${toKhmerDigits(day)} ខែ ${khmerGregMonth} ឆ្នាំ${toKhmerDigits(year)}`;
+  // 3. Full format with gregorian reference: ថ្ងៃអាទិត្យ ៨រោច... ត្រូវនឹងថ្ងៃទី០៤ ខែ តុលា ឆ្នាំ២០២៦
+  const formatted = `${fullLunarLine} ត្រូវនឹងថ្ងៃទី${toKhmerDigits(String(day).padStart(2, "0"))} ខែ ${khmerGregMonth} ឆ្នាំ${toKhmerDigits(year)}`;
 
   const formattedBen = `បិណ្ឌ ${toKhmerDigits(ben)} (Ben ${ben})`;
 
