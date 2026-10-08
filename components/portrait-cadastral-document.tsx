@@ -1,175 +1,18 @@
 "use client";
 
 import * as React from "react";
-import {
-  SlidersHorizontalIcon,
-  RotateCcwIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  EyeIcon,
-  EyeOffIcon,
-  CopyIcon,
-} from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
 import { cn, toKhmerNum } from "@/lib/utils";
 import {
   dateStringToKhmerLunar,
   KhmerLunarDate,
 } from "@/lib/khmer-lunar-calendar";
-
-const SHOW_CALIBRATION_TOOLBAR = true;
-
-const FILL_BLOCK_WIDTH_MM = 140;
-
-const STORAGE_KEY = "cadastral_print_calibration_v2";
-
-export interface FillSlotPositions {
-  weekday: number;
-  lunarMonth: number;
-  zodiac: number;
-  be: number;
-  gDay: number;
-  gMonth: number;
-  gYear: number;
-  line2Top: number;
-}
-
-export const DEFAULT_FILL_POS: FillSlotPositions = {
-  weekday: 41,
-  lunarMonth: 70,
-  zodiac: 90.5,
-  be: 128,
-  gDay: 80,
-  gMonth: 90,
-  gYear: 109.5,
-  line2Top: 8.5,
-};
-
-export interface PrintCalibrationSettings {
-  bottomMargin: number;
-  marginRight: number;
-  shortYear: boolean;
-  fillMode: boolean;
-  showGuide: boolean;
-  fillPos: FillSlotPositions;
-}
-
-export const DEFAULT_PRINT_CALIBRATION: PrintCalibrationSettings = {
-  bottomMargin: 52,
-  marginRight: 0,
-  shortYear: true,
-  fillMode: true,
-  showGuide: true,
-  fillPos: DEFAULT_FILL_POS,
-};
-
-function saveCalibration(next: PrintCalibrationSettings) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  } catch {
-    // ignore
-  }
-}
-
-interface NumberNudgeControlProps {
-  label: string;
-  subLabel?: string;
-  value: number;
-  min?: number;
-  max?: number;
-  step?: number;
-  unit?: string;
-  onChange: (val: number) => void;
-}
-
-function NumberNudgeControl({
-  label,
-  subLabel,
-  value,
-  min = 0,
-  max = 150,
-  step = 0.5,
-  unit = "mm",
-  onChange,
-}: NumberNudgeControlProps) {
-  return (
-    <div className="bg-white dark:bg-neutral-900/90 p-2.5 rounded-lg border border-neutral-200 dark:border-neutral-800 flex flex-col justify-between shadow-xs">
-      <div className="flex items-center justify-between text-xs mb-1">
-        <span className="font-medium text-neutral-800 dark:text-neutral-200">
-          {label}
-        </span>
-        <span className="font-mono text-[11px] font-semibold text-primary px-1.5 py-0.5 rounded bg-primary/10">
-          {value} {unit}
-        </span>
-      </div>
-      {subLabel && (
-        <span className="text-[10px] text-neutral-500 leading-tight mb-2">
-          {subLabel}
-        </span>
-      )}
-      <div className="flex items-center gap-1.5">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 w-7 p-0 text-xs font-bold shrink-0"
-          onClick={() =>
-            onChange(Math.max(min, Math.round((value - step) * 10) / 10))
-          }
-        >
-          -
-        </Button>
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="flex-1 accent-primary h-1.5 cursor-pointer"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 w-7 p-0 text-xs font-bold shrink-0"
-          onClick={() =>
-            onChange(Math.min(max, Math.round((value + step) * 10) / 10))
-          }
-        >
-          +
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function FillSlot({
-  left,
-  top = 0,
-  guide,
-  children,
-}: {
-  left: number;
-  top?: number;
-  guide: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <span
-      className={cn(
-        "absolute",
-        guide &&
-          "outline outline-1 outline-dashed outline-sky-400/70 print:outline-none",
-      )}
-      style={{ left: `${left}mm`, top: `${top}mm` }}
-    >
-      {children}
-    </span>
-  );
-}
+import {
+  CadastralDateFill,
+  DATE_BLOCK,
+  KHMER_GREGORIAN_MONTHS,
+} from "@/components/cis-date-fill";
 
 export interface PortraitCadastralData {
   documentDate?: string;
@@ -231,86 +74,14 @@ interface PortraitCadastralDocumentProps {
   showPrintButton?: boolean;
 }
 
-const KHMER_GREGORIAN_MONTHS = [
-  "",
-  "មករា",
-  "កុម្ភៈ",
-  "មីនា",
-  "មេសា",
-  "ឧសភា",
-  "មិថុនា",
-  "កក្កដា",
-  "សីហា",
-  "កញ្ញា",
-  "តុលា",
-  "វិច្ឆិកា",
-  "ធ្នូ",
-];
-
 export function PortraitCadastralDocument({
   data,
   className,
 }: PortraitCadastralDocumentProps) {
-  const [activePageTab] = React.useState<"all" | "page1" | "page2">("all");
-  const [page1Mode, setPage1Mode] = React.useState<"template" | "full">(
-    "template",
-  );
-  const [calibration, setCalibration] =
-    React.useState<PrintCalibrationSettings>(DEFAULT_PRINT_CALIBRATION);
-  const [showCalibrationPanel, setShowCalibrationPanel] = React.useState(false);
-
-  // Load saved calibration (merged, so new fields always get defaults)
-  React.useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const loadedFp = parsed.fillPos ?? {};
-        if (loadedFp.line2Top === 7) {
-          loadedFp.line2Top = 8.5;
-        }
-        setCalibration((prev) => ({
-            ...prev,
-            ...parsed,
-            fillPos: { ...prev.fillPos, ...loadedFp },
-        }));
-      }
-    } catch {}
-  }, []);
-
-  const updateCalibration = (updates: Partial<PrintCalibrationSettings>) => {
-    setCalibration((prev) => {
-      const next = { ...prev, ...updates };
-      saveCalibration(next);
-      return next;
-    });
-  };
-
-  const updateFillPos = (key: keyof FillSlotPositions, value: number) => {
-    setCalibration((prev) => {
-      const next = { ...prev, fillPos: { ...prev.fillPos, [key]: value } };
-      saveCalibration(next);
-      return next;
-    });
-  };
-
-  const resetCalibration = () => {
-    setCalibration(DEFAULT_PRINT_CALIBRATION);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {}
-  };
-
-  const copyFillPos = () => {
-    const body = Object.entries(calibration.fillPos)
-      .map(([k, v]) => `  ${k}: ${v},`)
-      .join("\n");
-    const text = `export const DEFAULT_FILL_POS: FillSlotPositions = {\n${body}\n};`;
-    navigator.clipboard.writeText(text).then(
-      () => toast.success("Copied DEFAULT_FILL_POS"),
-      () => toast.error("Copy failed"),
-    );
-  };
+  /** true = print only the values onto the pre-printed paper form */
+  const [fillMode, setFillMode] = React.useState(true);
+  /** grey printed words + dashed boxes on screen (never printed) */
+  const [showGuide, setShowGuide] = React.useState(true);
 
   const docLunar: KhmerLunarDate | null = React.useMemo(() => {
     if (!data.documentDate) return null;
@@ -356,9 +127,6 @@ export function PortraitCadastralDocument({
     data.owner2Mother,
   ]);
 
-  const fp = calibration.fillPos;
-  const guide = calibration.showGuide;
-
   return (
     <div
       id="printable-document"
@@ -368,228 +136,35 @@ export function PortraitCadastralDocument({
       )}
     >
       <div className="flex flex-col gap-6 w-full max-w-[210mm] items-center print:gap-0 print:w-full print:max-w-none print:m-0 print:p-0">
-        {/* ── Calibration Toolbar (screen only, never printed) ── */}
-        {SHOW_CALIBRATION_TOOLBAR && (
-          <div className="print:hidden w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/60 p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={showCalibrationPanel ? "secondary" : "outline"}
-                  size="sm"
-                  onClick={() => setShowCalibrationPanel(!showCalibrationPanel)}
-                  className="h-8 gap-1.5 text-xs font-khmer font-medium"
-                >
-                  <SlidersHorizontalIcon className="size-3.5 text-primary" />
-                  <span>កែសម្រួលទីតាំងអក្សរ (Spacing & Margins)</span>
-                  {showCalibrationPanel ? (
-                    <ChevronUpIcon className="size-3.5" />
-                  ) : (
-                    <ChevronDownIcon className="size-3.5" />
-                  )}
-                </Button>
+        {/* ── Screen-only switches (never printed) ── */}
+        <div className="print:hidden flex w-full items-center gap-2">
+          <Button
+            variant={fillMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFillMode((v) => !v)}
+            className="h-7 text-xs px-2.5 font-khmer"
+          >
+            {fillMode ? "បំពេញលើក្រដាសពុម្ព" : "បោះពុម្ពពេញលេញ"}
+          </Button>
 
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "text-[11px] font-khmer",
-                    calibration.fillMode
-                      ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
-                      : "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30",
-                  )}
-                >
-                  {calibration.fillMode
-                    ? "របៀប៖ បំពេញលើក្រដាសពុម្ពស្រាប់"
-                    : "របៀប៖ បោះពុម្ពពេញលេញ"}
-                </Badge>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={calibration.fillMode ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    const nextFill = !calibration.fillMode;
-                    updateCalibration({ fillMode: nextFill });
-                    setPage1Mode(nextFill ? "template" : "full");
-                  }}
-                  className="h-7 text-xs px-2.5 font-khmer"
-                >
-                  {calibration.fillMode
-                    ? "បំពេញលើក្រដាសពុម្ព"
-                    : "បោះពុម្ពពេញលេញ"}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    updateCalibration({ showGuide: !calibration.showGuide })
-                  }
-                  className="h-7 text-xs px-2 font-khmer text-neutral-600 dark:text-neutral-400"
-                  title="បង្ហាញ/លាក់ ស៊ុតចំណុចនៅលើអេក្រង់ (មិនប៉ះពាល់ការបោះពុម្ព)"
-                >
-                  {calibration.showGuide ? (
-                    <EyeIcon className="size-3.5 mr-1" />
-                  ) : (
-                    <EyeOffIcon className="size-3.5 mr-1" />
-                  )}
-                  {calibration.showGuide ? "ស៊ុតគំរូ: បើក" : "ស៊ុតគំរូ: បិទ"}
-                </Button>
-              </div>
-            </div>
-
-            {showCalibrationPanel && (
-              <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-800 space-y-3 font-khmer text-xs">
-                <p className="text-[11px] text-neutral-500">
-                  តម្លៃទាំងអស់វាស់ពីគែមឆ្វេងនៃប្លុកកាលបរិច្ឆេទ។ បង្កើនតម្លៃ =
-                  រំកិលអក្សរទៅស្តាំ។ ចំណុចនីមួយៗឯករាជ្យពីគ្នា។
-                </p>
-
-                {/* Line 1 */}
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-semibold text-blue-950 dark:text-blue-950">
-                    បន្ទាត់ទី១ (ចន្ទគតិ)
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    <NumberNudgeControl
-                      label="ថ្ងៃ + កើត/រោច"
-                      subLabel="បន្ទាប់ពី ថ្ងៃ"
-                      value={fp.weekday}
-                      onChange={(v) => updateFillPos("weekday", v)}
-                    />
-                    <NumberNudgeControl
-                      label="ខែ"
-                      subLabel="បន្ទាប់ពី ខែ"
-                      value={fp.lunarMonth}
-                      onChange={(v) => updateFillPos("lunarMonth", v)}
-                    />
-                    <NumberNudgeControl
-                      label="ឆ្នាំ + ស័ក"
-                      subLabel="បន្ទាប់ពី ឆ្នាំ (កុំឲ្យជាន់ ឆ្នាំ)"
-                      value={fp.zodiac}
-                      onChange={(v) => updateFillPos("zodiac", v)}
-                    />
-                    <NumberNudgeControl
-                      label="ព.ស. ២៥__"
-                      subLabel="ត្រូវធ្លាក់លើចុច ... ក្រោយ ២៥"
-                      value={fp.be}
-                      onChange={(v) => updateFillPos("be", v)}
-                    />
-                  </div>
-                </div>
-
-                {/* Line 2 */}
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-semibold text-blue-950 dark:text-blue-950">
-                    បន្ទាត់ទី២ (សកល)
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    <NumberNudgeControl
-                      label="ថ្ងៃទី"
-                      subLabel="បន្ទាប់ពី ថ្ងៃទី (កុំឲ្យជាន់ ទី)"
-                      value={fp.gDay}
-                      onChange={(v) => updateFillPos("gDay", v)}
-                    />
-                    <NumberNudgeControl
-                      label="ខែ (សកល)"
-                      subLabel="បន្ទាប់ពី ខែ"
-                      value={fp.gMonth}
-                      onChange={(v) => updateFillPos("gMonth", v)}
-                    />
-                    <NumberNudgeControl
-                      label="ឆ្នាំ២០__"
-                      subLabel="ត្រូវធ្លាក់លើចុច ... ក្រោយ ២០"
-                      value={fp.gYear}
-                      onChange={(v) => updateFillPos("gYear", v)}
-                    />
-                    <NumberNudgeControl
-                      label="កម្ពស់បន្ទាត់ទី២"
-                      subLabel="ចម្ងាយពីបន្ទាត់ទី១ (ធំ = ចុះក្រោម)"
-                      value={fp.line2Top}
-                      min={0}
-                      max={20}
-                      step={0.5}
-                      onChange={(v) => updateFillPos("line2Top", v)}
-                    />
-                  </div>
-                </div>
-
-                {/* Whole block */}
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
-                    ប្លុកទាំងមូល
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    <NumberNudgeControl
-                      label="ទីតាំងបញ្ឈរ (បាតក្រោម)"
-                      subLabel="បង្កើន = រំកិលឡើងលើ"
-                      value={calibration.bottomMargin}
-                      min={10}
-                      max={100}
-                      step={1}
-                      onChange={(v) => updateCalibration({ bottomMargin: v })}
-                    />
-                    <NumberNudgeControl
-                      label="គម្លាតស្តាំ"
-                      subLabel="បង្កើន = រំកិលទៅឆ្វេង"
-                      value={calibration.marginRight}
-                      min={-20}
-                      max={40}
-                      step={1}
-                      onChange={(v) => updateCalibration({ marginRight: v })}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
-                  <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={calibration.shortYear}
-                      onChange={(e) =>
-                        updateCalibration({ shortYear: e.target.checked })
-                      }
-                      className="rounded border-neutral-300 dark:border-neutral-700"
-                    />
-                    <span className="text-neutral-700 dark:text-neutral-300">
-                      ឆ្នាំកាត់ ២ខ្ទង់ (ឧ. ៧០ និង ២៦ ព្រោះលើក្រដាសមាន ព.ស. ២៥..
-                      និង ឆ្នាំ២០..)
-                    </span>
-                  </label>
-
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={copyFillPos}
-                      className="h-7 text-xs gap-1"
-                    >
-                      <CopyIcon className="size-3" />
-                      ចម្លងតម្លៃ (Copy)
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={resetCalibration}
-                      className="h-7 text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
-                    >
-                      <RotateCcwIcon className="size-3 mr-1" />
-                      កំណត់ឡើងវិញ (Reset)
-                    </Button>
-                  </div>
-                </div>
-              </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowGuide((v) => !v)}
+            className="h-7 text-xs px-2 font-khmer text-neutral-600 dark:text-neutral-400"
+            title="បង្ហាញ/លាក់ អក្សរពុម្ពប្រផេះ និងស៊ុតចំណុច នៅលើអេក្រង់ — មិនបោះពុម្ព"
+          >
+            {showGuide ? (
+              <EyeIcon className="size-3.5 mr-1" />
+            ) : (
+              <EyeOffIcon className="size-3.5 mr-1" />
             )}
-          </div>
-        )}
+            {showGuide ? "អក្សរគំរូ: បើក" : "អក្សរគំរូ: បិទ"}
+          </Button>
+        </div>
 
         {/* ───────────────────────── PAGE 1 ───────────────────────── */}
-        <div
-          className={cn(
-            "flex flex-col items-center w-full a4-page-wrapper",
-            activePageTab === "page2" ? "hidden print:block" : "flex",
-          )}
-        >
+        <div className="flex flex-col items-center w-full a4-page-wrapper">
           <div
             className={cn(
               "w-full h-[297mm] max-w-[210mm] bg-white text-neutral-950 p-10 sm:p-12",
@@ -598,7 +173,7 @@ export function PortraitCadastralDocument({
               "a4-page-sheet a4-page-1",
             )}
           >
-            {page1Mode === "full" ? (
+            {!fillMode ? (
               /* Full Header Mode */
               <div className="space-y-6">
                 <div className="text-center space-y-1">
@@ -742,57 +317,16 @@ export function PortraitCadastralDocument({
 
             {/* Bottom Right: Official Date Block */}
             <div
-              className="flex justify-end font-khmer transition-all"
+              className="flex justify-end font-khmer"
               style={{
-                paddingBottom: `${calibration.bottomMargin}mm`,
-                paddingRight: `${calibration.marginRight}mm`,
+                paddingBottom: `${DATE_BLOCK.bottom}mm`,
+                paddingRight: `${DATE_BLOCK.right}mm`,
               }}
             >
               <div className="space-y-1 mb-5">
                 {docLunar ? (
-                  calibration.fillMode ? (
-                    <div
-                      className="relative font-medium text-blue-950 text-[14px] print:text-[12pt] leading-relaxed tracking-wide whitespace-nowrap"
-                      style={{
-                        width: `${FILL_BLOCK_WIDTH_MM}mm`,
-                        height: `${fp.line2Top + 7}mm`,
-                      }}
-                    >
-                      {/* ── Line 1: Lunar ── */}
-                      <FillSlot left={fp.weekday} guide={guide}>
-                        {docLunar.weekday.replace(/^ថ្ងៃ/, "")}{" "}
-                        {toKhmerNum(docLunar.lunarDay)}
-                        {docLunar.lunarPhase}
-                      </FillSlot>
-                      <FillSlot left={fp.lunarMonth} guide={guide}>
-                        {docLunar.lunarMonthName}
-                      </FillSlot>
-                      <FillSlot left={fp.zodiac} guide={guide}>
-                        {docLunar.zodiacYear} {docLunar.sakYear}
-                      </FillSlot>
-                      <FillSlot left={fp.be} guide={guide}>
-                        {calibration.shortYear
-                          ? toKhmerNum(docLunar.buddhistEra).slice(-2)
-                          : toKhmerNum(docLunar.buddhistEra)}
-                      </FillSlot>
-
-                      {/* ── Line 2: Gregorian ── */}
-                      <FillSlot left={fp.gDay} top={fp.line2Top} guide={guide}>
-                        {toKhmerNum(docLunar.gregorianDay)}
-                      </FillSlot>
-                      <FillSlot
-                        left={fp.gMonth}
-                        top={fp.line2Top}
-                        guide={guide}
-                      >
-                        {KHMER_GREGORIAN_MONTHS[docLunar.gregorianMonth]}
-                      </FillSlot>
-                      <FillSlot left={fp.gYear} top={fp.line2Top} guide={guide}>
-                        {calibration.shortYear
-                          ? toKhmerNum(docLunar.gregorianYear).slice(-2)
-                          : toKhmerNum(docLunar.gregorianYear)}
-                      </FillSlot>
-                    </div>
+                  fillMode ? (
+                    <CadastralDateFill lunar={docLunar} showGuide={showGuide} />
                   ) : (
                     /* Full Mode (Complete labels for blank paper) */
                     <>
@@ -831,12 +365,7 @@ export function PortraitCadastralDocument({
         </div>
 
         {/* ───────────────────────── PAGE 2 ───────────────────────── */}
-        <div
-          className={cn(
-            "flex flex-col items-center w-full a4-page-wrapper",
-            activePageTab === "page1" ? "hidden print:block" : "flex",
-          )}
-        >
+        <div className="flex flex-col items-center w-full a4-page-wrapper">
           {/* A4 Portrait Sheet Container */}
           <div
             className={cn(
