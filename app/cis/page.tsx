@@ -294,12 +294,10 @@ export default function CisPage() {
                       <div className="flex items-center gap-1.5">
                         <span className="inline-block size-2 rounded-full bg-red-600 ring-2 ring-red-200 dark:ring-red-950" />
                         <Label className="text-xs font-semibold text-red-600 dark:text-red-400">
-                          បន្ទាត់ទី១ (ពណ៌ក្រហម • Bold Red Text)
+                          បន្ទាត់ទី១ (ពណ៌ក្រហម  Red Text)
                         </Label>
                       </div>
-                      <span className="text-[10px] text-muted-foreground">
-                        ជួរខាងលើគេ
-                      </span>
+
                     </div>
                     <Input
                       value={formData.remarksRed ?? ""}
@@ -307,7 +305,7 @@ export default function CisPage() {
                         updateField("remarksRed", e.target.value)
                       }
                       placeholder="ឧ. មកពី"
-                      className="h-9 text-xs border-red-300 dark:border-red-900/50 focus-visible:ring-red-500 font-bold text-red-600 dark:text-red-400 bg-red-50/20 dark:bg-neutral-950"
+                      className="flex w-full rounded-md border border-red-300 dark:border-red-900/50 bg-red-50/20 dark:bg-neutral-950 px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500 resize-none font-khmer"
                     />
                   </div>
 
@@ -317,12 +315,10 @@ export default function CisPage() {
                       <div className="flex items-center gap-1.5">
                         <span className="inline-block size-2 rounded-full bg-blue-600 ring-2 ring-blue-200 dark:ring-blue-950" />
                         <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-                          បន្ទាត់ទី២ (ពណ៌ខៀវ រុំចុះក្រោម • Blue Text)
+                          បន្ទាត់ទី២ (ពណ៌ខៀវ Blue Text)
                         </Label>
                       </div>
-                      <span className="text-[10px] text-muted-foreground">
-                        រុំចុះក្រោមបន្ទាត់ទី១
-                      </span>
+
                     </div>
                     <textarea
                       rows={2}

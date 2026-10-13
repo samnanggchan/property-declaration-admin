@@ -13,6 +13,7 @@ import {
   DATE_BLOCK,
   KHMER_GREGORIAN_MONTHS,
 } from "@/components/cis-date-fill";
+import { CisLedgerTable, LedgerValues } from "@/components/cis-ledger-table";
 
 export interface PortraitCadastralData {
   documentDate?: string;
@@ -78,9 +79,7 @@ export function PortraitCadastralDocument({
   data,
   className,
 }: PortraitCadastralDocumentProps) {
-  /** true = print only the values onto the pre-printed paper form */
   const [fillMode, setFillMode] = React.useState(true);
-  /** grey printed words + dashed boxes on screen (never printed) */
   const [showGuide, setShowGuide] = React.useState(true);
 
   const docLunar: KhmerLunarDate | null = React.useMemo(() => {
@@ -98,15 +97,15 @@ export function PortraitCadastralDocument({
     return dateStringToKhmerLunar(data.owner2Dob);
   }, [data.owner2Dob]);
 
-  // Build combined owner name string
+  // Combined owner names (empty string when neither is set – nothing is printed)
   const ownerNames = React.useMemo(() => {
     const p1 = data.owner1Name?.trim();
     const p2 = data.owner2Name?.trim();
     if (p1 && p2) return `${p1} និង ${p2}`;
-    return p1 || p2 || "—";
+    return p1 || p2 || "";
   }, [data.owner1Name, data.owner2Name]);
 
-  // Build ancestry string (សាវតារ)
+  // Ancestry string (សាវតារ)
   const ancestryText = React.useMemo(() => {
     const parts: string[] = [];
     if (data.owner1Father || data.owner1Mother) {
@@ -126,6 +125,35 @@ export function PortraitCadastralDocument({
     data.owner2Father,
     data.owner2Mother,
   ]);
+
+  const ledgerValues: LedgerValues = React.useMemo(
+    () => ({
+      col1: data.page2Col1Text || ownerNames,
+      col1Sub: data.page2Col1Text ? "" : data.propertyType,
+      col2: data.col2CustomText,
+      col3: data.page2Col3Text || (ownerNames ? ancestryText : ""),
+      col4: data.transferType,
+      col4Sub: data.transferDetails,
+      col5: data.encumbrance,
+      remarksRed: data.remarksRed,
+      remarksBlue: data.remarksBlue,
+      remarks: data.remarks,
+    }),
+    [
+      data.page2Col1Text,
+      ownerNames,
+      data.propertyType,
+      data.col2CustomText,
+      data.page2Col3Text,
+      ancestryText,
+      data.transferType,
+      data.transferDetails,
+      data.encumbrance,
+      data.remarksRed,
+      data.remarksBlue,
+      data.remarks,
+    ],
+  );
 
   return (
     <div
@@ -152,7 +180,7 @@ export function PortraitCadastralDocument({
             size="sm"
             onClick={() => setShowGuide((v) => !v)}
             className="h-7 text-xs px-2 font-khmer text-neutral-600 dark:text-neutral-400"
-            title="បង្ហាញ/លាក់ អក្សរពុម្ពប្រផេះ និងស៊ុតចំណុច នៅលើអេក្រង់ — មិនបោះពុម្ព"
+            title="បង្ហាញ/លាក់ អក្សរពុម្ពប្រផេះ តារាង និងស៊ុតចំណុច នៅលើអេក្រង់ — មិនបោះពុម្ព"
           >
             {showGuide ? (
               <EyeIcon className="size-3.5 mr-1" />
@@ -366,213 +394,19 @@ export function PortraitCadastralDocument({
 
         {/* ───────────────────────── PAGE 2 ───────────────────────── */}
         <div className="flex flex-col items-center w-full a4-page-wrapper">
-          {/* A4 Portrait Sheet Container */}
           <div
             className={cn(
               "w-full h-[297mm] max-w-[210mm] bg-white text-neutral-950",
               "shadow-xl border border-neutral-300 dark:border-neutral-700",
-              "font-khmer select-text relative overflow-hidden flex items-center justify-center",
+              "font-khmer select-text relative overflow-hidden",
               "a4-page-sheet a4-page-2",
             )}
           >
-            {/* Rotated Table Container (-90 degrees) */}
-            <div
-              className="w-[275mm] h-[190mm] flex flex-col justify-start p-2"
-              style={{
-                transform: "rotate(-90deg)",
-                transformOrigin: "center center",
-              }}
-            >
-              {/* Official Table */}
-              <div className="w-full overflow-hidden border-2 border-neutral-900 bg-white">
-                <table className="w-full border-collapse text-xs text-neutral-900 table-fixed">
-                  <thead>
-                    {/* Master Section Headers */}
-                    <tr className="border-b-2 border-neutral-900 text-center font-bold">
-                      <th
-                        colSpan={3}
-                        className="w-[43%] border-r-2 border-neutral-900 py-2 px-2 text-sm tracking-wide bg-neutral-50/70"
-                      >
-                        អត្រានុកូលដ្ឋានម្ចាស់អចលនវត្ថុ
-                      </th>
-                      <th
-                        colSpan={2}
-                        className="w-[43%] border-r-2 border-neutral-900 py-2 px-2 text-sm tracking-wide bg-neutral-50/70"
-                      >
-                        ការផ្លាស់ប្តូរ
-                      </th>
-                      <th className="w-[14%] py-2 px-2 bg-neutral-50/70"></th>
-                    </tr>
-
-                    {/* Detailed Column Titles */}
-                    <tr className="border-b-2 border-neutral-900 text-center font-semibold text-[11px] leading-tight">
-                      {/* Col 1: Diagonal Header */}
-                      <th className="w-[20%] border-r border-neutral-900 p-0 relative h-14 align-top">
-                        <div className="absolute inset-0">
-                          <svg
-                            className="w-full h-full"
-                            preserveAspectRatio="none"
-                            viewBox="0 0 100 100"
-                          >
-                            <line
-                              x1="0"
-                              y1="100"
-                              x2="100"
-                              y2="0"
-                              stroke="#171717"
-                              strokeWidth="1.2"
-                            />
-                          </svg>
-                        </div>
-                        <div className="relative z-10 flex flex-col justify-between h-full p-1.5 text-[10px]">
-                          <div className="text-left font-semibold text-neutral-950">
-                            តាមត្រកូល និង នាមខ្លួន
-                          </div>
-                          <div className="text-right font-semibold text-neutral-950">
-                            ប្រភេទទ្រព្យ
-                          </div>
-                        </div>
-                      </th>
-
-                      {/* Col 2 */}
-                      <th className="w-[11%] border-r border-neutral-900 px-1 py-1.5 align-middle">
-                        ថ្ងៃ ខែ ឆ្នាំ <br />
-                        និង <br />
-                        ទីកន្លែងកំណើត
-                      </th>
-
-                      {/* Col 3 */}
-                      <th className="w-[12%] border-r-2 border-neutral-900 px-1 py-1.5 align-middle">
-                        សាវតារ
-                      </th>
-
-                      {/* Col 4 */}
-                      <th className="w-[30%] border-r border-neutral-900 px-2 py-1.5 align-middle">
-                        លេខចារឹកដោយសង្ខេបនៃ <br />
-                        លិខិតសញ្ញា ឬ សាលក្រមតុលាការ
-                      </th>
-
-                      {/* Col 5 */}
-                      <th className="w-[13%] border-r-2 border-neutral-900 px-1 py-1.5 align-middle">
-                        បន្ទុកលើអចលនវត្ថុ
-                      </th>
-
-                      {/* Col 6 */}
-                      <th className="w-[14%] px-1 py-1.5 align-middle">
-                        សេចក្តីផ្សេងៗ
-                      </th>
-                    </tr>
-
-                    {/* Row of Column Numbers (១ ២ ៣ ៤ ៥ ៦) */}
-                    <tr className="border-b-2 border-neutral-900 text-center font-bold text-xs bg-neutral-100/70">
-                      <th className="border-r border-neutral-900 py-0.5">១</th>
-                      <th className="border-r border-neutral-900 py-0.5">២</th>
-                      <th className="border-r-2 border-neutral-900 py-0.5">
-                        ៣
-                      </th>
-                      <th className="border-r border-neutral-900 py-0.5">៤</th>
-                      <th className="border-r-2 border-neutral-900 py-0.5">
-                        ៥
-                      </th>
-                      <th className="py-0.5">៦</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {/* Primary Record Row */}
-                    <tr className="border-b border-dashed border-neutral-400 align-top min-h-[64px]">
-                      {/* Col 1: Names and Property Type */}
-                      <td className="border-r border-neutral-900 p-2 text-[11px] leading-relaxed">
-                        {data.page2Col1Text ? (
-                          <div className="font-semibold text-neutral-950">
-                            {data.page2Col1Text}
-                          </div>
-                        ) : ownerNames ? (
-                          <>
-                            <div className="font-semibold text-neutral-950">
-                              {ownerNames}
-                            </div>
-                            {data.propertyType && (
-                              <div className="mt-0.5 text-neutral-600 text-[10px]">
-                                {data.propertyType}
-                              </div>
-                            )}
-                          </>
-                        ) : null}
-                      </td>
-
-                      {/* Col 2: Custom Text */}
-                      <td className="border-r border-neutral-900 p-2 text-center text-[10px] leading-relaxed">
-                        {data.col2CustomText && (
-                          <div className="font-medium underline decoration-neutral-400 underline-offset-2">
-                            {data.col2CustomText}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Col 3: Ancestry */}
-                      <td className="border-r-2 border-neutral-900 p-2 text-[10px] whitespace-pre-line leading-relaxed">
-                        {data.page2Col3Text || (ownerNames ? ancestryText : "")}
-                      </td>
-
-                      {/* Col 4: Acquisition Deed (e.g. "ទិញ") */}
-                      <td className="border-r border-neutral-900 p-2 text-[11px] leading-relaxed">
-                        {data.transferType && (
-                          <div className="font-bold text-neutral-950">
-                            {data.transferType}
-                          </div>
-                        )}
-                        {data.transferDetails && (
-                          <div className="mt-0.5 text-[10px] text-neutral-700">
-                            {data.transferDetails}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Col 5: Encumbrance */}
-                      <td className="border-r-2 border-neutral-900 p-2 text-center text-[10px]">
-                        {data.encumbrance || ""}
-                      </td>
-
-                      {/* Col 6: Remarks (Line 1 Red, Line 2 Blue wrapped under) */}
-                      <td className="p-2 text-left text-[11px] leading-tight">
-                        {data.remarksRed || data.remarksBlue ? (
-                          <div className="flex flex-col gap-0.5">
-                            {data.remarksRed && (
-                              <span className="font-bold text-red-600">
-                                {data.remarksRed}
-                              </span>
-                            )}
-                            {data.remarksBlue && (
-                              <span className="font-semibold text-blue-700 whitespace-pre-line">
-                                {data.remarksBlue}
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          data.remarks || ""
-                        )}
-                      </td>
-                    </tr>
-
-                    {/* Empty Dashed Ledger Rows down the table */}
-                    {Array.from({ length: 14 }).map((_, index) => (
-                      <tr
-                        key={index}
-                        className="border-b border-dashed border-neutral-400 h-8"
-                      >
-                        <td className="border-r border-neutral-900"></td>
-                        <td className="border-r border-neutral-900"></td>
-                        <td className="border-r-2 border-neutral-900"></td>
-                        <td className="border-r border-neutral-900"></td>
-                        <td className="border-r-2 border-neutral-900"></td>
-                        <td></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <CisLedgerTable
+              values={ledgerValues}
+              fillMode={fillMode}
+              showGuide={showGuide}
+            />
           </div>
         </div>
       </div>
