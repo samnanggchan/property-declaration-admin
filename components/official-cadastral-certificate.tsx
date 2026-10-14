@@ -771,15 +771,11 @@ export function OfficialCadastralCertificate({
       {/* The Printable Official Document Canvas */}
       <div
         id="printable-document"
-        className={`mx-auto w-full max-w-5xl rounded-xl border p-6 sm:p-10 shadow-sm transition-colors text-neutral-900 ${
+        className={`font-battambang mx-auto w-full max-w-5xl rounded-xl border p-6 sm:p-10 shadow-sm transition-colors text-neutral-900 ${
           variant === "HOUSE" && useGreenPaper
-            ? "bg-[#edf5ec] border-emerald-800/40 text-neutral-950 font-serif"
+            ? "bg-[#edf5ec] border-emerald-800/40 text-neutral-950"
             : "bg-white border-neutral-800 text-neutral-900"
         }`}
-        style={{
-          fontFamily:
-            "'Battambang', 'Siemreap', 'Kantumruy Pro', 'Khmer OS', serif",
-        }}
       >
         {/* =======================
             HEADER SECTION
@@ -813,7 +809,7 @@ export function OfficialCadastralCertificate({
 
           {/* Top Center: Official Form Title */}
           <div className="col-span-6 text-center">
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-900">
+            <h1 className="font-moul text-base sm:text-lg font-normal tracking-wide text-neutral-900">
               តារាងសម្រង់វិញ្ញាបនប័ត្រសំគាល់ម្ចាស់អចលនវត្ថុ
             </h1>
             <p className="mt-1.5 text-xs sm:text-sm font-semibold tracking-wide">

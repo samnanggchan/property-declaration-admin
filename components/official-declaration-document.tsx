@@ -60,7 +60,15 @@ export function OfficialDeclarationDocument({
       <div className="mb-6">
         <div className="mb-2 flex items-center justify-between border-b border-neutral-900 pb-1">
           <h4 className="text-base font-bold text-neutral-900">
-            {title}
+            {title.includes("រូបវន្តបុគ្គល") ? (
+              <>
+                {title.split("រូបវន្តបុគ្គល")[0]}
+                <span className="font-moul font-normal">រូបវន្តបុគ្គល</span>
+                {title.split("រូបវន្តបុគ្គល")[1]}
+              </>
+            ) : (
+              title
+            )}
           </h4>
           <span className="text-xs font-semibold uppercase tracking-wider text-neutral-600">
             {badgeText}
@@ -266,14 +274,14 @@ export function OfficialDeclarationDocument({
       {/* Printable Official Document Layout */}
       <div
         id="printable-document"
-        className="mx-auto w-full max-w-[850px] rounded-lg border bg-white p-8 text-neutral-900 shadow-sm print:m-0 print:max-w-none print:border-none print:p-0 print:shadow-none font-serif"
+        className="font-battambang mx-auto w-full max-w-[850px] rounded-lg border bg-white p-8 text-neutral-900 shadow-sm print:m-0 print:max-w-none print:border-none print:p-0 print:shadow-none"
       >
         {/* Kingdom of Cambodia Header */}
         <div className="mb-6 text-center">
-          <h2 className="text-xl font-bold tracking-wide">
+          <h2 className="font-moul text-xl tracking-wide text-neutral-950 font-normal">
             ព្រះរាជាណាចក្រកម្ពុជា
           </h2>
-          <h3 className="text-lg font-bold tracking-wider">
+          <h3 className="font-moul text-base tracking-wider text-neutral-950 mt-1 font-normal">
             ជាតិ សាសនា ព្រះមហាក្សត្រ
           </h3>
           <div className="mx-auto my-2 flex w-32 items-center justify-center">
@@ -348,7 +356,9 @@ export function OfficialDeclarationDocument({
 
         {/* Section 4: Legal Entity (នីតិបុគ្គល) */}
         <div className="mb-6 border-t border-neutral-300 pt-3">
-          <h5 className="mb-2 text-center text-sm font-bold">នីតិបុគ្គល</h5>
+          <h5 className="font-moul mb-2 text-center text-base font-normal text-neutral-950">
+            នីតិបុគ្គល
+          </h5>
           <div className="grid grid-cols-3 gap-2 text-xs text-neutral-700">
             <div>
               <span className="font-semibold">លក្ខន្តិកៈ:</span>{" "}
@@ -364,10 +374,14 @@ export function OfficialDeclarationDocument({
             </div>
           </div>
           <div className="mt-2 text-center text-xs text-neutral-800">
-            <span className="font-bold">អ្នកតំណាង ឬអ្នកគ្រប់គ្រង:</span>{" "}
-            {joint.repName
-              ? `${joint.repName}${joint.repRole ? ` (${joint.repRole})` : ""}`
-              : "ឈ្មោះអ្នកតំណាង .................................... មុខងារ ...................................."}
+            <span className="font-moul font-normal text-sm text-neutral-950">
+              អ្នកតំណាង ឬអ្នកគ្រប់គ្រង:
+            </span>{" "}
+            <span className="font-bold">
+              {joint.repName
+                ? `${joint.repName}${joint.repRole ? ` (${joint.repRole})` : ""}`
+                : "ឈ្មោះអ្នកតំណាង .................................... មុខងារ ...................................."}
+            </span>
           </div>
 
           {/* 1-Person Table for Company Representative (អ្នកតំណាង ឬអ្នកគ្រប់គ្រង) matching Image 2 */}

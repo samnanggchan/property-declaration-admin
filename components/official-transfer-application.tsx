@@ -236,53 +236,6 @@ export function OfficialTransferApplication({
 
   return (
     <div className="relative mx-auto w-full max-w-5xl rounded-xl bg-background p-2 sm:p-4 text-foreground">
-      {/* Load Fonts Requested by User */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-          @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&family=Moul&display=swap');
-
-          .font-moul {
-            font-family: 'Moul', 'Khmer OS Muol Light', serif;
-          }
-
-          .font-battambang {
-            font-family: 'Battambang', 'Khmer OS Battambang', 'Khmer OS', sans-serif;
-          }
-
-          @media print {
-            body {
-              background: #ffffff !important;
-              color: #000000 !important;
-              margin: 0 !important;
-              padding: 0 !important;
-            }
-            .no-print {
-              display: none !important;
-            }
-            .application-sheet {
-              box-shadow: none !important;
-              border: none !important;
-              margin: 0 auto !important;
-              padding: 12mm 14mm 10mm 14mm !important;
-              width: 210mm !important;
-              min-height: 297mm !important;
-              max-width: 210mm !important;
-              page-break-after: always !important;
-              break-after: page !important;
-            }
-            .application-sheet:last-of-type {
-              page-break-after: auto !important;
-              break-after: auto !important;
-            }
-            .page-break {
-              display: none !important;
-            }
-          }
-        `,
-        }}
-      />
-
       {/* Top Action Bar (hidden on print) */}
       <div className="no-print mb-4 flex flex-wrap items-center justify-between gap-3 border-b pb-3">
         <div className="flex items-center gap-2">
