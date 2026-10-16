@@ -327,6 +327,12 @@ html.font-khmer {
     background: transparent !important;
     overflow: visible !important;
   }
+  /* When #printable-document itself is an application-sheet, the
+     application-sheet padding takes priority (not the padding:0 above). */
+  #printable-document.application-sheet {
+    padding: 12mm 14mm 10mm 14mm !important;
+    background: #ffffff !important;
+  }
   .a4-page-wrapper {
     margin: 0 !important;
     padding: 0 !important;
@@ -378,14 +384,18 @@ html.font-khmer {
   .application-sheet {
     box-shadow: none !important;
     border: none !important;
+    border-radius: 0 !important;
     margin: 0 auto !important;
     padding: 12mm 14mm 10mm 14mm !important;
     width: 210mm !important;
     min-height: 297mm !important;
     max-width: 210mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
     page-break-after: always !important;
     break-after: page !important;
   }
+  .application-sheet:last-child,
   .application-sheet:last-of-type {
     page-break-after: auto !important;
     break-after: auto !important;

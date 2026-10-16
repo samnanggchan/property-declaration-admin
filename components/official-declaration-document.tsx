@@ -274,7 +274,7 @@ export function OfficialDeclarationDocument({
       {/* Printable Official Document Layout */}
       <div
         id="printable-document"
-        className="font-battambang mx-auto w-full max-w-[850px] rounded-lg border bg-white p-8 text-neutral-900 shadow-sm print:m-0 print:max-w-none print:border-none print:p-0 print:shadow-none"
+        className="application-sheet font-battambang mx-auto w-full max-w-[210mm] min-h-[297mm] rounded-lg border border-neutral-300 bg-white p-8 sm:px-12 sm:py-10 text-neutral-900 shadow-md"
       >
         {/* Kingdom of Cambodia Header */}
         <div className="mb-6 text-center">

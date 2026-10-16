@@ -771,10 +771,10 @@ export function OfficialCadastralCertificate({
       {/* The Printable Official Document Canvas */}
       <div
         id="printable-document"
-        className={`font-battambang mx-auto w-full max-w-5xl rounded-xl border p-6 sm:p-10 shadow-sm transition-colors text-neutral-900 ${
+        className={`application-sheet font-battambang mx-auto w-full max-w-[210mm] min-h-[297mm] rounded-xl border p-6 sm:p-10 shadow-md transition-colors text-neutral-900 ${
           variant === "HOUSE" && useGreenPaper
             ? "bg-[#edf5ec] border-emerald-800/40 text-neutral-950"
-            : "bg-white border-neutral-800 text-neutral-900"
+            : "bg-white border-neutral-300 text-neutral-900"
         }`}
       >
         {/* =======================

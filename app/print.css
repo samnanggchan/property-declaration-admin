@@ -1,0 +1,229 @@
+:root {
+  --paper-w: 210mm;
+  --paper-h: 297mm;
+  --paper-pad-top: 12mm;
+  --paper-pad-x: 14mm;
+  --paper-pad-bottom: 10mm;
+}
+
+@media screen and (max-width: 640px) {
+  :root {
+    --paper-pad-top: 8mm;
+    --paper-pad-x: 6mm;
+    --paper-pad-bottom: 8mm;
+  }
+}
+
+/* ── The printer page ──────────────────────────────────────────────────── */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+/* ── Screen look of one sheet (utilities such as p-4 / mb-8 can still override) ── */
+@layer components {
+  .a4-sheet {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: var(--paper-w);
+    min-height: var(--paper-h);
+    margin-inline: auto;
+    /* per-sheet override:  style={{ "--sheet-pad": "20mm 15mm" }}  or <A4Page padding="20mm 15mm"> */
+    padding: var(
+      --sheet-pad,
+      var(--paper-pad-top) var(--paper-pad-x) var(--paper-pad-bottom)
+    );
+    background: #fff;
+    color: #171717;
+    border: 1px solid #d4d4d4;
+    border-radius: 0.75rem;
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  /* exactly one page, clipped – for pre-printed forms */
+  .a4-sheet[data-mode="fixed"] {
+    height: var(--paper-h);
+    overflow: hidden;
+  }
+
+  /* green paper preview (printed on white, see print block) */
+  .a4-sheet[data-tone="green"] {
+    background: #edf5ec;
+    border-color: rgb(6 78 59 / 0.4);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  PRINT
+ * ═══════════════════════════════════════════════════════════════════════ */
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: var(--paper-w) !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* hide app chrome */
+  header,
+  aside,
+  nav,
+  .no-print,
+  [data-slot="sidebar"],
+  [data-slot="sidebar-gap"],
+  [data-sidebar="sidebar"],
+  [data-slot="site-header"] {
+    display: none !important;
+  }
+
+  /* flatten the app shell so the document is the only thing on the page */
+  [data-slot="sidebar-wrapper"],
+  [data-slot="sidebar-inset"],
+  [data-slot="sidebar-inset"] > div,
+  [data-slot="sidebar-inset"] > div > div,
+  [data-slot="sidebar-inset"] > div > div > div {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  /* wrapper around the sheet(s): exactly one paper wide, no decoration */
+  #printable-document,
+  .printable-area {
+    display: block !important;
+    width: var(--paper-w) !important;
+    max-width: var(--paper-w) !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  /* ── NEW: every <A4Page> / .a4-sheet ─────────────────────────────── */
+  .a4-sheet {
+    width: var(--paper-w);
+    max-width: none;
+    /* 1mm less than the page so rounding never creates a blank extra page */
+    min-height: calc(var(--paper-h) - 1mm);
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: #ffffff;
+    color: #000000;
+    break-after: page;
+  }
+  .a4-sheet:last-of-type {
+    break-after: auto;
+  }
+  .a4-sheet[data-mode="fixed"] {
+    height: var(--paper-h);
+    min-height: var(--paper-h);
+    overflow: hidden;
+    break-inside: avoid;
+  }
+
+  .page-break {
+    display: none !important;
+  }
+
+  /* ───────────────────────────────────────────────────────────────────
+   *  LEGACY – kept exactly as before so existing screens print the same.
+   *  (a) pre-printed fill-in forms (PortraitCadastralDocument): their
+   *      print padding is part of the tuned millimetre positions – do
+   *      NOT change these numbers.
+   *  (b) old `.application-sheet` – migrate to <A4Page>, then delete.
+   * ─────────────────────────────────────────────────────────────────── */
+  .a4-page-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    overflow: hidden !important;
+    display: block !important;
+    box-sizing: border-box !important;
+  }
+  .a4-page-sheet {
+    width: 210mm !important;
+    height: 297mm !important;
+    max-width: 210mm !important;
+    max-height: 297mm !important;
+    min-height: 297mm !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    position: relative !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  .a4-page-1 {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 20mm 15mm 20mm 15mm !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  .a4-page-2 {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  #printable-document.application-sheet {
+    padding: 12mm 14mm 10mm 14mm !important;
+    background: #ffffff !important;
+  }
+  .application-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 auto !important;
+    padding: 12mm 14mm 10mm 14mm !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    max-width: 210mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  .application-sheet:last-child,
+  .application-sheet:last-of-type {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+}
