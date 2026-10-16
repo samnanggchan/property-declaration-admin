@@ -59,7 +59,7 @@ export interface PortraitCadastralData {
   remarks?: string;
 
   remarksRed?: string;
-  remarksBlue?: string;
+  remarksBlack?: string;
   page2Col1Text?: string;
   page2Col3Text?: string;
 
@@ -136,7 +136,7 @@ export function PortraitCadastralDocument({
       col4Sub: data.transferDetails,
       col5: data.encumbrance,
       remarksRed: data.remarksRed,
-      remarksBlue: data.remarksBlue,
+      remarksBlack: data.remarksBlack,
       remarks: data.remarks,
     }),
     [
@@ -150,7 +150,7 @@ export function PortraitCadastralDocument({
       data.transferDetails,
       data.encumbrance,
       data.remarksRed,
-      data.remarksBlue,
+      data.remarksBlack,
       data.remarks,
     ],
   );

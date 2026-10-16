@@ -30,7 +30,7 @@ const DEFAULT_FORM_DATA: PortraitCadastralData = {
 
   // Page 2: Dynamic Cadastral Register Data (All blank except active remarks)
   remarksRed: "មកពី",
-  remarksBlue: "ក្បាលដីលេខ ៤២១ (បំបែកក្បាលដី)",
+  remarksBlack: "ក្បាលដីលេខ ៤២១ (បំបែកក្បាលដី)",
   page2Col1Text: "",
   col2CustomText: "",
   page2Col3Text: "",
@@ -86,7 +86,7 @@ export default function CisPage() {
       documentDate: "",
       issueLocation: "រាជធានីភ្នំពេញ",
       remarksRed: "",
-      remarksBlue: "",
+      remarksBlack: "",
       page2Col1Text: "",
       col2CustomText: "",
       page2Col3Text: "",
@@ -294,10 +294,9 @@ export default function CisPage() {
                       <div className="flex items-center gap-1.5">
                         <span className="inline-block size-2 rounded-full bg-red-600 ring-2 ring-red-200 dark:ring-red-950" />
                         <Label className="text-xs font-semibold text-red-600 dark:text-red-400">
-                          បន្ទាត់ទី១ (ពណ៌ក្រហម  Red Text)
+                          បន្ទាត់ទី១ (ពណ៌ក្រហម Red Text)
                         </Label>
                       </div>
-
                     </div>
                     <Input
                       value={formData.remarksRed ?? ""}
@@ -309,25 +308,24 @@ export default function CisPage() {
                     />
                   </div>
 
-                  {/* Line 2: Blue Text (wraps under Red) */}
+                  {/* Line 2: Black Text (wraps under Red) */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <span className="inline-block size-2 rounded-full bg-blue-600 ring-2 ring-blue-200 dark:ring-blue-950" />
-                        <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-                          បន្ទាត់ទី២ (ពណ៌ខៀវ Blue Text)
+                        <span className="inline-block size-2 rounded-full bg-black ring-2 ring-blue-200 dark:ring-blue-950" />
+                        <Label className="text-xs font-semibold text-black dark:text-blue-400">
+                          បន្ទាត់ទី២ (ពណ៌ខៀវ Black Text)
                         </Label>
                       </div>
-
                     </div>
                     <textarea
                       rows={2}
-                      value={formData.remarksBlue ?? ""}
+                      value={formData.remarksBlack ?? ""}
                       onChange={(e) =>
-                        updateField("remarksBlue", e.target.value)
+                        updateField("remarksBlack", e.target.value)
                       }
                       placeholder="ឧ. ក្បាលដីលេខ ៤២១ (បំបែកក្បាលដី)"
-                      className="flex w-full rounded-md border border-blue-300 dark:border-blue-900/50 bg-blue-50/20 dark:bg-neutral-950 px-3 py-2 text-xs font-medium text-blue-600 dark:text-blue-400 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 resize-none font-khmer"
+                      className="flex w-full rounded-md border border-blue-300 dark:border-blue-900/50 bg-blue-50/20 dark:bg-neutral-950 px-3 py-2 text-xs font-medium text-black dark:text-blue-400 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 resize-none font-khmer"
                     />
                   </div>
                 </div>

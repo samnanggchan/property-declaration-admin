@@ -3,10 +3,8 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-
 export const LEDGER = {
-
-  origin: { x: 13.4, y: 35 },
+  origin: { x: 8.4, y: 46 },
 
   width: 272,
   height: 159,
@@ -29,15 +27,33 @@ const cell = (from: number, to: number, pad = 1.5) => ({
   w: B[to] - B[from - 1] - pad * 2,
 });
 
-
 export const LEDGER_FIELDS = {
   col1: { ...cell(1, 1), y: 36, align: "left", tweak: "" },
   col2: { ...cell(2, 3), y: 36, align: "center", tweak: "" },
-  col2Alone: { ...cell(2, 2, 1), y: 36, align: "center", size: "text-[9pt]", tweak: "" },
-  col3: { ...cell(3, 3, 1), y: 36, align: "left", size: "text-[9pt]", tweak: "" },
+  col2Alone: {
+    ...cell(2, 2, 1),
+    y: 36,
+    align: "center",
+    size: "text-[9pt]",
+    tweak: "",
+  },
+  col3: {
+    ...cell(3, 3, 1),
+    y: 36,
+    align: "left",
+    size: "text-[9pt]",
+    tweak: "",
+  },
   col4: { ...cell(4, 4), y: 36, align: "center", tweak: "" },
   col5: { ...cell(5, 5), y: 36, align: "center", tweak: "" },
-  col6: { ...cell(6, 6, 1.5), y: 36, align: "left", size: "text-[10pt]", tweak: "" },
+  col6: {
+    ...cell(6, 6, 1.5),
+    y: 36,
+    align: "center",
+    size: "text-[10pt]",
+    lh: 2,
+    tweak: "",
+  },
 } satisfies Record<string, FieldCfg>;
 
 interface FieldCfg {
@@ -46,6 +62,7 @@ interface FieldCfg {
   y: number;
   align: "left" | "center";
   size?: string;
+  lh?: number;
   tweak?: string;
 }
 
@@ -58,7 +75,7 @@ export interface LedgerValues {
   col4Sub?: string;
   col5?: string;
   remarksRed?: string;
-  remarksBlue?: string;
+  remarksBlack?: string;
   remarks?: string;
 }
 
@@ -139,9 +156,8 @@ function LedgerFrame({ ghost }: { ghost: boolean }) {
         {/* body dividers (col 2|3 starts under the merged first row) */}
         <path
           d={
-            [1, 3, 4, 5]
-              .map((i) => `M${B[i]} ${R.numbers}V${H}`)
-              .join(" ") + ` M${B[2]} ${R.row1}V${H}`
+            [1, 3, 4, 5].map((i) => `M${B[i]} ${R.numbers}V${H}`).join(" ") +
+            ` M${B[2]} ${R.row1}V${H}`
           }
         />
         {/* diagonal in the first title cell */}
@@ -183,7 +199,13 @@ function LedgerFrame({ ghost }: { ghost: boolean }) {
       </Box>
 
       {/* other column titles */}
-      <Box x={B[1]} y={R.master} w={B[2] - B[1]} h={title} className="text-[9.5pt]">
+      <Box
+        x={B[1]}
+        y={R.master}
+        w={B[2] - B[1]}
+        h={title}
+        className="text-[9.5pt]"
+      >
         <span>
           ថ្ងៃ ខែ ឆ្នាំ
           <br />
@@ -236,12 +258,17 @@ function Field({
   return (
     <div
       className={cn(
-        "absolute whitespace-pre-line break-words leading-snug",
+        "absolute whitespace-pre-line break-words",
         cfg.align === "center" ? "text-center" : "text-left",
         cfg.size ?? "text-[11pt]",
         cfg.tweak,
       )}
-      style={{ left: `${cfg.x}mm`, top: `${cfg.y}mm`, width: `${cfg.w}mm` }}
+      style={{
+        left: `${cfg.x}mm`,
+        top: `${cfg.y}mm`,
+        width: `${cfg.w}mm`,
+        lineHeight: cfg.lh,
+      }}
     >
       {children}
     </div>
@@ -264,7 +291,7 @@ export function CisLedgerTable({
 }) {
   const v = values;
   const hasCol3 = has(v.col3);
-  const hasRemarks = has(v.remarksRed) || has(v.remarksBlue) || has(v.remarks);
+  const hasRemarks = has(v.remarksRed) || has(v.remarksBlack) || has(v.remarks);
 
   return (
     // landscape A4 sheet, rotated so it sits on the portrait page
@@ -290,7 +317,7 @@ export function CisLedgerTable({
         {fillMode && showGuide && <LedgerFrame ghost />}
 
         {/* values (ink colour) */}
-        <div className="text-blue-950">
+        <div className="text-black">
           {(has(v.col1) || has(v.col1Sub)) && (
             <Field cfg={LEDGER_FIELDS.col1}>
               {has(v.col1) && <div className="font-semibold">{v.col1}</div>}
@@ -317,14 +344,16 @@ export function CisLedgerTable({
 
           {hasRemarks && (
             <Field cfg={LEDGER_FIELDS.col6}>
-              {has(v.remarksRed) || has(v.remarksBlue) ? (
+              {has(v.remarksRed) || has(v.remarksBlack) ? (
                 <>
                   {has(v.remarksRed) && (
-                    <div className="font-semibold text-red-600">{v.remarksRed}</div>
+                    <div className="font-semibold text-red-600">
+                      {v.remarksRed}
+                    </div>
                   )}
-                  {has(v.remarksBlue) && (
-                    <div className="font-semibold text-blue-700">
-                      {v.remarksBlue}
+                  {has(v.remarksBlack) && (
+                    <div className="font-semibold text-black">
+                      {v.remarksBlack}
                     </div>
                   )}
                 </>
