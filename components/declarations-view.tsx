@@ -22,6 +22,7 @@ import {
   ChevronRightIcon,
   ChevronsRightIcon,
 } from "lucide-react";
+import { printCleanDocument } from "@/lib/print-service";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -207,7 +208,8 @@ export function DeclarationsView() {
   const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
 
   return (
-    <div className="flex flex-col gap-5 px-4 lg:px-6">
+    <>
+      <div className="no-print flex flex-col gap-5 px-4 lg:px-6">
       {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
         <div>
@@ -510,7 +512,7 @@ export function DeclarationsView() {
                           <DropdownMenuItem
                             onClick={() => {
                               setSelectedDeclaration(r);
-                              setTimeout(() => window.print(), 350);
+                              setTimeout(() => printCleanDocument("printable-document"), 400);
                             }}
                             className="gap-2"
                           >
@@ -643,6 +645,7 @@ export function DeclarationsView() {
           </div>
         </div>
       </div>
+    </div>
 
       {/* One-by-One Detail View Dialog */}
       <Dialog
@@ -651,7 +654,7 @@ export function DeclarationsView() {
           if (!open) setSelectedDeclaration(null);
         }}
       >
-        <DialogContent className="max-h-[95vh] max-w-5xl overflow-y-auto p-4 sm:p-6 border border-border/80 shadow-2xl rounded-2xl">
+        <DialogContent className="max-h-[95vh] max-w-5xl overflow-y-auto p-4 sm:p-6 border border-border/80 shadow-2xl rounded-2xl print:max-h-none print:max-w-[210mm] print:w-[210mm] print:overflow-visible print:p-0 print:m-0 print:border-none print:shadow-none print:rounded-none print:bg-transparent">
           <DialogHeader className="sr-only">
             <DialogTitle>
               ឯកសារក្បាលដីលេខ: {selectedDeclaration?.certNumber}
@@ -732,6 +735,6 @@ export function DeclarationsView() {
         initialDeclaration={editingDeclaration}
         onSuccess={handleSuccess}
       />
-    </div>
+    </>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Inter, Battambang } from "next/font/google";
 
 import "./globals.css";
+import "./print.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import ReduxProvider from "@/lib/redux/ReduxProvider";
 import { I18nProvider } from "@/lib/i18n";

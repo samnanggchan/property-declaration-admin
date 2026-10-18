@@ -1,8 +1,8 @@
 :root {
   --paper-w: 210mm;
   --paper-h: 297mm;
-  --paper-pad-top: 12mm;
-  --paper-pad-x: 14mm;
+  --paper-pad-top: 10mm;
+  --paper-pad-x: 12mm;
   --paper-pad-bottom: 10mm;
 }
 
@@ -12,12 +12,6 @@
     --paper-pad-x: 6mm;
     --paper-pad-bottom: 8mm;
   }
-}
-
-/* ── The printer page ──────────────────────────────────────────────────── */
-@page {
-  size: A4 portrait;
-  margin: 0;
 }
 
 /* ── Screen look of one sheet (utilities such as p-4 / mb-8 can still override) ── */
@@ -34,7 +28,7 @@
       --sheet-pad,
       var(--paper-pad-top) var(--paper-pad-x) var(--paper-pad-bottom)
     );
-    background: #fff;
+    background: #ffffff;
     color: #171717;
     border: 1px solid #d4d4d4;
     border-radius: 0.75rem;
@@ -46,6 +40,7 @@
   /* exactly one page, clipped – for pre-printed forms */
   .a4-sheet[data-mode="fixed"] {
     height: var(--paper-h);
+    max-height: var(--paper-h);
     overflow: hidden;
   }
 
@@ -56,13 +51,16 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
- *  PRINT
- * ═══════════════════════════════════════════════════════════════════════ */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 0mm;
+  }
+
   html,
   body {
     background: #ffffff !important;
+    background-color: #ffffff !important;
     color: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -74,24 +72,75 @@
     print-color-adjust: exact !important;
   }
 
-  /* hide app chrome */
+  /* 1. Hide all application chrome, navigation, headers, footers, sidebars */
   header,
   aside,
   nav,
   .no-print,
+  .print\:hidden,
   [data-slot="sidebar"],
   [data-slot="sidebar-gap"],
   [data-sidebar="sidebar"],
-  [data-slot="site-header"] {
+  [data-slot="site-header"],
+  [data-slot="dialog-close"],
+  [data-slot="dialog-header"] {
     display: none !important;
   }
 
-  /* flatten the app shell so the document is the only thing on the page */
-  [data-slot="sidebar-wrapper"],
-  [data-slot="sidebar-inset"],
-  [data-slot="sidebar-inset"] > div,
-  [data-slot="sidebar-inset"] > div > div,
-  [data-slot="sidebar-inset"] > div > div > div {
+  /* 2. When printing from a dialog, hide the main app shell so dashboard never shows */
+  body:has([data-slot="dialog-content"]) [data-slot="sidebar-wrapper"],
+  body:has([data-slot="dialog-content"]) [data-slot="sidebar-inset"],
+  body:has([data-slot="dialog-content"]) #app-sidebar,
+  body:has([data-slot="dialog-content"]) main,
+  body:has([role="dialog"]) [data-slot="sidebar-wrapper"],
+  body:has([role="dialog"]) [data-slot="sidebar-inset"],
+  body:has([role="dialog"]) #app-sidebar,
+  body:has([role="dialog"]) main {
+    display: none !important;
+  }
+
+  /* 3. Drop all dialog backdrops and overlays */
+  [data-slot="dialog-overlay"],
+  .dialog-overlay,
+  [data-slot="dialog-portal"] > div:first-child:not([data-slot="dialog-content"]):not([role="dialog"]),
+  div[class*="backdrop-blur"],
+  div[class*="bg-black/50"] {
+    display: none !important;
+    background: none !important;
+  }
+
+  /* 4. Strip the dialog popup frame of all modal decorations and reset translate/transforms */
+  [data-slot="dialog-content"],
+  [role="dialog"],
+  .dialog-content {
+    position: static !important;
+    transform: none !important;
+    translate: none !important;
+    inset: auto !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    max-height: none !important;
+    max-width: var(--paper-w) !important;
+    width: var(--paper-w) !important;
+    min-width: var(--paper-w) !important;
+    height: auto !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+    display: block !important;
+    z-index: auto !important;
+  }
+
+  /* 5. In case of page-level print (e.g. /cis), flatten wrappers cleanly without hiding them */
+  body:not(:has([data-slot="dialog-content"])) [data-slot="sidebar-wrapper"],
+  body:not(:has([data-slot="dialog-content"])) [data-slot="sidebar-inset"] {
     display: block !important;
     width: 100% !important;
     height: auto !important;
@@ -105,55 +154,72 @@
     overflow: visible !important;
   }
 
-  /* wrapper around the sheet(s): exactly one paper wide, no decoration */
+  /* 6. Document printable wrapper */
   #printable-document,
   .printable-area {
     display: block !important;
+    box-sizing: border-box !important;
     width: var(--paper-w) !important;
     max-width: var(--paper-w) !important;
+    min-width: var(--paper-w) !important;
     margin: 0 auto !important;
     padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
     background: transparent !important;
+    background-color: transparent !important;
     overflow: visible !important;
   }
 
-  /* ── NEW: every <A4Page> / .a4-sheet ─────────────────────────────── */
+  /* 7. Sheet styles for print: pure white paper, exact A4 size */
   .a4-sheet {
-    width: var(--paper-w);
-    max-width: none;
-    /* 1mm less than the page so rounding never creates a blank extra page */
-    min-height: calc(var(--paper-h) - 1mm);
-    margin: 0;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-    background: #ffffff;
-    color: #000000;
+    box-sizing: border-box !important;
+    width: var(--paper-w) !important;
+    max-width: var(--paper-w) !important;
+    min-width: var(--paper-w) !important;
+    min-height: calc(var(--paper-h) - 1mm) !important;
+    margin: 0 auto !important;
+    padding: var(--paper-pad-top) var(--paper-pad-x) var(--paper-pad-bottom) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
     break-after: page;
+    page-break-after: always;
   }
-  .a4-sheet:last-of-type {
-    break-after: auto;
+
+  .a4-sheet:last-of-type,
+  .a4-sheet:last-child {
+    break-after: auto !important;
+    page-break-after: auto !important;
   }
+
+  /* Pre-printed fixed-height forms */
   .a4-sheet[data-mode="fixed"] {
-    height: var(--paper-h);
-    min-height: var(--paper-h);
-    overflow: hidden;
-    break-inside: avoid;
+    height: var(--paper-h) !important;
+    max-height: var(--paper-h) !important;
+    min-height: var(--paper-h) !important;
+    overflow: hidden !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-after: auto !important;
+    page-break-after: auto !important;
+  }
+
+  /* Green paper mode on screen prints pure white on physical paper */
+  .a4-sheet[data-tone="green"] {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: none !important;
   }
 
   .page-break {
     display: none !important;
   }
 
-  /* ───────────────────────────────────────────────────────────────────
-   *  LEGACY – kept exactly as before so existing screens print the same.
-   *  (a) pre-printed fill-in forms (PortraitCadastralDocument): their
-   *      print padding is part of the tuned millimetre positions – do
-   *      NOT change these numbers.
-   *  (b) old `.application-sheet` – migrate to <A4Page>, then delete.
-   * ─────────────────────────────────────────────────────────────────── */
+  /* 8. Legacy pre-printed fill-in forms (PortraitCadastralDocument) */
   .a4-page-wrapper {
     margin: 0 !important;
     padding: 0 !important;
@@ -176,6 +242,7 @@
     overflow: hidden !important;
     position: relative !important;
     background: #ffffff !important;
+    background-color: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
     margin: 0 !important;
@@ -199,30 +266,6 @@
     padding: 0 !important;
     page-break-before: avoid !important;
     break-before: avoid !important;
-    page-break-after: auto !important;
-    break-after: auto !important;
-  }
-
-  #printable-document.application-sheet {
-    padding: 12mm 14mm 10mm 14mm !important;
-    background: #ffffff !important;
-  }
-  .application-sheet {
-    box-shadow: none !important;
-    border: none !important;
-    border-radius: 0 !important;
-    margin: 0 auto !important;
-    padding: 12mm 14mm 10mm 14mm !important;
-    width: 210mm !important;
-    min-height: 297mm !important;
-    max-width: 210mm !important;
-    background: #ffffff !important;
-    color: #000000 !important;
-    page-break-after: always !important;
-    break-after: page !important;
-  }
-  .application-sheet:last-child,
-  .application-sheet:last-of-type {
     page-break-after: auto !important;
     break-after: auto !important;
   }

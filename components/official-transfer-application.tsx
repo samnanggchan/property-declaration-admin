@@ -2,6 +2,8 @@
 
 import { PrinterIcon, XIcon, FileTextIcon, LayersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { A4Page } from "@/components/a4-page";
+import { printCleanDocument } from "@/lib/print-service";
 import {
   LandDeclaration,
   PersonFields,
@@ -231,11 +233,14 @@ export function OfficialTransferApplication({
   const transferDate = parseDateParts(transferDateStr);
 
   const handlePrint = () => {
-    window.print();
+    printCleanDocument("printable-document");
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-5xl rounded-xl bg-background p-2 sm:p-4 text-foreground">
+    <div
+      id="printable-document"
+      className="printable-area relative mx-auto w-full max-w-5xl rounded-xl bg-background p-2 sm:p-4 text-foreground print:p-0 print:m-0 print:w-[210mm] print:max-w-[210mm] print:bg-transparent"
+    >
       {/* Top Action Bar (hidden on print) */}
       <div className="no-print mb-4 flex flex-wrap items-center justify-between gap-3 border-b pb-3">
         <div className="flex items-center gap-2">
@@ -290,7 +295,7 @@ export function OfficialTransferApplication({
       {/* =========================================================================
           PAGE 1 (A4 FORMATTED)
           ========================================================================= */}
-      <div className="application-sheet font-battambang mx-auto min-h-[297mm] w-full max-w-[210mm] border border-neutral-300 bg-white p-8 sm:px-12 sm:py-10 text-neutral-900 shadow-md transition-all text-[14px] leading-[1.85] flex flex-col justify-between mb-8">
+      <A4Page className="font-battambang text-[13.5px] leading-[1.8] flex flex-col justify-between mb-8 print:mb-0 print:border-none print:shadow-none">
         <div className="space-y-3">
           {/* Header: Kingdom of Cambodia */}
           <div className="relative text-center">
@@ -326,7 +331,7 @@ export function OfficialTransferApplication({
           </div>
 
           {/* Section 1: Applicant Identification Paragraph (Seller First Husband/Wife, Buyer Husband/Wife) */}
-          <div className="w-full space-y-1 text-[14px] leading-[2.3]">
+          <div className="w-full space-y-1 text-[13.5px] leading-[1.85]">
             {/* Line 1 */}
             <div className="flex items-baseline w-full">
               <span className="w-8 shrink-0" />
@@ -644,8 +649,8 @@ export function OfficialTransferApplication({
         </div>
 
         {/* Footnotes matching Image 2 anchored cleanly at bottom of Page 1 */}
-        <div className="mt-6 pt-1 text-[12px] leading-[1.6] text-neutral-700 space-y-1.5">
-          <div className="w-36 border-t-[1.5px] border-neutral-900 mb-2" />
+        <div className="mt-4 pt-1 text-[11px] leading-[1.45] text-neutral-600 space-y-1">
+          <div className="w-28 border-t-[1px] border-neutral-800 mb-1" />
           <div className="flex items-start gap-1">
             <span className="shrink-0 font-bold">
               - <sup>(១)</sup> និង <sup>(២)</sup>
@@ -680,7 +685,7 @@ export function OfficialTransferApplication({
             </span>
           </div>
         </div>
-      </div>
+      </A4Page>
 
       {/* Page Separator */}
       <div className="page-break my-4 no-print" />
@@ -688,7 +693,7 @@ export function OfficialTransferApplication({
       {/* =========================================================================
           PAGE 2 (A4 FORMATTED)
           ========================================================================= */}
-      <div className="application-sheet font-battambang mx-auto min-h-[297mm] w-full max-w-[210mm] border border-neutral-300 bg-white p-8 sm:px-12 sm:py-10 text-neutral-900 shadow-md transition-all text-[14px] leading-[1.85] flex flex-col justify-between">
+      <A4Page className="font-battambang text-[13.5px] leading-[1.8] flex flex-col justify-between print:border-none print:shadow-none">
         <div className="space-y-4">
           {/* Continuation of Section ខ from Page 1 */}
           <div className="text-[14px] leading-relaxed">
@@ -1081,7 +1086,7 @@ export function OfficialTransferApplication({
             </span>
           </div>
         </div>
-      </div>
+      </A4Page>
     </div>
   );
 }

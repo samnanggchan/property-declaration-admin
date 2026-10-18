@@ -21,6 +21,7 @@ import {
   PortraitCadastralData,
 } from "@/components/portrait-cadastral-document";
 import { cn } from "@/lib/utils";
+import { printCleanDocument } from "@/lib/print-service";
 
 // Initial sample data focused strictly on official print-fill requirements
 const DEFAULT_FORM_DATA: PortraitCadastralData = {
@@ -200,7 +201,7 @@ export default function CisPage() {
 
           <Button
             size="sm"
-            onClick={() => window.print()}
+            onClick={() => printCleanDocument("printable-document")}
             className="h-8 gap-1.5 bg-neutral-900 px-3.5 text-xs font-semibold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 shadow-xs"
             title="ទាញយកជា PDF ឬបោះពុម្ព (Save as PDF)"
           >
