@@ -56,8 +56,8 @@ const data = {
       icon: <FileTextIcon />,
     },
     {
-      title: "Analytics",
-      url: "/analytics",
+      title: "Inheritance",
+      url: "/inheritance",
       icon: <ChartBarIcon />,
     },
     {
