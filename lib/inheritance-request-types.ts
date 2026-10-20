@@ -1,6 +1,15 @@
 export const APPLICANT_SLOTS = 2;
 export const WITNESS_SLOTS = 2;
 export const CHILD_SLOTS = 10;
+export const DECEASED_SLOTS = 2;
+
+export interface Deceased {
+  name: string; // ឈ្មោះខ្មោច
+  birthYear: string; // កើតនៅឆ្នាំ
+  deathDate: string; // ស្លាប់នៅថ្ងៃ
+  deathCertNo: string; // សំបុត្រមរណៈភាពលេខ
+  deathCertDate: string; // ចុះថ្ងៃ
+}
 
 export interface Applicant {
   name: string;
@@ -21,7 +30,11 @@ export interface Child {
   name: string;
   gender: "" | "ប្រុស" | "ស្រី";
   dob: string;
-  note: string;
+  birthCertDate: string; // ថ្ងៃខែឆ្នាំចុះ សំបុត្រកំណើត
+  birthCertNo: string; // លេខសំបុត្រកំណើត
+  commune: string; // ឃុំ/សង្កាត់
+  district: string; // ក្រុង/ស្រុក/ខណ្ឌ
+  note: string; // សម្គាល់
 }
 
 export interface InheritanceRequest {
@@ -30,6 +43,8 @@ export interface InheritanceRequest {
   location: string; // ទីតាំង
   area: string; // ទំហំ
   date: string; // dd.mm.yyyy – date printed above the signatures
+  deceasedSangkat: string; // នៅសង្កាត់
+  deceased: Deceased[];
   applicants: Applicant[];
   witnesses: Witness[];
   children: Child[];
@@ -54,7 +69,19 @@ export const emptyChild = (): Child => ({
   name: "",
   gender: "",
   dob: "",
+  birthCertDate: "",
+  birthCertNo: "",
+  commune: "",
+  district: "",
   note: "",
+});
+
+export const emptyDeceased = (): Deceased => ({
+  name: "",
+  birthYear: "",
+  deathDate: "",
+  deathCertNo: "",
+  deathCertDate: "",
 });
 
 export const emptyRequest = (): InheritanceRequest => ({
@@ -63,6 +90,8 @@ export const emptyRequest = (): InheritanceRequest => ({
   location: "",
   area: "",
   date: "",
+  deceasedSangkat: "",
+  deceased: Array.from({ length: DECEASED_SLOTS }, emptyDeceased),
   applicants: Array.from({ length: APPLICANT_SLOTS }, emptyApplicant),
   witnesses: Array.from({ length: WITNESS_SLOTS }, emptyWitness),
   children: Array.from({ length: CHILD_SLOTS }, emptyChild),
@@ -92,6 +121,9 @@ export function normalizeRequest(raw: unknown): InheritanceRequest {
     location: typeof r.location === "string" ? r.location : "",
     area: typeof r.area === "string" ? r.area : "",
     date: typeof r.date === "string" ? r.date : "",
+    deceasedSangkat:
+      typeof r.deceasedSangkat === "string" ? r.deceasedSangkat : "",
+    deceased: fixedList(r.deceased, emptyDeceased, DECEASED_SLOTS),
     applicants: fixedList(r.applicants, emptyApplicant, APPLICANT_SLOTS),
     witnesses: fixedList(r.witnesses, emptyWitness, WITNESS_SLOTS),
     children: fixedList(r.children, emptyChild, CHILD_SLOTS),
@@ -126,6 +158,21 @@ export function sampleRequest(): InheritanceRequest {
   r.location = "ភូមិ​ឧទាហរណ៍ សង្កាត់ឧទាហរណ៍ ខណ្ឌឧទាហរណ៍ រាជធានីភ្នំពេញ";
   r.area = "93 ម²";
   r.date = "08.10.2026";
+  r.deceasedSangkat = "ទឹកល្អក់ទី១";
+  r.deceased[0] = {
+    name: "សុខ ចាន់",
+    birthYear: "1955",
+    deathDate: "10.05.2020",
+    deathCertNo: "០៤៥",
+    deathCertDate: "12.05.2020",
+  };
+  r.deceased[1] = {
+    name: "ជា សុវណ្ណា",
+    birthYear: "1958",
+    deathDate: "15.08.2022",
+    deathCertNo: "០៨៩",
+    deathCertDate: "18.08.2022",
+  };
   r.applicants[0] = {
     name: "សុខ សុភា",
     dob: "12.03.1985",
@@ -152,8 +199,35 @@ export function sampleRequest(): InheritanceRequest {
     idNumber: "010654321",
     address: "សង្កាត់ឧទាហរណ៍ រាជធានីភ្នំពេញ",
   };
-  r.children[0] = { name: "សុខ វិសាល", gender: "ប្រុស", dob: "01.02.2010", note: "" };
-  r.children[1] = { name: "សុខ សោភា", gender: "ស្រី", dob: "14.09.2012", note: "" };
-  r.children[2] = { name: "សុខ ដារា", gender: "ប្រុស", dob: "30.06.2015", note: "ស្លាប់" };
+  r.children[0] = {
+    name: "សុខ វិសាល",
+    gender: "ប្រុស",
+    dob: "01.02.2010",
+    birthCertDate: "15.02.2010",
+    birthCertNo: "១២",
+    commune: "ទឹកល្អក់ទី១",
+    district: "ទួលគោក",
+    note: "",
+  };
+  r.children[1] = {
+    name: "សុខ សោភា",
+    gender: "ស្រី",
+    dob: "14.09.2012",
+    birthCertDate: "20.09.2012",
+    birthCertNo: "៣៥",
+    commune: "ទឹកល្អក់ទី១",
+    district: "ទួលគោក",
+    note: "",
+  };
+  r.children[2] = {
+    name: "សុខ ដារា",
+    gender: "ប្រុស",
+    dob: "30.06.2015",
+    birthCertDate: "05.07.2015",
+    birthCertNo: "៨៨",
+    commune: "ទឹកល្អក់ទី១",
+    district: "ទួលគោក",
+    note: "ស្លាប់",
+  };
   return r;
 }
