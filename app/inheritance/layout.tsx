@@ -17,11 +17,11 @@ export default function InheritanceLayout({
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset>
+      <SidebarInset className="print:p-0 print:m-0">
         <SiteHeader />
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <div className="flex flex-1 flex-col print:block print:p-0 print:m-0">
+          <div className="@container/main flex flex-1 flex-col gap-2 print:block print:p-0 print:m-0">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 print:block print:p-0 print:m-0 print:gap-0">
               {children}
             </div>
           </div>

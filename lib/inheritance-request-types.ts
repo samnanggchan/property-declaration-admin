@@ -44,6 +44,23 @@ export interface InheritanceRequest {
   area: string; // ទំហំ
   date: string; // dd.mm.yyyy – date printed above the signatures
   deceasedSangkat: string; // នៅសង្កាត់
+
+  // Specific land & authority details for pages 3, 4, 5
+  titleDeedNo: string; // ប័ណ្ណសម្គាល់សិទ្ធិកាន់កាប់អចលនវត្ថុលេខ
+  plotNo: string; // ក្បាលដីលេខ
+  streetNo: string; // ផ្លូវលេខ
+  village: string; // ភូមិ
+  sangkat: string; // សង្កាត់
+  khan: string; // ខណ្ឌ
+  city: string; // រាជធានី/ខេត្ត
+  authorizedPerson: string; // ឈ្មោះអ្នកទទួលសិទ្ធិចាត់ចែង (ខាង)
+  authorizedRelationDeceased: string; // ត្រូវជា...នៃខ្មោច (ឧ. ប្រពន្ធ / ប្ដី)
+  authorizedRelationHeirs: string; // និងជា...នៃយើងខ្ញុំទាំងអស់គ្នា (ឧ. ម្ដាយ / ឪពុក)
+  communeChiefName: string; // ឈ្មោះចៅសង្កាត់
+  heirCertNo: string; // លេខសំបុត្របញ្ជាក់ទាយាទ
+  letterRefNo: string; // លិខិតតំណាង/ដំណាលលេខ
+  letterRefDate: string; // ចុះថ្ងៃទី
+
   deceased: Deceased[];
   applicants: Applicant[];
   witnesses: Witness[];
@@ -91,6 +108,20 @@ export const emptyRequest = (): InheritanceRequest => ({
   area: "",
   date: "",
   deceasedSangkat: "",
+  titleDeedNo: "",
+  plotNo: "",
+  streetNo: "",
+  village: "",
+  sangkat: "",
+  khan: "",
+  city: "រាជធានីភ្នំពេញ",
+  authorizedPerson: "",
+  authorizedRelationDeceased: "",
+  authorizedRelationHeirs: "",
+  communeChiefName: "",
+  heirCertNo: "",
+  letterRefNo: "",
+  letterRefDate: "",
   deceased: Array.from({ length: DECEASED_SLOTS }, emptyDeceased),
   applicants: Array.from({ length: APPLICANT_SLOTS }, emptyApplicant),
   witnesses: Array.from({ length: WITNESS_SLOTS }, emptyWitness),
@@ -123,6 +154,28 @@ export function normalizeRequest(raw: unknown): InheritanceRequest {
     date: typeof r.date === "string" ? r.date : "",
     deceasedSangkat:
       typeof r.deceasedSangkat === "string" ? r.deceasedSangkat : "",
+    titleDeedNo: typeof r.titleDeedNo === "string" ? r.titleDeedNo : "",
+    plotNo: typeof r.plotNo === "string" ? r.plotNo : "",
+    streetNo: typeof r.streetNo === "string" ? r.streetNo : "",
+    village: typeof r.village === "string" ? r.village : "",
+    sangkat: typeof r.sangkat === "string" ? r.sangkat : "",
+    khan: typeof r.khan === "string" ? r.khan : "",
+    city: typeof r.city === "string" ? r.city : "រាជធានីភ្នំពេញ",
+    authorizedPerson:
+      typeof r.authorizedPerson === "string" ? r.authorizedPerson : "",
+    authorizedRelationDeceased:
+      typeof r.authorizedRelationDeceased === "string"
+        ? r.authorizedRelationDeceased
+        : "",
+    authorizedRelationHeirs:
+      typeof r.authorizedRelationHeirs === "string"
+        ? r.authorizedRelationHeirs
+        : "",
+    communeChiefName:
+      typeof r.communeChiefName === "string" ? r.communeChiefName : "",
+    heirCertNo: typeof r.heirCertNo === "string" ? r.heirCertNo : "",
+    letterRefNo: typeof r.letterRefNo === "string" ? r.letterRefNo : "",
+    letterRefDate: typeof r.letterRefDate === "string" ? r.letterRefDate : "",
     deceased: fixedList(r.deceased, emptyDeceased, DECEASED_SLOTS),
     applicants: fixedList(r.applicants, emptyApplicant, APPLICANT_SLOTS),
     witnesses: fixedList(r.witnesses, emptyWitness, WITNESS_SLOTS),
@@ -155,10 +208,24 @@ export const countNamed = (list: { name: string }[]) =>
 export function sampleRequest(): InheritanceRequest {
   const r = emptyRequest();
   r.refNo = "០០១/២៦";
-  r.location = "ភូមិ​ឧទាហរណ៍ សង្កាត់ឧទាហរណ៍ ខណ្ឌឧទាហរណ៍ រាជធានីភ្នំពេញ";
+  r.location = "ភូមិ៣ សង្កាត់ទឹកល្អក់ទី១ ខណ្ឌទួលគោក រាជធានីភ្នំពេញ";
   r.area = "93 ម²";
   r.date = "08.10.2026";
   r.deceasedSangkat = "ទឹកល្អក់ទី១";
+  r.titleDeedNo = "១២-៣៤-៥៦-៧៨៩";
+  r.plotNo = "១២៨";
+  r.streetNo = "១៩៣";
+  r.village = "ភូមិ៣";
+  r.sangkat = "ទឹកល្អក់ទី១";
+  r.khan = "ទួលគោក";
+  r.city = "រាជធានីភ្នំពេញ";
+  r.authorizedPerson = "ជា សុវណ្ណា";
+  r.authorizedRelationDeceased = "ប្រពន្ធ";
+  r.authorizedRelationHeirs = "ម្ដាយ";
+  r.communeChiefName = "";
+  r.heirCertNo = "០៤២/២៦";
+  r.letterRefNo = "០១២/២៦";
+  r.letterRefDate = "០៥.១០.២០២៦";
   r.deceased[0] = {
     name: "សុខ ចាន់",
     birthYear: "1955",

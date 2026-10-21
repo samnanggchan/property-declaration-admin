@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { InheritanceRequestPrint } from "@/components/inheritance-request-print";
+import { printCleanDocument } from "@/lib/print-service";
 import { cn } from "@/lib/utils";
 import {
   Applicant,
@@ -81,6 +82,9 @@ function Field({
 export function InheritanceRequestForm() {
   const [data, setData] = React.useState<InheritanceRequest>(emptyRequest);
   const [hydrated, setHydrated] = React.useState(false);
+  const [pageFilter, setPageFilter] = React.useState<"all" | 1 | 2 | 3 | 4 | 5>(
+    "all",
+  );
 
   // load saved draft once (after mount, so server/client HTML match)
   React.useEffect(() => {
@@ -159,54 +163,93 @@ export function InheritanceRequestForm() {
   return (
     <div className="flex flex-col gap-4">
       {/* ── toolbar (never printed) ── */}
-      <div className="no-print flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/30 p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline" className="text-xs">
-            ខ្មោច {deceasedNamed}/{DECEASED_SLOTS}
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            អ្នកស្នើសុំ {applicantsNamed}/{data.applicants.length}
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            សាក្សី {witnessesNamed}/{data.witnesses.length}
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            កូន {childrenNamed}/{CHILD_SLOTS}
-          </Badge>
+      <div className="no-print flex flex-col gap-3 rounded-xl border bg-muted/30 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="text-xs">
+              ខ្មោច {deceasedNamed}/{DECEASED_SLOTS}
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              អ្នកស្នើសុំ {applicantsNamed}/{data.applicants.length}
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              សាក្សី {witnessesNamed}/{data.witnesses.length}
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              កូន {childrenNamed}/{CHILD_SLOTS}
+            </Badge>
+            <Badge variant="secondary" className="text-xs font-semibold">
+              សរុប ៥ ទំព័រ
+            </Badge>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSample}
+              className="h-8 gap-1.5 text-xs"
+            >
+              <SparklesIcon className="size-3.5" />
+              ទិន្នន័យគំរូ
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              className="h-8 gap-1.5 text-xs"
+            >
+              <RotateCcwIcon className="size-3.5" />
+              សម្អាត
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => printCleanDocument("printable-document")}
+              className="h-8 gap-1.5 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900"
+            >
+              <PrinterIcon className="size-3.5" />
+              {pageFilter === "all"
+                ? "បោះពុម្ព (Print)"
+                : `បោះពុម្ពទំព័រ ${pageFilter} (Print Page ${pageFilter})`}
+            </Button>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSample}
-            className="h-8 gap-1.5 text-xs"
-          >
-            <SparklesIcon className="size-3.5" />
-            ទិន្នន័យគំរូ
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleReset}
-            className="h-8 gap-1.5 text-xs"
-          >
-            <RotateCcwIcon className="size-3.5" />
-            សម្អាត
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => window.print()}
-            className="h-8 gap-1.5 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900"
-          >
-            <PrinterIcon className="size-3.5" />
-            បោះពុម្ព (Print)
-          </Button>
+        {/* Page navigation tabs */}
+        <div className="flex flex-wrap items-center gap-1.5 border-t pt-2.5">
+          <span className="text-xs font-medium text-muted-foreground mr-1">
+            មើលទំព័រ៖
+          </span>
+          {[
+            { id: "all", label: "ទាំងអស់ (៥ ទំព័រ)" },
+            { id: 1, label: "ទំព័រ ១ (ដំណរវង្ស)" },
+            { id: 2, label: "ទំព័រ ២ (ដំណរវង្ស-ត)" },
+            { id: 3, label: "ទំព័រ ៣ (ព្រមព្រៀង)" },
+            { id: 4, label: "ទំព័រ ៤ (ក្រុមប្រឹក្សាញាតិ)" },
+            { id: 5, label: "ទំព័រ ៥ (បញ្ជាក់ទាយាទ)" },
+          ].map((tab) => {
+            const active = pageFilter === tab.id;
+            return (
+              <button
+                key={String(tab.id)}
+                type="button"
+                onClick={() => setPageFilter(tab.id as typeof pageFilter)}
+                className={cn(
+                  "rounded-md px-3 py-1 text-xs font-medium transition-colors cursor-pointer",
+                  active
+                    ? "bg-neutral-900 text-white shadow-xs dark:bg-neutral-100 dark:text-neutral-900"
+                    : "bg-background text-muted-foreground border hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* editor on the left, A4 preview on the right; plain block when printing */}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,480px)_minmax(0,1fr)] print:block">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,480px)_minmax(0,1fr)] print:block print:p-0 print:m-0 print:gap-0">
         {/* ═══════════════ EDITOR (never printed) ═══════════════ */}
         <div className="no-print space-y-4">
           <Card title="ព័ត៌មានទូទៅ">
@@ -510,11 +553,98 @@ export function InheritanceRequestForm() {
               ))}
             </div>
           </Card>
+
+          <Card
+            title="ព័ត៌មានអចលនវត្ថុ និងអាជ្ញាធរ (ទំព័រ ៣, ៤, ៥)"
+            hint="សម្រាប់សេចក្តីព្រមព្រៀង, ក្រុមប្រឹក្សាញាតិ, បញ្ជាក់ទាយាទ"
+          >
+            <div className="grid grid-cols-2 gap-3">
+              <Field
+                label="ប័ណ្ណសម្គាល់សិទ្ធិលេខ"
+                value={data.titleDeedNo}
+                onChange={(v) => setField("titleDeedNo", v)}
+                placeholder="ឧ. ១២-៣៤-៥៦-៧៨៩"
+              />
+              <Field
+                label="ក្បាលដីលេខ"
+                value={data.plotNo}
+                onChange={(v) => setField("plotNo", v)}
+                placeholder="ឧ. ១២៨"
+              />
+              <Field
+                label="ផ្លូវលេខ"
+                value={data.streetNo}
+                onChange={(v) => setField("streetNo", v)}
+                placeholder="ឧ. ១៩៣"
+              />
+              <Field
+                label="ភូមិ"
+                value={data.village}
+                onChange={(v) => setField("village", v)}
+                placeholder="ឧ. ភូមិ៣"
+              />
+              <Field
+                label="សង្កាត់"
+                value={data.sangkat}
+                onChange={(v) => setField("sangkat", v)}
+                placeholder="ឧ. ទឹកល្អក់ទី១"
+              />
+              <Field
+                label="ខណ្ឌ"
+                value={data.khan}
+                onChange={(v) => setField("khan", v)}
+                placeholder="ឧ. ទួលគោក"
+              />
+              <Field
+                label="ឈ្មោះអ្នកទទួលសិទ្ធិចាត់ចែង (ខាង)"
+                value={data.authorizedPerson}
+                onChange={(v) => setField("authorizedPerson", v)}
+                placeholder="ឧ. ជា សុវណ្ណា"
+                className="col-span-2"
+              />
+              <Field
+                label="ត្រូវជា...នៃខ្មោច"
+                value={data.authorizedRelationDeceased}
+                onChange={(v) => setField("authorizedRelationDeceased", v)}
+                placeholder="ឧ. ប្រពន្ធ / ប្ដី"
+              />
+              <Field
+                label="ត្រូវជា...នៃយើងខ្ញុំ"
+                value={data.authorizedRelationHeirs}
+                onChange={(v) => setField("authorizedRelationHeirs", v)}
+                placeholder="ឧ. ម្ដាយ / ឪពុក"
+              />
+              <Field
+                label="ឈ្មោះចៅសង្កាត់"
+                value={data.communeChiefName}
+                onChange={(v) => setField("communeChiefName", v)}
+                placeholder="ទុកទំនេរសម្រាប់ចុះហត្ថលេខា"
+              />
+              <Field
+                label="លេខសំបុត្របញ្ជាក់ទាយាទ (ទំព័រ ៥)"
+                value={data.heirCertNo}
+                onChange={(v) => setField("heirCertNo", v)}
+                placeholder="ឧ. ០៤២/២៦"
+              />
+              <Field
+                label="លិខិតដំណាលលេខ (ទំព័រ ៤)"
+                value={data.letterRefNo}
+                onChange={(v) => setField("letterRefNo", v)}
+                placeholder="ឧ. ០១២/២៦"
+              />
+              <Field
+                label="ចុះថ្ងៃទី (លិខិតដំណាល)"
+                value={data.letterRefDate}
+                onChange={(v) => setField("letterRefDate", v)}
+                placeholder="ឧ. ០៥.១០.២០២៦"
+              />
+            </div>
+          </Card>
         </div>
 
-        {/* ═══════════════ PRINTABLE FORM (2 × A4) ═══════════════ */}
+        {/* ═══════════════ PRINTABLE FORM (5 × A4) ═══════════════ */}
         <div id="printable-document" className="printable-area">
-          <InheritanceRequestPrint data={data} />
+          <InheritanceRequestPrint data={data} pageFilter={pageFilter} />
         </div>
       </div>
     </div>

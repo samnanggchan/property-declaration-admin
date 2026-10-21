@@ -102,7 +102,8 @@
   /* 3. Drop all dialog backdrops and overlays */
   [data-slot="dialog-overlay"],
   .dialog-overlay,
-  [data-slot="dialog-portal"] > div:first-child:not([data-slot="dialog-content"]):not([role="dialog"]),
+  [data-slot="dialog-portal"]
+    > div:first-child:not([data-slot="dialog-content"]):not([role="dialog"]),
   div[class*="backdrop-blur"],
   div[class*="bg-black/50"] {
     display: none !important;
@@ -138,17 +139,29 @@
     z-index: auto !important;
   }
 
-  /* 5. In case of page-level print (e.g. /cis), flatten wrappers cleanly without hiding them */
+  /* 5. In case of page-level print (e.g. /inheritance, /cis), flatten wrappers cleanly without hiding them */
   body:not(:has([data-slot="dialog-content"])) [data-slot="sidebar-wrapper"],
-  body:not(:has([data-slot="dialog-content"])) [data-slot="sidebar-inset"] {
+  body:not(:has([data-slot="dialog-content"])) [data-slot="sidebar-inset"],
+  body:not(:has([data-slot="dialog-content"]))
+    [data-slot="sidebar-inset"]
+    > div,
+  body:not(:has([data-slot="dialog-content"]))
+    [data-slot="sidebar-inset"]
+    > div
+    > div,
+  body:not(:has([data-slot="dialog-content"])) main,
+  body:not(:has([data-slot="dialog-content"])) div:has(#printable-document),
+  body:not(:has([data-slot="dialog-content"])) div:has(.printable-area) {
     display: block !important;
     width: 100% !important;
+    max-width: none !important;
     height: auto !important;
     min-height: auto !important;
     max-height: none !important;
     background: transparent !important;
     padding: 0 !important;
     margin: 0 !important;
+    gap: 0 !important;
     border: none !important;
     box-shadow: none !important;
     overflow: visible !important;
@@ -177,7 +190,7 @@
     width: var(--paper-w) !important;
     max-width: var(--paper-w) !important;
     min-width: var(--paper-w) !important;
-    min-height: calc(var(--paper-h) - 1mm) !important;
+    min-height: calc(var(--paper-h) - 2mm) !important;
     margin: 0 auto !important;
     padding: var(--paper-pad-top) var(--paper-pad-x) var(--paper-pad-bottom) !important;
     border: none !important;
@@ -186,8 +199,8 @@
     background: #ffffff !important;
     background-color: #ffffff !important;
     color: #000000 !important;
-    break-after: page;
-    page-break-after: always;
+    break-after: page !important;
+    page-break-after: always !important;
   }
 
   .a4-sheet:last-of-type,
@@ -198,12 +211,21 @@
 
   /* Pre-printed fixed-height forms */
   .a4-sheet[data-mode="fixed"] {
-    height: var(--paper-h) !important;
-    max-height: var(--paper-h) !important;
-    min-height: var(--paper-h) !important;
+    height: calc(var(--paper-h) - 1.5mm) !important;
+    max-height: calc(var(--paper-h) - 1.5mm) !important;
+    min-height: calc(var(--paper-h) - 1.5mm) !important;
     overflow: hidden !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
+  }
+
+  .a4-sheet[data-mode="fixed"]:not(:last-child):not(:last-of-type) {
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  .a4-sheet[data-mode="fixed"]:last-child,
+  .a4-sheet[data-mode="fixed"]:last-of-type {
     break-after: auto !important;
     page-break-after: auto !important;
   }

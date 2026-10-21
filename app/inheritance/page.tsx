@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function InheritanceRequestPage() {
   return (
-    <div className="p-4">
+    <div className="p-4 print:p-0 print:m-0">
       <InheritanceRequestForm />
     </div>
   );
