@@ -1,7 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { PrinterIcon, RotateCcwIcon, SparklesIcon } from "lucide-react";
+import {
+  PlusIcon,
+  PrinterIcon,
+  RotateCcwIcon,
+  SparklesIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,14 +18,23 @@ import { printCleanDocument } from "@/lib/print-service";
 import { cn } from "@/lib/utils";
 import {
   Applicant,
+  APPLICANT_SLOTS,
   Child,
   CHILD_SLOTS,
   Deceased,
   DECEASED_SLOTS,
   InheritanceRequest,
+  Relative,
+  RELATIVE_SLOTS,
   Witness,
+  WITNESS_SLOTS,
   countNamed,
+  emptyApplicant,
+  emptyChild,
+  emptyDeceased,
+  emptyRelative,
   emptyRequest,
+  emptyWitness,
   normalizeRequest,
   sampleRequest,
   toKhmerDigits as kh,
@@ -79,9 +94,27 @@ function Field({
 
 /* ═════════════════════════════ main component ═════════════════════════════ */
 
+function getLastFilledIndex<T extends object>(list: T[] = []): number {
+  const last = list.reduce(
+    (max, item, idx) =>
+      Object.values(item).some(
+        (v) => typeof v === "string" && v.trim().length > 0,
+      )
+        ? idx + 1
+        : max,
+    0,
+  );
+  return Math.max(1, last);
+}
+
 export function InheritanceRequestForm() {
   const [data, setData] = React.useState<InheritanceRequest>(emptyRequest);
   const [hydrated, setHydrated] = React.useState(false);
+  const [visibleDeceased, setVisibleDeceased] = React.useState<number>(1);
+  const [visibleApplicants, setVisibleApplicants] = React.useState<number>(1);
+  const [visibleWitnesses, setVisibleWitnesses] = React.useState<number>(1);
+  const [visibleChildren, setVisibleChildren] = React.useState<number>(1);
+  const [visibleRelatives, setVisibleRelatives] = React.useState<number>(1);
   const [pageFilter, setPageFilter] = React.useState<"all" | 1 | 2 | 3 | 4 | 5>(
     "all",
   );
@@ -90,7 +123,15 @@ export function InheritanceRequestForm() {
   React.useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setData(normalizeRequest(JSON.parse(saved)));
+      if (saved) {
+        const parsed = normalizeRequest(JSON.parse(saved));
+        setData(parsed);
+        setVisibleDeceased(getLastFilledIndex(parsed.deceased));
+        setVisibleApplicants(getLastFilledIndex(parsed.applicants));
+        setVisibleWitnesses(getLastFilledIndex(parsed.witnesses));
+        setVisibleChildren(getLastFilledIndex(parsed.children));
+        setVisibleRelatives(getLastFilledIndex(parsed.relatives));
+      }
     } catch {
       /* ignore */
     }
@@ -144,14 +185,98 @@ export function InheritanceRequestForm() {
       ),
     }));
 
+  const patchRelative = (i: number, patch: Partial<Relative>) =>
+    setData((p) => ({
+      ...p,
+      relatives: (
+        p.relatives || Array.from({ length: RELATIVE_SLOTS }, emptyRelative)
+      ).map((r, idx) => (idx === i ? { ...r, ...patch } : r)),
+    }));
+
+  const handleAddDeceased = () => {
+    setVisibleDeceased((prev) => Math.min(DECEASED_SLOTS, prev + 1));
+  };
+  const handleRemoveDeceased = (index: number) => {
+    setData((p) => {
+      const cur = [...p.deceased];
+      cur.splice(index, 1);
+      cur.push(emptyDeceased());
+      return { ...p, deceased: cur };
+    });
+    setVisibleDeceased((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleAddApplicant = () => {
+    setVisibleApplicants((prev) => Math.min(APPLICANT_SLOTS, prev + 1));
+  };
+  const handleRemoveApplicant = (index: number) => {
+    setData((p) => {
+      const cur = [...p.applicants];
+      cur.splice(index, 1);
+      cur.push(emptyApplicant());
+      return { ...p, applicants: cur };
+    });
+    setVisibleApplicants((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleAddWitness = () => {
+    setVisibleWitnesses((prev) => Math.min(WITNESS_SLOTS, prev + 1));
+  };
+  const handleRemoveWitness = (index: number) => {
+    setData((p) => {
+      const cur = [...p.witnesses];
+      cur.splice(index, 1);
+      cur.push(emptyWitness());
+      return { ...p, witnesses: cur };
+    });
+    setVisibleWitnesses((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleAddChild = () => {
+    setVisibleChildren((prev) => Math.min(CHILD_SLOTS, prev + 1));
+  };
+  const handleRemoveChild = (index: number) => {
+    setData((p) => {
+      const cur = [...p.children];
+      cur.splice(index, 1);
+      cur.push(emptyChild());
+      return { ...p, children: cur };
+    });
+    setVisibleChildren((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleAddRelative = () => {
+    setVisibleRelatives((prev) => Math.min(RELATIVE_SLOTS, prev + 1));
+  };
+  const handleRemoveRelative = (index: number) => {
+    setData((p) => {
+      const cur = [...p.relatives];
+      cur.splice(index, 1);
+      cur.push(emptyRelative());
+      return { ...p, relatives: cur };
+    });
+    setVisibleRelatives((prev) => Math.max(1, prev - 1));
+  };
+
   const handleReset = () => {
     if (!window.confirm("សម្អាតទិន្នន័យទាំងអស់?")) return;
     setData(emptyRequest());
+    setVisibleDeceased(1);
+    setVisibleApplicants(1);
+    setVisibleWitnesses(1);
+    setVisibleChildren(1);
+    setVisibleRelatives(1);
     toast.success("បានសម្អាតទិន្នន័យ");
   };
 
   const handleSample = () => {
-    setData(sampleRequest());
+    const s = sampleRequest();
+    setData(s);
+    setVisibleDeceased(getLastFilledIndex(s.deceased));
+    setVisibleApplicants(getLastFilledIndex(s.applicants));
+    setVisibleWitnesses(getLastFilledIndex(s.witnesses));
+    setVisibleChildren(getLastFilledIndex(s.children));
+    setVisibleRelatives(getLastFilledIndex(s.relatives));
     toast.success("បានដាក់ទិន្នន័យគំរូ");
   };
 
@@ -159,6 +284,7 @@ export function InheritanceRequestForm() {
   const applicantsNamed = countNamed(data.applicants);
   const witnessesNamed = countNamed(data.witnesses);
   const childrenNamed = countNamed(data.children);
+  const relativesNamed = countNamed(data.relatives || []);
 
   return (
     <div className="flex flex-col gap-4">
@@ -177,6 +303,9 @@ export function InheritanceRequestForm() {
             </Badge>
             <Badge variant="outline" className="text-xs">
               កូន {childrenNamed}/{CHILD_SLOTS}
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              សាច់ញាតិ {relativesNamed}/{RELATIVE_SLOTS}
             </Badge>
             <Badge variant="secondary" className="text-xs font-semibold">
               សរុប ៥ ទំព័រ
@@ -266,6 +395,12 @@ export function InheritanceRequestForm() {
                 onChange={(v) => setField("refNo", v)}
               />
               <Field
+                label="ប្រភេទទ្រព្យ"
+                value={data.propertyType}
+                onChange={(v) => setField("propertyType", v)}
+                placeholder="ឧ. ដីលំនៅដ្ឋាន"
+              />
+              <Field
                 label="ទំហំ"
                 value={data.area}
                 onChange={(v) => setField("area", v)}
@@ -288,7 +423,7 @@ export function InheritanceRequestForm() {
           </Card>
 
           <Card
-            title={`សំបុត្រដំណរវង្សត្រកូលនៃខ្មោច (${DECEASED_SLOTS} នាក់)`}
+            title={`សំបុត្រដំណរវង្សត្រកូលនៃខ្មោច (${deceasedNamed}/${DECEASED_SLOTS} នាក់)`}
             hint="ព័ត៌មានឪពុក-ម្តាយ ឬអ្នកចែកឋាន"
           >
             <div className="space-y-3">
@@ -299,13 +434,33 @@ export function InheritanceRequestForm() {
                 placeholder="សង្កាត់..."
               />
 
-              {data.deceased.map((d, i) => (
+              {data.deceased.slice(0, visibleDeceased).map((d, i) => (
                 <div
                   key={i}
                   className="space-y-2 rounded-lg border bg-muted/20 p-2.5 transition-colors hover:border-neutral-400 dark:hover:border-neutral-600"
                 >
-                  <div className="border-b pb-1 text-xs font-semibold text-foreground">
-                    ខ្មោចទី {kh(i + 1)}
+                  <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <span className="flex size-5 items-center justify-center rounded-full bg-neutral-200 text-[10px] font-bold text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
+                        {i + 1}
+                      </span>
+                      <span>
+                        ខ្មោចទី {kh(i + 1)}
+                        {d.name ? `: ${d.name}` : ""}
+                      </span>
+                    </span>
+                    {visibleDeceased > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveDeceased(i)}
+                        className="h-6 px-1.5 text-[11px] text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                        title="ដកចេញ"
+                      >
+                        <Trash2Icon className="size-3" />
+                      </Button>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Field
@@ -342,75 +497,200 @@ export function InheritanceRequestForm() {
                   </div>
                 </div>
               ))}
+
+              {visibleDeceased < DECEASED_SLOTS && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddDeceased}
+                  className="w-full gap-1.5 border-dashed text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <PlusIcon className="size-3.5" />
+                  បន្ថែមខ្មោចទី {kh(visibleDeceased + 1)} (អតិបរមា{" "}
+                  {kh(DECEASED_SLOTS)} នាក់)
+                </Button>
+              )}
             </div>
           </Card>
 
-          {data.applicants.map((a, i) => (
-            <Card key={i} title={`អ្នកស្នើសុំទី ${i + 1}`}>
-              <div className="grid grid-cols-2 gap-3">
-                <Field
-                  label="ឈ្មោះ"
-                  value={a.name}
-                  onChange={(v) => patchApplicant(i, { name: v })}
-                />
-                <Field
-                  label="ថ្ងៃ ខែ ឆ្នាំកំណើត"
-                  value={a.dob}
-                  onChange={(v) => patchApplicant(i, { dob: v })}
-                  placeholder="22.02.1980"
-                />
-                <Field
-                  label="អាសយដ្ឋាន"
-                  value={a.address}
-                  onChange={(v) => patchApplicant(i, { address: v })}
-                  className="col-span-2"
-                />
-                <Field
-                  label="ឈ្មោះឪពុក"
-                  value={a.fatherName}
-                  onChange={(v) => patchApplicant(i, { fatherName: v })}
-                />
-                <Field
-                  label="ឈ្មោះម្តាយ"
-                  value={a.motherName}
-                  onChange={(v) => patchApplicant(i, { motherName: v })}
-                />
-              </div>
-            </Card>
-          ))}
-
-          {data.witnesses.map((w, i) => (
-            <Card key={i} title={`សាក្សីទី ${i + 1}`}>
-              <div className="grid grid-cols-2 gap-3">
-                <Field
-                  label="ឈ្មោះ"
-                  value={w.name}
-                  onChange={(v) => patchWitness(i, { name: v })}
-                />
-                <Field
-                  label="ថ្ងៃ ខែ ឆ្នាំកំណើត"
-                  value={w.dob}
-                  onChange={(v) => patchWitness(i, { dob: v })}
-                  placeholder="22.02.1980"
-                />
-                <Field
-                  label="អត្តសញ្ញាណប័ណ្ណ"
-                  value={w.idNumber}
-                  onChange={(v) => patchWitness(i, { idNumber: v })}
-                />
-                <Field
-                  label="អាសយដ្ឋាន"
-                  value={w.address}
-                  onChange={(v) => patchWitness(i, { address: v })}
-                  placeholder="សង្កាត់… ខណ្ឌ… រាជធានី…"
-                />
-              </div>
-            </Card>
-          ))}
-
-          <Card title={`ឈ្មោះកូន (${CHILD_SLOTS} នាក់)`} hint="ទុកទទេបើគ្មាន">
+          <Card
+            title={`អ្នកស្នើសុំ (${applicantsNamed}/${APPLICANT_SLOTS} នាក់)`}
+            hint="ព័ត៌មានអ្នកស្នើសុំ"
+          >
             <div className="space-y-3">
-              {data.children.map((c, i) => (
+              {data.applicants.slice(0, visibleApplicants).map((a, i) => (
+                <div
+                  key={i}
+                  className="space-y-2 rounded-lg border bg-muted/20 p-2.5 transition-colors hover:border-neutral-400 dark:hover:border-neutral-600"
+                >
+                  <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <span className="flex size-5 items-center justify-center rounded-full bg-neutral-200 text-[10px] font-bold text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
+                        {i + 1}
+                      </span>
+                      <span>
+                        អ្នកស្នើសុំទី {kh(i + 1)}
+                        {a.name ? `: ${a.name}` : ""}
+                      </span>
+                    </span>
+                    {visibleApplicants > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveApplicant(i)}
+                        className="h-6 px-1.5 text-[11px] text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                        title="ដកចេញ"
+                      >
+                        <Trash2Icon className="size-3" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field
+                      label="ឈ្មោះ"
+                      value={a.name}
+                      onChange={(v) => patchApplicant(i, { name: v })}
+                    />
+                    <Field
+                      label="ថ្ងៃ ខែ ឆ្នាំកំណើត"
+                      value={a.dob}
+                      onChange={(v) => patchApplicant(i, { dob: v })}
+                      placeholder="22.02.1980"
+                    />
+                    <Field
+                      label="អាសយដ្ឋាន"
+                      value={a.address}
+                      onChange={(v) => patchApplicant(i, { address: v })}
+                      className="col-span-2"
+                    />
+                    <Field
+                      label="ឈ្មោះឪពុក"
+                      value={a.fatherName}
+                      onChange={(v) => patchApplicant(i, { fatherName: v })}
+                    />
+                    <Field
+                      label="ឈ្មោះម្តាយ"
+                      value={a.motherName}
+                      onChange={(v) => patchApplicant(i, { motherName: v })}
+                    />
+                    <Field
+                      label="ត្រូវជា (នៃខ្មោច)"
+                      value={a.relationDeceased}
+                      onChange={(v) =>
+                        patchApplicant(i, { relationDeceased: v })
+                      }
+                      placeholder="ឧ. ប្រពន្ធ / ប្ដី / កូន"
+                    />
+                    <Field
+                      label="និងជា (នៃយើងខ្ញុំ)"
+                      value={a.relationHeirs}
+                      onChange={(v) => patchApplicant(i, { relationHeirs: v })}
+                      placeholder="ឧ. ម្ដាយ / ឪពុក / បង"
+                    />
+                  </div>
+                </div>
+              ))}
+
+              {visibleApplicants < APPLICANT_SLOTS && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddApplicant}
+                  className="w-full gap-1.5 border-dashed text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <PlusIcon className="size-3.5" />
+                  បន្ថែមអ្នកស្នើសុំទី {kh(visibleApplicants + 1)} (អតិបរមា{" "}
+                  {kh(APPLICANT_SLOTS)} នាក់)
+                </Button>
+              )}
+            </div>
+          </Card>
+
+          <Card
+            title={`សាក្សី (${witnessesNamed}/${WITNESS_SLOTS} នាក់)`}
+            hint="ព័ត៌មានសាក្សីបញ្ជាក់"
+          >
+            <div className="space-y-3">
+              {data.witnesses.slice(0, visibleWitnesses).map((w, i) => (
+                <div
+                  key={i}
+                  className="space-y-2 rounded-lg border bg-muted/20 p-2.5 transition-colors hover:border-neutral-400 dark:hover:border-neutral-600"
+                >
+                  <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <span className="flex size-5 items-center justify-center rounded-full bg-neutral-200 text-[10px] font-bold text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
+                        {i + 1}
+                      </span>
+                      <span>
+                        សាក្សីទី {kh(i + 1)}
+                        {w.name ? `: ${w.name}` : ""}
+                      </span>
+                    </span>
+                    {visibleWitnesses > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveWitness(i)}
+                        className="h-6 px-1.5 text-[11px] text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                        title="ដកចេញ"
+                      >
+                        <Trash2Icon className="size-3" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field
+                      label="ឈ្មោះ"
+                      value={w.name}
+                      onChange={(v) => patchWitness(i, { name: v })}
+                    />
+                    <Field
+                      label="ថ្ងៃ ខែ ឆ្នាំកំណើត"
+                      value={w.dob}
+                      onChange={(v) => patchWitness(i, { dob: v })}
+                      placeholder="22.02.1980"
+                    />
+                    <Field
+                      label="អត្តសញ្ញាណប័ណ្ណ"
+                      value={w.idNumber}
+                      onChange={(v) => patchWitness(i, { idNumber: v })}
+                    />
+                    <Field
+                      label="អាសយដ្ឋាន"
+                      value={w.address}
+                      onChange={(v) => patchWitness(i, { address: v })}
+                      placeholder="សង្កាត់… ខណ្ឌ… រាជធានី…"
+                    />
+                  </div>
+                </div>
+              ))}
+
+              {visibleWitnesses < WITNESS_SLOTS && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddWitness}
+                  className="w-full gap-1.5 border-dashed text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <PlusIcon className="size-3.5" />
+                  បន្ថែមសាក្សីទី {kh(visibleWitnesses + 1)} (អតិបរមា{" "}
+                  {kh(WITNESS_SLOTS)} នាក់)
+                </Button>
+              )}
+            </div>
+          </Card>
+
+          <Card
+            title={`ឈ្មោះកូន (${childrenNamed}/${CHILD_SLOTS} នាក់)`}
+            hint="សម្រាប់ទំព័រ ១–២ (បង្ហាញ ១–១០ នាក់)"
+          >
+            <div className="space-y-3">
+              {data.children.slice(0, visibleChildren).map((c, i) => (
                 <div
                   key={i}
                   className="space-y-2 rounded-lg border bg-muted/20 p-2.5 transition-colors hover:border-neutral-400 dark:hover:border-neutral-600"
@@ -425,14 +705,28 @@ export function InheritanceRequestForm() {
                         {c.name ? `: ${c.name}` : ""}
                       </span>
                     </span>
-                    {c.gender && (
-                      <Badge
-                        variant="secondary"
-                        className="h-5 px-1.5 text-[10px]"
-                      >
-                        {c.gender}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {c.gender && (
+                        <Badge
+                          variant="secondary"
+                          className="h-5 px-1.5 text-[10px]"
+                        >
+                          {c.gender}
+                        </Badge>
+                      )}
+                      {visibleChildren > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveChild(i)}
+                          className="h-6 px-1.5 text-[11px] text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                          title="ដកចេញ"
+                        >
+                          <Trash2Icon className="size-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Row 1: ឈ្មោះ, ភេទ, ថ្ងៃកំណើត, សម្គាល់ */}
@@ -461,7 +755,7 @@ export function InheritanceRequestForm() {
                             gender: e.target.value as Child["gender"],
                           })
                         }
-                        className="h-8 w-full rounded-md border border-input bg-background px-1.5 text-xs"
+                        className="h-8 w-full rounded-3xl border border-transparent bg-input/50 px-3 text-xs outline-none transition-[color,box-shadow,background-color] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 cursor-pointer"
                       >
                         <option value="">—</option>
                         <option value="ប្រុស">ប្រុស</option>
@@ -551,6 +845,142 @@ export function InheritanceRequestForm() {
                   </div>
                 </div>
               ))}
+
+              {visibleChildren < CHILD_SLOTS && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddChild}
+                  className="w-full gap-1.5 border-dashed text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <PlusIcon className="size-3.5" />
+                  បន្ថែមឈ្មោះកូនទី {kh(visibleChildren + 1)} (អតិបរមា{" "}
+                  {kh(CHILD_SLOTS)} នាក់)
+                </Button>
+              )}
+            </div>
+          </Card>
+
+          <Card
+            title={`សាច់ញាតិ / ក្រុមប្រឹក្សាញាតិ (${relativesNamed}/${RELATIVE_SLOTS} នាក់)`}
+            hint="សម្រាប់ទំព័រ ៤ (បង្ហាញ ១–៨ នាក់)"
+          >
+            <div className="space-y-3">
+              {data.relatives.slice(0, visibleRelatives).map((rel, i) => (
+                <div
+                  key={i}
+                  className="space-y-2 rounded-lg border bg-muted/20 p-2.5 transition-colors hover:border-neutral-400 dark:hover:border-neutral-600"
+                >
+                  <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <span className="flex size-5 items-center justify-center rounded-full bg-neutral-200 text-[10px] font-bold text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
+                        {i + 1}
+                      </span>
+                      <span>
+                        សាច់ញាតិទី {kh(i + 1)}
+                        {rel.name ? `: ${rel.name}` : ""}
+                      </span>
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {rel.gender && (
+                        <Badge
+                          variant="secondary"
+                          className="h-5 px-1.5 text-[10px]"
+                        >
+                          {rel.gender}
+                        </Badge>
+                      )}
+                      {visibleRelatives > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveRelative(i)}
+                          className="h-6 px-1.5 text-[11px] text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                          title="ដកចេញ"
+                        >
+                          <Trash2Icon className="size-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-12 gap-2">
+                    <div className="col-span-5 space-y-1">
+                      <Label className="text-[10px] text-muted-foreground">
+                        ឈ្មោះ
+                      </Label>
+                      <Input
+                        value={rel.name}
+                        onChange={(e) =>
+                          patchRelative(i, { name: e.target.value })
+                        }
+                        placeholder="ឈ្មោះសាច់ញាតិ"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="col-span-2 space-y-1">
+                      <Label className="text-[10px] text-muted-foreground">
+                        ភេទ
+                      </Label>
+                      <select
+                        value={rel.gender}
+                        onChange={(e) =>
+                          patchRelative(i, {
+                            gender: e.target.value as Relative["gender"],
+                          })
+                        }
+                        className="h-8 w-full rounded-3xl border border-transparent bg-input/50 px-3 text-xs outline-none transition-[color,box-shadow,background-color] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 cursor-pointer"
+                      >
+                        <option value="">—</option>
+                        <option value="ប្រុស">ប្រុស</option>
+                        <option value="ស្រី">ស្រី</option>
+                      </select>
+                    </div>
+                    <div className="col-span-2 space-y-1">
+                      <Label className="text-[10px] text-muted-foreground">
+                        ឆ្នាំកំណើត
+                      </Label>
+                      <Input
+                        value={rel.birthYear}
+                        onChange={(e) =>
+                          patchRelative(i, { birthYear: e.target.value })
+                        }
+                        placeholder="2010"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="col-span-3 space-y-1">
+                      <Label className="text-[10px] text-muted-foreground">
+                        ទីលំនៅ
+                      </Label>
+                      <Input
+                        value={rel.address}
+                        onChange={(e) =>
+                          patchRelative(i, { address: e.target.value })
+                        }
+                        placeholder="ទឹកល្អក់ទី១ ទួលគោក"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {visibleRelatives < RELATIVE_SLOTS && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddRelative}
+                  className="w-full gap-1.5 border-dashed text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <PlusIcon className="size-3.5" />
+                  បន្ថែមសាច់ញាតិទី {kh(visibleRelatives + 1)} (អតិបរមា{" "}
+                  {kh(RELATIVE_SLOTS)} នាក់)
+                </Button>
+              )}
             </div>
           </Card>
 
@@ -564,6 +994,12 @@ export function InheritanceRequestForm() {
                 value={data.titleDeedNo}
                 onChange={(v) => setField("titleDeedNo", v)}
                 placeholder="ឧ. ១២-៣៤-៥៦-៧៨៩"
+              />
+              <Field
+                label="ប្រភេទទ្រព្យ"
+                value={data.propertyType}
+                onChange={(v) => setField("propertyType", v)}
+                placeholder="ឧ. ដីលំនៅដ្ឋាន"
               />
               <Field
                 label="ក្បាលដីលេខ"

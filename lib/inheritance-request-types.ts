@@ -2,6 +2,7 @@ export const APPLICANT_SLOTS = 2;
 export const WITNESS_SLOTS = 2;
 export const CHILD_SLOTS = 10;
 export const DECEASED_SLOTS = 2;
+export const RELATIVE_SLOTS = 8;
 
 export interface Deceased {
   name: string; // ឈ្មោះខ្មោច
@@ -17,6 +18,8 @@ export interface Applicant {
   address: string;
   fatherName: string;
   motherName: string;
+  relationDeceased: string; // ត្រូវជា...នៃខ្មោច (ឧ. ប្រពន្ធ / ប្ដី)
+  relationHeirs: string; // និងជា...នៃយើងខ្ញុំ (ឧ. ម្ដាយ / ឪពុក)
 }
 
 export interface Witness {
@@ -37,11 +40,19 @@ export interface Child {
   note: string; // សម្គាល់
 }
 
+export interface Relative {
+  name: string; // ឈ្មោះ
+  gender: "" | "ប្រុស" | "ស្រី"; // ភេទ
+  birthYear: string; // ឆ្នាំកំណើត
+  address: string; // ទីលំនៅ
+}
+
 export interface InheritanceRequest {
   title: string;
   refNo: string; // លេខយោង
   location: string; // ទីតាំង
   area: string; // ទំហំ
+  propertyType: string; // ប្រភេទទ្រព្យ (ឧ. ដីលំនៅដ្ឋាន)
   date: string; // dd.mm.yyyy – date printed above the signatures
   deceasedSangkat: string; // នៅសង្កាត់
 
@@ -65,6 +76,7 @@ export interface InheritanceRequest {
   applicants: Applicant[];
   witnesses: Witness[];
   children: Child[];
+  relatives: Relative[];
 }
 
 export const emptyApplicant = (): Applicant => ({
@@ -73,6 +85,8 @@ export const emptyApplicant = (): Applicant => ({
   address: "",
   fatherName: "",
   motherName: "",
+  relationDeceased: "",
+  relationHeirs: "",
 });
 
 export const emptyWitness = (): Witness => ({
@@ -93,6 +107,13 @@ export const emptyChild = (): Child => ({
   note: "",
 });
 
+export const emptyRelative = (): Relative => ({
+  name: "",
+  gender: "",
+  birthYear: "",
+  address: "",
+});
+
 export const emptyDeceased = (): Deceased => ({
   name: "",
   birthYear: "",
@@ -106,6 +127,7 @@ export const emptyRequest = (): InheritanceRequest => ({
   refNo: "",
   location: "",
   area: "",
+  propertyType: "លំនៅដ្ឋាន",
   date: "",
   deceasedSangkat: "",
   titleDeedNo: "",
@@ -126,6 +148,7 @@ export const emptyRequest = (): InheritanceRequest => ({
   applicants: Array.from({ length: APPLICANT_SLOTS }, emptyApplicant),
   witnesses: Array.from({ length: WITNESS_SLOTS }, emptyWitness),
   children: Array.from({ length: CHILD_SLOTS }, emptyChild),
+  relatives: Array.from({ length: RELATIVE_SLOTS }, emptyRelative),
 });
 
 /** Fixed-size list: keeps known fields, fills the rest with blanks. */
@@ -151,6 +174,8 @@ export function normalizeRequest(raw: unknown): InheritanceRequest {
     refNo: typeof r.refNo === "string" ? r.refNo : "",
     location: typeof r.location === "string" ? r.location : "",
     area: typeof r.area === "string" ? r.area : "",
+    propertyType:
+      typeof r.propertyType === "string" ? r.propertyType : "លំនៅដ្ឋាន",
     date: typeof r.date === "string" ? r.date : "",
     deceasedSangkat:
       typeof r.deceasedSangkat === "string" ? r.deceasedSangkat : "",
@@ -180,6 +205,7 @@ export function normalizeRequest(raw: unknown): InheritanceRequest {
     applicants: fixedList(r.applicants, emptyApplicant, APPLICANT_SLOTS),
     witnesses: fixedList(r.witnesses, emptyWitness, WITNESS_SLOTS),
     children: fixedList(r.children, emptyChild, CHILD_SLOTS),
+    relatives: fixedList(r.relatives, emptyRelative, RELATIVE_SLOTS),
   };
 }
 
@@ -210,6 +236,7 @@ export function sampleRequest(): InheritanceRequest {
   r.refNo = "០០១/២៦";
   r.location = "ភូមិ៣ សង្កាត់ទឹកល្អក់ទី១ ខណ្ឌទួលគោក រាជធានីភ្នំពេញ";
   r.area = "93 ម²";
+  r.propertyType = "ដីលំនៅដ្ឋាន";
   r.date = "08.10.2026";
   r.deceasedSangkat = "ទឹកល្អក់ទី១";
   r.titleDeedNo = "១២-៣៤-៥៦-៧៨៩";
@@ -246,6 +273,8 @@ export function sampleRequest(): InheritanceRequest {
     address: "ផ្ទះលេខ ១២ ផ្លូវ ១៩៣ រាជធានីភ្នំពេញ",
     fatherName: "សុខ ចាន់",
     motherName: "ជា សុវណ្ណា",
+    relationDeceased: "កូន",
+    relationHeirs: "បង",
   };
   r.applicants[1] = {
     name: "ជា សុភី",
@@ -253,6 +282,8 @@ export function sampleRequest(): InheritanceRequest {
     address: "ផ្ទះលេខ ១២ ផ្លូវ ១៩៣ រាជធានីភ្នំពេញ",
     fatherName: "ជា ធី",
     motherName: "ឈួន សុខា",
+    relationDeceased: "កូន",
+    relationHeirs: "ប្អូន",
   };
   r.witnesses[0] = {
     name: "លី វុទ្ធី",
@@ -295,6 +326,24 @@ export function sampleRequest(): InheritanceRequest {
     commune: "ទឹកល្អក់ទី១",
     district: "ទួលគោក",
     note: "ស្លាប់",
+  };
+  r.relatives[0] = {
+    name: "សុខ វិសាល",
+    gender: "ប្រុស",
+    birthYear: "2010",
+    address: "ទឹកល្អក់ទី១ ទួលគោក",
+  };
+  r.relatives[1] = {
+    name: "សុខ សោភា",
+    gender: "ស្រី",
+    birthYear: "2012",
+    address: "ទឹកល្អក់ទី១ ទួលគោក",
+  };
+  r.relatives[2] = {
+    name: "សុខ ដារា",
+    gender: "ប្រុស",
+    birthYear: "2015",
+    address: "ទឹកល្អក់ទី១ ទួលគោក",
   };
   return r;
 }

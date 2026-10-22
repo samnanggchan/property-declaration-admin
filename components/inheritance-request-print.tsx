@@ -10,22 +10,31 @@ import {
 } from "@/lib/khmer-lunar-calendar";
 import {
   Child,
+  emptyRelative,
   InheritanceRequest,
   parseDateParts,
+  Relative,
+  RELATIVE_SLOTS,
   toKhmerDigits as kh,
 } from "@/lib/inheritance-request-types";
 
 const FORM = {
-  /** "ក្រដាសលេខ ៥" in the top-right box */
   paperNo: "៥",
-  /** logo in the top-right box (file in /public) */
   logo: "/mtpp.png",
   logoAlt: "មន្ទីរ ដ.ន.ស.ស រាជធានីភ្នំពេញ",
-  /** how many children fit on page 1; the rest continue on page 2 */
+  ornament: "/symbol-rs.png",
+  divider: "/symbol-3.png",
   pageOneChildren: 8,
+  minHeirRows: 8,
+  adultsOnly: true,
+  defaults: {
+    relationToDeceased: "ប្រពន្ធ",
+    relationToHeirs: "ម្ដាយ",
+    action: "ផ្ទេរសិទ្ធិ",
+    landKind: "លំនៅដ្ឋាន",
+  },
 };
 
-/** Footnotes printed at the bottom of each page */
 const FOOTNOTES_PAGE_1 = [
   "១- នាមត្រកូល និងនាមខ្លួននៃអ្នកដែលស្លាប់ឥតមានសំបុត្របណ្តាំ។",
   "២- បើមានប្តី ឬប្រពន្ធដើមនៅរស់ ឲ្យដាក់ឈ្មោះ អាយុ ទីលំនៅផង បើគ្មានឲ្យធ្វូតចោល ឯប្រពន្ធចុងមិនចុះឈ្មោះទេ ឲ្យចុះឈ្មោះកូន បើមាន។",
@@ -38,9 +47,41 @@ const FOOTNOTES_PAGE_2 = [
   "៣- សង្កាត់ ថ្ងៃ ខែ និងឆ្នាំលេខបញ្ជាក់។",
 ];
 
+const NOTES_CONSENT = [
+  "(១)-(២) ចុះឈ្មោះសហព័ទ្ធដែលស្លាប់",
+  "(៣) ចុះឈ្មោះសហព័ទ្ធដែលរស់",
+  "(៤) ប្តី ឬប្រពន្ធ",
+  "(៥) ឪពុក ឬម្តាយ",
+];
+
+/** page 4 – សំបុត្រអនុញ្ញាតពីក្រុមប្រឹក្សាញាតិ (line 1 is a best guess – check it against the paper form) */
+const NOTES_COUNCIL = [
+  "(១) ចុះឈ្មោះសហព័ទ្ធដែលស្លាប់",
+  "(២) ចំពោះប័ណ្ណសម្គាល់សិទ្ធិដែលមិនត្រូវកែផ្ទេរសិទ្ធិ ពុំឱ្យសរសេរចូលឡើយ",
+  "(៣) អ្នកដែលនៅរស់ត្រូវជាប្ដីឬប្រពន្ធ ឬកូននៃខ្មោចហើយជាអាណាព្យាបាល និងជាមេគ្រួសារនៅ។",
+];
+
+/** fields the print needs beyond the base form – optional, so it compiles with or without them */
+interface PrintExtras {
+  village: string;
+  sangkat: string;
+  khan: string;
+  titleDeedNo: string;
+  plotNo: string;
+  streetNo: string;
+  authorizedPerson: string;
+  authorizedRelationDeceased: string;
+  authorizedRelationHeirs: string;
+  communeChiefName: string;
+  letterRefNo: string;
+  letterRefDate: string;
+  heirCertNo: string;
+}
+
+const PAGE =
+  "flex flex-col font-battambang text-[10.5pt] leading-[1.5] text-neutral-950";
 const ROW = "flex h-[7.4mm] items-baseline gap-x-1.5 whitespace-nowrap";
 
-/** printed label */
 function L({
   children,
   className,
@@ -63,6 +104,17 @@ function D({ v, grow = 1 }: { v?: string; grow?: number }) {
   );
 }
 
+/** two blanks separated by "/" – used for the two deceased */
+function Pair({ a, b, grow = 1 }: { a?: string; b?: string; grow?: number }) {
+  return (
+    <>
+      <D v={a} grow={grow} />
+      <L>/</L>
+      <D v={b} grow={grow} />
+    </>
+  );
+}
+
 /** "43 ឆ្នាំ" → "៤៣" */
 function ageNumber(dob: string) {
   if (!dob?.trim()) return "";
@@ -73,6 +125,38 @@ function ageNumber(dob: string) {
       .replace(/\s*ឆ្នាំ\s*$/, "")
       .trim(),
   );
+}
+
+/** under 18 → false; unknown age → true */
+function isAdultOrUnknown(c: Child) {
+  if (!c.dob?.trim()) return true;
+  const n = parseInt(
+    String(calculateAgeFromDob(c.dob) ?? "").replace(/\D/g, ""),
+    10,
+  );
+  return Number.isNaN(n) || n >= 18;
+}
+
+const EMPTY_CHILD: Child = {
+  name: "",
+  gender: "",
+  dob: "",
+  birthCertDate: "",
+  birthCertNo: "",
+  commune: "",
+  district: "",
+  note: "",
+};
+
+/** pad a list with blank rows up to `min` (never cuts rows off) */
+function padRows(list: Child[], min: number): Child[] {
+  return [
+    ...list,
+    ...Array.from(
+      { length: Math.max(0, min - list.length) },
+      () => EMPTY_CHILD,
+    ),
+  ];
 }
 
 /** "08.10.2026" → day / Khmer month name / year (in Khmer digits) */
@@ -94,7 +178,7 @@ function splitAddress(address: string) {
     const m = a.match(re);
     return m ? m[0].replace(prefix, "").trim() : "";
   };
-  const village = pick(/(ភូមិ)[^\s,]+/, /^(ភូមិ)/);
+  const village = pick(/ភូមិ[^\s,]+/, /^ភូមិ/);
   const commune = pick(/(សង្កាត់|ឃុំ)[^\s,]+/, /^(សង្កាត់|ឃុំ)/);
   const district = pick(/(ខណ្ឌ|ស្រុក|ក្រុង)[^\s,]+/, /^(ខណ្ឌ|ស្រុក|ក្រុង)/);
   const city = pick(/(រាជធានី|ខេត្ត)[^\s,]+/, /^(រាជធានី|ខេត្ត)/);
@@ -103,13 +187,46 @@ function splitAddress(address: string) {
   return { village, commune, district, city };
 }
 
-function Ornament() {
+/** every date string the pages need, built once */
+interface SignDates {
+  lunarDay: string;
+  lunarMonth: string;
+  lunarYear: string;
+  era: string;
+  eraShort: string; // ព.ស ២៥__
+  day: string;
+  month: string;
+  year: string;
+  yearShort: string; // ឆ្នាំ ២០__
+}
+
+function Img({
+  src,
+  alt,
+  className,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) {
+  // eslint-disable-next-line @next/next/no-img-element
   return (
-    /* eslint-disable-next-line @next/next/no-img-element */
-    <img
-      src="/symbol-rs.png"
-      alt="symbol"
-      className="mx-auto my-1.5 h-[8mm] w-auto object-contain"
+    <img src={src} alt={alt} className={cn("object-contain", className)} />
+  );
+}
+
+function Ornament({
+  src = FORM.ornament,
+  className = "h-[8mm]",
+}: {
+  src?: string;
+  className?: string;
+}) {
+  return (
+    <Img
+      src={src}
+      alt="ornament"
+      className={cn("mx-auto my-1.5 w-auto", className)}
     />
   );
 }
@@ -159,7 +276,86 @@ function Footnotes({
   );
 }
 
-/** two printed lines per child */
+/** title (Moul) with the logo on the right – pages 3 and 4 */
+function TitleBar({
+  title,
+  withOrnament,
+}: {
+  title: string;
+  withOrnament?: boolean;
+}) {
+  return (
+    <div className="relative pt-1 text-center">
+      <Img
+        src={FORM.logo}
+        alt={FORM.logoAlt}
+        className="absolute right-0 top-2 h-[7mm] w-auto"
+      />
+      <h2 className="font-moul text-[13pt] font-normal text-neutral-900">
+        {title}
+      </h2>
+      {withOrnament && <Ornament className="h-[6mm]" />}
+    </div>
+  );
+}
+
+/** ថ្ងៃ … ខែ … ឆ្នាំ … ព.ស. … (lunar date line) */
+function LunarLine({
+  d,
+  shortEra,
+  indentClass,
+}: {
+  d: SignDates;
+  shortEra?: boolean;
+  indentClass?: string;
+}) {
+  return (
+    <div className={ROW}>
+      <L className={indentClass}>ថ្ងៃ</L>
+      <D v={d.lunarDay} grow={2} />
+      <L>ខែ</L>
+      <D v={d.lunarMonth} grow={1.3} />
+      <L>ឆ្នាំ</L>
+      <D v={d.lunarYear} grow={1.8} />
+      <L>{shortEra ? "ព.ស២៥" : "ព.ស."}</L>
+      <D v={shortEra ? d.eraShort : d.era} grow={shortEra ? 0.8 : 1} />
+    </div>
+  );
+}
+
+/** រាជធានីភ្នំពេញ ថ្ងៃទី … ខែ … ឆ្នាំ២០… */
+function PlaceDateLine({
+  d,
+  label = "រាជធានីភ្នំពេញ ថ្ងៃទី",
+  indentClass,
+}: {
+  d: SignDates;
+  label?: string;
+  indentClass?: string;
+}) {
+  return (
+    <div className={ROW}>
+      <L className={indentClass}>{label}</L>
+      <D v={d.day} grow={0.8} />
+      <L>ខែ</L>
+      <D v={d.month} grow={1.2} />
+      <L>ឆ្នាំ២០</L>
+      <D v={d.yearShort} grow={0.8} />
+    </div>
+  );
+}
+
+/** "ចៅសង្កាត់" + name under it */
+function ChiefSign({ name, className }: { name?: string; className?: string }) {
+  return (
+    <div className={cn("text-center", className)}>
+      <p className="font-moul text-[10.5pt]">ចៅសង្កាត់</p>
+      <p className="mt-7 font-semibold">{name || "\u00A0"}</p>
+    </div>
+  );
+}
+
+/** two printed lines per child (pages 1–2) */
 function ChildBlock({ child, first }: { child: Child; first: boolean }) {
   const label =
     child.gender === "ប្រុស"
@@ -170,21 +366,27 @@ function ChildBlock({ child, first }: { child: Child; first: boolean }) {
           ? "កូនប្រុស-ស្រី"
           : "";
   const cert = dateParts(child.birthCertDate);
+  const note = child.note?.replace(/[()]/g, "").trim();
 
   return (
     <div>
       <div className={ROW}>
-        <L className="w-[24mm]">{label}</L>
-        <L>ឈ្មោះ</L>
+        <span className="w-[24mm] shrink-0 whitespace-nowrap">{label}</span>
+        <L>ឈ្មោះ:</L>
         <D v={child.name} grow={3} />
         <L>អាយុ</L>
         <D v={ageNumber(child.dob)} grow={0.8} />
         <L>ឆ្នាំ</L>
-        {child.note && <L className="font-semibold">({child.note})</L>}
         <L>ដូចមានសំបុត្រកំណើត លេខ</L>
         <D v={kh(child.birthCertNo)} grow={1.6} />
+        {note && (
+          <span className="shrink-0 font-semibold text-neutral-900">
+            ({note})
+          </span>
+        )}
       </div>
-      <div className={cn(ROW, "pl-[20mm]")}>
+      <div className={ROW}>
+        <span className="w-[24mm] shrink-0" />
         <L>ចុះថ្ងៃ</L>
         <D v={cert.day} grow={0.8} />
         <L>ខែ</L>
@@ -207,33 +409,68 @@ export function InheritanceRequestPrint({
   data: InheritanceRequest;
   pageFilter?: "all" | 1 | 2 | 3 | 4 | 5;
 }) {
+  const x = data as InheritanceRequest & Partial<PrintExtras>;
   const [d1, d2] = [data.deceased[0], data.deceased[1]];
   const [a1, a2] = [data.applicants[0], data.applicants[1]];
   const [w1, w2] = [data.witnesses[0], data.witnesses[1]];
+  const show = (n: 1 | 2 | 3 | 4 | 5) =>
+    pageFilter === "all" || pageFilter === n;
 
   const deceasedNames = data.deceased
     .map((d) => d.name.trim())
     .filter(Boolean)
     .join(" និង ");
 
+  /* children */
   const p1Children = data.children.slice(0, FORM.pageOneChildren);
   const p2Children = data.children.slice(FORM.pageOneChildren);
+  const named = data.children.filter((c) => c.name.trim());
+  const heirs = padRows(named, FORM.minHeirRows);
+  const adultHeirs = padRows(
+    FORM.adultsOnly ? named.filter(isAdultOrUnknown) : named,
+    FORM.minHeirRows,
+  );
 
+  /* addresses + property */
   const w1Addr = splitAddress(w1.address);
   const w2Addr = splitAddress(w2.address);
   const a1Addr = splitAddress(a1.address);
-
-  // Address and property fallbacks
   const loc = splitAddress(data.location);
-  const village = data.village || loc.village || "";
-  const sangkat = data.sangkat || data.deceasedSangkat || loc.commune || "";
-  const khan = data.khan || loc.district || "";
-  const titleDeedNo = data.titleDeedNo || data.refNo || "";
-  const authPerson = data.authorizedPerson || a1.name || "";
-  const authRelDeceased = data.authorizedRelationDeceased || "ប្រពន្ធ";
-  const authRelHeirs = data.authorizedRelationHeirs || "ម្ដាយ";
+  const village = x.village || loc.village;
+  const sangkat = x.sangkat || data.deceasedSangkat || loc.commune;
+  const khan = x.khan || loc.district;
+  const titleDeedNo = kh(x.titleDeedNo || data.refNo);
+  const area = kh(data.area);
 
-  // lunar + gregorian date of signing
+  /* council members = 8 relatives for page 4 */
+  const councilRelatives = Array.from(
+    { length: RELATIVE_SLOTS },
+    (_, i) => data.relatives?.[i] || emptyRelative(),
+  );
+
+  /* the person who is authorised (pages 3–4) */
+  const authPerson = x.authorizedPerson || a1.name;
+  const relDeceased =
+    x.authorizedRelationDeceased ||
+    a1.relationDeceased ||
+    FORM.defaults.relationToDeceased;
+  const relHeirs =
+    x.authorizedRelationHeirs ||
+    a1.relationHeirs ||
+    FORM.defaults.relationToHeirs;
+
+  /* deceased dates (pairs "d1 / d2") */
+  const death1 = dateParts(d1.deathDate);
+  const death2 = dateParts(d2.deathDate);
+  const cert1 = dateParts(d1.deathCertDate);
+  const cert2 = dateParts(d2.deathCertDate);
+  const deathSangkat = data.deceasedSangkat || sangkat;
+  const certNumbers = [d1.deathCertNo, d2.deathCertNo]
+    .filter(Boolean)
+    .map(kh)
+    .join(" / ");
+
+  /* signing date */
   const lunar: KhmerLunarDate | null = React.useMemo(() => {
     if (!data.date) return null;
     try {
@@ -243,62 +480,53 @@ export function InheritanceRequestPrint({
     }
   }, [data.date]);
 
+  const signDate = dateParts(data.date);
   const sign = parseDateParts(data.date);
-
-  // Deceased date parts
-  const d1DeathParts = parseDateParts(d1.deathDate);
-  const d2DeathParts = parseDateParts(d2.deathDate);
-  const d1CertParts = parseDateParts(d1.deathCertDate);
-  const d2CertParts = parseDateParts(d2.deathCertDate);
-
-  const showP1 = pageFilter === "all" || pageFilter === 1;
-  const showP2 = pageFilter === "all" || pageFilter === 2;
-  const showP3 = pageFilter === "all" || pageFilter === 3;
-  const showP4 = pageFilter === "all" || pageFilter === 4;
-  const showP5 = pageFilter === "all" || pageFilter === 5;
+  const sd: SignDates = {
+    lunarDay: lunar
+      ? `${lunar.weekday.replace(/^ថ្ងៃ/, "")} ${toKhmerNum(lunar.lunarDay)}${lunar.lunarPhase}`
+      : "",
+    lunarMonth: lunar?.lunarMonthName ?? "",
+    lunarYear: lunar ? `${lunar.zodiacYear} ${lunar.sakYear}` : "",
+    era: lunar ? toKhmerNum(lunar.buddhistEra) : "",
+    eraShort: lunar
+      ? toKhmerNum(String(lunar.buddhistEra).replace(/^25/, ""))
+      : "",
+    ...signDate,
+    yearShort: sign.year ? kh(String(sign.year).replace(/^20/, "")) : "",
+  };
 
   return (
     <div className="flex flex-col gap-6 print:block print:p-0 print:m-0 print:gap-0">
       {/* ═══════════════════════════ PAGE 1 ═══════════════════════════ */}
-      {showP1 && (
-        <A4Page
-          mode="fixed"
-          className="flex flex-col font-battambang text-[10.5pt] leading-[1.5] text-neutral-950"
-        >
+      {show(1) && (
+        <A4Page mode="fixed" className={PAGE}>
           {/* header: storage line centred on the page, logo box on the right */}
           <div className="relative h-[28mm]">
             <div className="absolute inset-x-0 top-[1mm] flex justify-center">
               <div className={cn(ROW, "w-[68mm]")}>
-                <L className="font-moul text-[10.5pt]">តំកល់ទុក</L>
-                <L className="font-moul text-[10.5pt] underline underline-offset-4">
+                <L className="font-moul text-[12pt]">តំកល់ទុក</L>
+                <L className="font-moul text-[12pt] underline underline-offset-8">
                   លេខ
                 </L>
                 <D v={kh(data.refNo)} grow={1} />
               </div>
             </div>
 
-            <div className="absolute left-0 top-[10mm] w-[68mm]">
+            <div className="absolute left-0 top-[10mm] w-[48mm]">
               <div className={ROW}>
                 <L>អ្នកតែងលិខិត</L>
-                <D grow={1} />
+                <D grow={1} />  
               </div>
             </div>
-            {(data.location || data.area) && (
-              <p className="absolute left-0 top-[19mm] w-[118mm] text-[9pt] leading-snug text-neutral-700">
-                {data.location && <>ទីតាំង៖ {data.location}</>}
-                {data.location && data.area && " · "}
-                {data.area && <>ទំហំ៖ {kh(data.area)}</>}
-              </p>
-            )}
 
-            <div className="absolute right-0 top-0 w-[54mm] border-b border-l border-neutral-800 pb-1 pl-2 text-[9.5pt] leading-tight">
+            <div className="absolute right-0 top-0 w-[54mm] border-b border-l border-neutral-800 pb-1 pl-2 text-[12pt] leading-tight">
               <p>ក្រដាសលេខ {FORM.paperNo}</p>
               <p>លេខទីទុកឯកសារ</p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Img
                 src={FORM.logo}
                 alt={FORM.logoAlt}
-                className="mt-1 h-9 w-auto max-w-full object-contain"
+                className="mt-1 h-9 w-auto max-w-full"
               />
             </div>
           </div>
@@ -306,7 +534,7 @@ export function InheritanceRequestPrint({
           {/* title + deceased */}
           <div className="mt-2">
             <div className={ROW}>
-              <L className="pl-[18mm] font-battambang font-bold text-[12pt]">
+              <L className="pl-[18mm] font-battambang text-[12pt] font-bold">
                 សំបុត្រដំណរវង្សត្រកូលនៃខ្មោច (១)
               </L>
               <D v={deceasedNames} grow={1} />
@@ -351,7 +579,7 @@ export function InheritanceRequestPrint({
 
           <Ornament />
 
-          {/* surviving spouse */}
+          {/* surviving spouse (filled by hand) */}
           <div className="flex items-stretch gap-1.5">
             <div className="w-[34mm] shrink-0 self-center text-center leading-tight">
               <p>ប្ដីពោះម៉ាយ (២)</p>
@@ -395,7 +623,6 @@ export function InheritanceRequestPrint({
             <D v={deceasedNames} grow={1} />
           </div>
 
-          {/* children – first part */}
           <div className="mt-0.5">
             {p1Children.map((c, i) => (
               <ChildBlock key={i} child={c} first={i === 0} />
@@ -407,12 +634,8 @@ export function InheritanceRequestPrint({
       )}
 
       {/* ═══════════════════════════ PAGE 2 ═══════════════════════════ */}
-      {showP2 && (
-        <A4Page
-          mode="fixed"
-          className="flex flex-col font-battambang text-[10.5pt] leading-[1.5] text-neutral-950"
-        >
-          {/* children – continued */}
+      {show(2) && (
+        <A4Page mode="fixed" className={PAGE}>
           <div>
             {p2Children.map((c, i) => (
               <ChildBlock key={i} child={c} first={false} />
@@ -489,35 +712,16 @@ export function InheritanceRequestPrint({
 
           {/* date */}
           <div className="ml-auto mt-4 w-[125mm]">
-            <div className={ROW}>
-              <L className="pl-[22mm]">ថ្ងៃ</L>
-              <D
-                v={
-                  lunar
-                    ? `${lunar.weekday.replace(/^ថ្ងៃ/, "")} ${toKhmerNum(lunar.lunarDay)}${lunar.lunarPhase}`
-                    : ""
-                }
-                grow={2.2}
-              />
-              <L>ខែ</L>
-              <D v={lunar?.lunarMonthName} grow={1.4} />
-              <L>ឆ្នាំ</L>
-              <D
-                v={lunar ? `${lunar.zodiacYear} ${lunar.sakYear}` : ""}
-                grow={2}
-              />
-              <L>ព.ស.</L>
-              <D v={lunar ? toKhmerNum(lunar.buddhistEra) : ""} grow={1} />
-            </div>
+            <LunarLine d={sd} indentClass="pl-[22mm]" />
             <div className={ROW}>
               <L>ធ្វើនៅសង្កាត់ (៣)</L>
               <D grow={2} />
               <L>នៅថ្ងៃទី</L>
-              <D v={dateParts(data.date).day} grow={0.8} />
+              <D v={sd.day} grow={0.8} />
               <L>ខែ</L>
-              <D v={dateParts(data.date).month} grow={1.2} />
+              <D v={sd.month} grow={1.2} />
               <L>ឆ្នាំ</L>
-              <D v={sign.year ? kh(sign.year) : ""} grow={1} />
+              <D v={sd.year} grow={1} />
             </div>
           </div>
 
@@ -525,11 +729,9 @@ export function InheritanceRequestPrint({
           <div className="mt-4 grid grid-cols-[1.15fr_1fr] gap-6 break-inside-avoid">
             <div>
               <p className="text-center">ហត្ថលេខា ឬ ស្នាមមេដៃស្តាំ</p>
-              <div className="mt-1 pl-[20mm] grid grid-cols-2 gap-3 text-center">
+              <div className="mt-1 grid grid-cols-2 gap-3 pl-[20mm] text-center">
                 <div>
-                  <p className="font-battambang text-[10.5pt] font-normal">
-                    អ្នកប្តឹង
-                  </p>
+                  <p>អ្នកប្តឹង</p>
                   {data.applicants.map((a, i) => (
                     <p key={i} className="mt-10 font-semibold">
                       {a.name || "\u00A0"}
@@ -537,9 +739,7 @@ export function InheritanceRequestPrint({
                   ))}
                 </div>
                 <div>
-                  <p className="font-battambang text-[10.5pt] font-normal">
-                    កសិណ
-                  </p>
+                  <p>កសិណ</p>
                   {data.witnesses.map((w, i) => (
                     <p key={i} className="mt-10 font-semibold">
                       {w.name || "\u00A0"}
@@ -563,96 +763,71 @@ export function InheritanceRequestPrint({
       )}
 
       {/* ═══════════════════════════ PAGE 3 ═══════════════════════════ */}
-      {/* សេចក្តីព្រមព្រៀង និងអនុញ្ញាត (Agreement & Authorization of Heirs) */}
-      {showP3 && (
-        <A4Page
-          mode="fixed"
-          className="flex flex-col font-battambang text-[10.5pt] leading-[1.5] text-neutral-950"
-        >
-          {/* Header */}
-          <div className="relative">
-            <div className="absolute right-0 top-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={FORM.logo}
-                alt={FORM.logoAlt}
-                className="h-6 w-auto object-contain"
-              />
-            </div>
+      {/* សេចក្តីព្រមព្រៀង និងអនុញ្ញាត */}
+      {show(3) && (
+        <A4Page mode="fixed" className={PAGE}>
+          <TitleBar title="សេចក្តីព្រមព្រៀង និងអនុញ្ញាត" withOrnament />
 
-            <div className="text-center pt-1">
-              <h2 className="font-moul text-[13pt] text-neutral-900">
-                សេចក្តីព្រមព្រៀង និងអនុញ្ញាត
-              </h2>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/symbol-rs.png"
-                alt="divider"
-                className="mx-auto my-1.5 h-[6mm] w-auto object-contain"
-              />
-            </div>
-          </div>
-
-          {/* Intro lines */}
           <div className="mt-1">
             <div className={ROW}>
               <L className="pl-[8mm]">
-                ឱ្យផ្ទេរសិទ្ធិកាន់កាប់នូវមរតករបស់ខ្មោច (ខាង)(១)
+                ឱ្យផ្ទេរសិទ្ធិកាន់កាប់នូវមរតករបស់ខ្មោច (នាង)(១)
               </L>
               <D v={deceasedNames} grow={1} />
             </div>
             <div className={ROW}>
-              <L>យើងខ្ញុំទាំងអស់គ្នាជាទាយាទរបស់ខ្មោច (ខាង) (២)</L>
+              <L>យើងខ្ញុំទាំងអស់គ្នាជាទាយាទរបស់ខ្មោច (នាង) (២)</L>
               <D v={deceasedNames} grow={1} />
             </div>
-            <p className="text-[9.5pt] text-neutral-800 leading-snug">
+            <p className="text-[9.5pt] leading-snug text-neutral-800">
               (សរសេរតែឈ្មោះកូនដែលមានអាយុពី១៨ឆ្នាំឡើងទៅ
               ឬកូនដែលបានទទួលអត្ថាធិនភាពហើយ)
             </p>
           </div>
 
-          {/* 8 Heirs List */}
-          <div className="mt-1.5 space-y-0.5">
-            {Array.from({ length: 8 }, (_, i) => {
-              const child = data.children[i];
-              const numKh = kh(i + 1);
-              return (
-                <div key={i} className={ROW}>
-                  <L className="w-[18mm]">{numKh}- ឈ្មោះ</L>
-                  <D v={child?.name} grow={3.5} />
-                  <L>ភេទ</L>
-                  <D v={child?.gender} grow={1} />
-                  <L>អាយុ</L>
-                  <D v={child ? ageNumber(child.dob) : ""} grow={1} />
-                  <L>ឆ្នាំ,</L>
-                </div>
-              );
-            })}
+          {/* heirs */}
+          <div className="mt-1.5">
+            {adultHeirs.map((c, i) => (
+              <div key={i} className={ROW}>
+                <L className="w-[18mm]">{kh(i + 1)}- ឈ្មោះ:</L>
+                <D v={c.name} grow={3.5} />
+                <L>ភេទ</L>
+                <D v={c.gender} grow={1} />
+                <L>អាយុ</L>
+                <D v={ageNumber(c.dob)} grow={1} />
+                <L>ឆ្នាំ,</L>
+                {c.note && (
+                  <span className="shrink-0 font-semibold text-neutral-900">
+                    ({c.note.replace(/[()]/g, "").trim()})
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
 
-          {/* Authorization Statement */}
+          {/* authorisation */}
           <div className="mt-2.5">
             <div className={ROW}>
               <L className="pl-[8mm]">
-                សូមប្រកាសព្រមព្រៀង និងអនុញ្ញាតឱ្យឈ្មោះ (ខាង)(៣)
+                សូមប្រកាសព្រមព្រៀង និងអនុញ្ញាតឱ្យឈ្មោះ (នាង)(៣)
               </L>
               <D v={authPerson} grow={1} />
             </div>
             <div className={ROW}>
               <L>ដែលត្រូវជា(៤)</L>
-              <D v={authRelDeceased} grow={1.2} />
+              <D v={relDeceased} grow={1.2} />
               <L>នៃខ្មោច និងជា(៥)</L>
-              <D v={authRelHeirs} grow={1.2} />
+              <D v={relHeirs} grow={1.2} />
               <L>នៃយើងខ្ញុំទាំងអស់គ្នា បានចាត់ចែង</L>
-              <D v="ផ្ទេរសិទ្ធិ" grow={1.5} />
+              <D v={FORM.defaults.action} grow={1.5} />
             </div>
             <div className={ROW}>
               <L>អចលនវត្ថុដែលមានក្នុងប័ណ្ណសម្គាល់សិទ្ធិកាន់កាប់អចលនវត្ថុលេខ</L>
-              <D v={kh(titleDeedNo)} grow={1} />
+              <D v={titleDeedNo} grow={1} />
             </div>
             <div className={ROW}>
               <L>ទំហំផ្ទៃ</L>
-              <D v={kh(data.area)} grow={1.2} />
+              <D v={area} grow={1.2} />
               <L>ស្ថិតនៅក្នុងភូមិ</L>
               <D v={village} grow={1.5} />
               <L>សង្កាត់</L>
@@ -661,122 +836,62 @@ export function InheritanceRequestPrint({
               <D v={khan} grow={1.5} />
             </div>
             <div className={ROW}>
-              <L>រាជធានីភ្នំពេញ តាមមរតករបស់ខ្មោច</L>
+              <L>រាជធានីភ្នំពេញ ជាមរតករបស់ខ្មោច</L>
               <D v={deceasedNames} grow={1} />
               <L>យើងខ្ញុំ។</L>
             </div>
           </div>
 
-          <p className="mt-2 text-center font-medium">
+          <p className="mt-2 text-center">
             យើងខ្ញុំទាំងអស់គ្នាសូមផ្តិតមេដៃស្តាំទុកជាភស្តុតាងស្រាប់។
           </p>
 
-          {/* Footnotes & Thumbprint */}
+          {/* notes + thumbprint area */}
           <div className="mt-2.5 grid grid-cols-2 gap-4">
-            <div className="text-[9pt] leading-tight text-neutral-800 space-y-0.5">
-              <p>(១)-(២) ចុះឈ្មោះសហព័ទ្ធដែលស្លាប់</p>
-              <p>(៣) ចុះឈ្មោះសហព័ទ្ធដែលរស់</p>
-              <p>(៤) ប្តី ឬប្រពន្ធ</p>
-              <p>(៥) ឪពុក ឬម្តាយ</p>
+            <div className="space-y-0.5 text-[9pt] leading-tight text-neutral-800">
+              {NOTES_CONSENT.map((n) => (
+                <p key={n}>{n}</p>
+              ))}
             </div>
-            <div className="text-center">
-              <p className="font-medium">ស្នាមមេដៃស្តាំ</p>
-            </div>
+            <p className="text-center font-medium">ស្នាមមេដៃស្តាំ</p>
           </div>
-
-          <div className={cn(ROW, "mt-1")}>
-            <L>ឈ្មោះ</L>
+          <div className="h-[22mm]" />
+          <div className={ROW}>
+            <L>ឈ្មោះ:</L>
             <D grow={1} />
           </div>
 
-          {/* Sangkat Chief statement */}
+          {/* commune chief */}
           <div className="mt-2 text-center text-[10pt] leading-[1.6]">
-            <p>ស្នាមមេដៃទាំងនេះបានផ្ដិតនៅចំពោះមុខយើង</p>
-            <p>ដែលយើងបានសួរត្រួតសេចក្តីខាងលើនេះយ៉ាងក្បោះក្បាយ</p>
+            <p>ស្នាមមេដៃទាំងនេះបានផ្តិតនៅចំពោះមុខយើង</p>
+            <p>ដែលយើងបានសូត្រសេចក្តីខាងលើនេះយ៉ាងក្បោះក្បាយ</p>
             <p>ហើយអានខ្លាំងៗអោយទាយាទទាំងអស់ស្តាប់មុនពេលផ្តិតមេដៃយល់ព្រម។</p>
-            <div className="mt-1.5 flex justify-center">
-              <div className="w-[125mm]">
-                <div className={ROW}>
-                  <L className="pl-[16mm]">ថ្ងៃ</L>
-                  <D
-                    v={
-                      lunar
-                        ? `${lunar.weekday.replace(/^ថ្ងៃ/, "")} ${toKhmerNum(lunar.lunarDay)}${lunar.lunarPhase}`
-                        : ""
-                    }
-                    grow={2}
-                  />
-                  <L>ខែ</L>
-                  <D v={lunar?.lunarMonthName} grow={1.3} />
-                  <L>ឆ្នាំ</L>
-                  <D
-                    v={lunar ? `${lunar.zodiacYear} ${lunar.sakYear}` : ""}
-                    grow={1.8}
-                  />
-                  <L>ព.ស.</L>
-                  <D v={lunar ? toKhmerNum(lunar.buddhistEra) : ""} grow={1} />
-                </div>
-                <div className={cn(ROW, "mt-0.5")}>
-                  <L className="pl-[22mm]">រាជធានីភ្នំពេញ ថ្ងៃទី</L>
-                  <D v={dateParts(data.date).day} grow={0.8} />
-                  <L>ខែ</L>
-                  <D v={dateParts(data.date).month} grow={1.2} />
-                  <L>ឆ្នាំ២០</L>
-                  <D
-                    v={
-                      sign.year ? kh(String(sign.year).replace(/^20/, "")) : ""
-                    }
-                    grow={0.8}
-                  />
-                </div>
-              </div>
-            </div>
-            <p className="mt-2 font-moul text-[10.5pt]">ចៅសង្កាត់</p>
-            <p className="mt-7 font-semibold">
-              {data.communeChiefName || "\u00A0"}
-            </p>
           </div>
+          <div className="mx-auto mt-1.5 w-[125mm]">
+            <LunarLine d={sd} indentClass="pl-[16mm]" />
+            <PlaceDateLine d={sd} indentClass="pl-[22mm]" />
+          </div>
+          <ChiefSign name={x.communeChiefName} className="mt-1" />
         </A4Page>
       )}
 
       {/* ═══════════════════════════ PAGE 4 ═══════════════════════════ */}
-      {/* សំបុត្រអនុញ្ញាតពីក្រុមប្រឹក្សាញាតិ (Family Council Authorization Letter) */}
-      {showP4 && (
-        <A4Page
-          mode="fixed"
-          className="flex flex-col font-battambang text-[10.5pt] leading-[1.5] text-neutral-950"
-        >
-          {/* Header */}
-          <div className="relative">
-            <div className="absolute right-0 top-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={FORM.logo}
-                alt={FORM.logoAlt}
-                className="h-6 w-auto object-contain"
-              />
-            </div>
-
-            <div className="text-center pt-1">
-              <h2 className="font-moul text-[13pt] text-neutral-900">
-                សំបុត្រអនុញ្ញាតពីក្រុមប្រឹក្សាញាតិ
-              </h2>
-            </div>
-          </div>
+      {/* សំបុត្រអនុញ្ញាតពីក្រុមប្រឹក្សាញាតិ */}
+      {show(4) && (
+        <A4Page mode="fixed" className={PAGE}>
+          <TitleBar title="សំបុត្រអនុញ្ញាតពីក្រុមប្រឹក្សាញាតិ" />
 
           <div className="mt-1">
             <div className={ROW}>
-              <L className="pl-[16mm]">នៃខ្មោច (ខាង)</L>
+              <L className="pl-[16mm]">នៃខ្មោច (នាង)</L>
               <D v={deceasedNames} grow={1} />
             </div>
-            <div className={ROW}>
-              <L className="text-[9.5pt]">
-                (លិខិតដំណាលរបស់លិខិតសញ្ញាលក់ផ្ដាច់លេខ
-              </L>
-              <D v={kh(data.letterRefNo)} grow={1.5} />
-              <L className="text-[9.5pt]">ចុះថ្ងៃទី</L>
-              <D v={kh(data.letterRefDate)} grow={1.2} />
-              <L className="text-[9.5pt]">)</L>
+            <div className={cn(ROW, "text-[9.5pt]")}>
+              <L>(លិខិតដំណាលរបស់លិខិតសញ្ញាលក់ផ្ដាច់លេខ</L>
+              <D v={kh(x.letterRefNo)} grow={1.5} />
+              <L>ចុះថ្ងៃទី</L>
+              <D v={kh(x.letterRefDate)} grow={1.2} />
+              <L>)</L>
             </div>
           </div>
 
@@ -784,46 +899,23 @@ export function InheritanceRequestPrint({
             យើងខ្ញុំទាំងអស់គ្នា
           </p>
 
-          {/* 8 Council Member rows */}
-          <div className="mt-1 space-y-0.5">
-            {Array.from({ length: 8 }, (_, i) => {
-              const member =
-                i < data.witnesses.length ? data.witnesses[i] : null;
-              const child =
-                !member && i - data.witnesses.length < data.children.length
-                  ? data.children[i - data.witnesses.length]
-                  : null;
-
-              const name = member ? member.name : child ? child.name : "";
-              const gender = child ? child.gender : "";
-              const dobYear = member
-                ? parseDateParts(member.dob).year
-                : child
-                  ? parseDateParts(child.dob).year
-                  : "";
-              const address = member
-                ? member.address
-                : child
-                  ? `${child.commune || ""} ${child.district || ""}`.trim()
-                  : "";
-
-              const numKh = kh(i + 1);
-              return (
-                <div key={i} className={ROW}>
-                  <L className="w-[18mm]">{numKh}- ឈ្មោះ</L>
-                  <D v={name} grow={3} />
-                  <L>ភេទ</L>
-                  <D v={gender} grow={0.8} />
-                  <L>ឆ្នាំកំណើត</L>
-                  <D v={kh(dobYear)} grow={1} />
-                  <L>ទីលំនៅ</L>
-                  <D v={address} grow={3.5} />
-                </div>
-              );
-            })}
+          {/* council members = relatives (1-8) */}
+          <div className="mt-1">
+            {councilRelatives.map((rel, i) => (
+              <div key={i} className={cn(ROW, "h-[6.8mm]")}>
+                <L className="w-[18mm]">{kh(i + 1)}- ឈ្មោះ:</L>
+                <D v={rel.name} grow={3} />
+                <L>ភេទ</L>
+                <D v={rel.gender} grow={0.8} />
+                <L>ឆ្នាំកំណើត</L>
+                <D v={kh(rel.birthYear)} grow={1} />
+                <L>ទីលំនៅ</L>
+                <D v={rel.address} grow={3.5} />
+              </div>
+            ))}
           </div>
 
-          {/* Statement */}
+          {/* statement */}
           <div className="mt-2.5">
             <div className={ROW}>
               <L className="pl-[8mm]">
@@ -835,17 +927,17 @@ export function InheritanceRequestPrint({
               <L>
                 ដែលបានស្លាប់ទៅ ដោយឥតមានបណ្ដាំ ហើយបន្សល់ទុកនូវកេរ្តិ៍មរតកជាដី
               </L>
-              <D v="លំនៅដ្ឋាន" grow={1.2} />
+              <D v={data.propertyType || FORM.defaults.landKind} grow={1.2} />
               <L>ទំហំ</L>
-              <D v={kh(data.area)} grow={1} />
+              <D v={area} grow={1} />
             </div>
             <div className={ROW}>
               <L>តាមប័ណ្ណសម្គាល់សិទ្ធិកាន់កាប់អចលនវត្ថុលេខ(២)</L>
-              <D v={kh(titleDeedNo)} grow={1.5} />
+              <D v={titleDeedNo} grow={1.5} />
               <L>ស្ថិតនៅក្បាលដីលេខ</L>
-              <D v={kh(data.plotNo)} grow={1} />
+              <D v={kh(x.plotNo)} grow={1} />
               <L>ផ្លូវ</L>
-              <D v={kh(data.streetNo)} grow={1} />
+              <D v={kh(x.streetNo)} grow={1} />
             </div>
             <div className={ROW}>
               <L className="pl-[8mm]">ភូមិ</L>
@@ -857,14 +949,14 @@ export function InheritanceRequestPrint({
               <L>រាជធានីភ្នំពេញ។</L>
             </div>
             <div className={ROW}>
-              <L>ដោយសម្គាល់ឃើញថាឈ្មោះ (ខាង)</L>
-              <D v={deceasedNames} grow={1.8} />
-              <L>បានព្រមព្រៀងគ្នាយកឈ្មោះ</L>
+              <L>ដោយសម្គាល់ឃើញថាឈ្មោះ (នាង)(៣)</L>
               <D v={authPerson} grow={1.8} />
+              <L>បានព្រមព្រៀងអោយឈ្មោះ</L>
+              <D grow={1.8} />
             </div>
             <div className={ROW}>
               <L className="pl-[8mm]">
-                ដែលនៅរស់មានសិទ្ធិចាត់ចែងនូវមរតករបស់ខ្មោច(ខាង)
+                ដែលនៅរស់មានសិទ្ធិចាត់ចែងនូវមរតកមតកជន (នាង)(១)
               </L>
               <D v={deceasedNames} grow={1} />
             </div>
@@ -873,149 +965,54 @@ export function InheritanceRequestPrint({
             </div>
           </div>
 
-          {/* Date and Thumbprint */}
-          <div className="mt-2.5 flex justify-end">
-            <div className="w-[110mm] text-center">
-              <div className={ROW}>
-                <L>ថ្ងៃ</L>
-                <D
-                  v={
-                    lunar
-                      ? `${lunar.weekday.replace(/^ថ្ងៃ/, "")} ${toKhmerNum(lunar.lunarDay)}${lunar.lunarPhase}`
-                      : ""
-                  }
-                  grow={1.8}
-                />
-                <L>ខែ</L>
-                <D v={lunar?.lunarMonthName} grow={1.2} />
-                <L>ឆ្នាំ</L>
-                <D
-                  v={lunar ? `${lunar.zodiacYear} ${lunar.sakYear}` : ""}
-                  grow={1.5}
-                />
-                <L>ព.ស២៥</L>
-                <D
-                  v={
-                    lunar
-                      ? toKhmerNum(String(lunar.buddhistEra).replace(/^25/, ""))
-                      : ""
-                  }
-                  grow={0.8}
-                />
-              </div>
-              <div className={cn(ROW, "mt-0.5 justify-center")}>
-                <L>ធ្វើនៅថ្ងៃទី</L>
-                <D v={dateParts(data.date).day} grow={0.8} />
-                <L>ខែ</L>
-                <D v={dateParts(data.date).month} grow={1.2} />
-                <L>ឆ្នាំ២០</L>
-                <D
-                  v={sign.year ? kh(String(sign.year).replace(/^20/, "")) : ""}
-                  grow={0.8}
-                />
-              </div>
-              <p className="mt-2 font-medium">ស្នាមមេដៃស្តាំ</p>
-            </div>
+          {/* date + thumbprint */}
+          <div className="ml-auto mt-2.5 w-[110mm] text-center">
+            <LunarLine d={sd} shortEra />
+            <PlaceDateLine d={sd} label="ធ្វើនៅថ្ងៃទី" />
+            <p className="mt-2 font-medium">ស្នាមមេដៃស្តាំ</p>
           </div>
 
-          {/* Footnotes & verification */}
+          {/* notes (left) + verification (right) */}
           <div className="mt-auto grid grid-cols-2 gap-4 pb-2">
             <div className="text-[8.5pt] leading-relaxed text-neutral-800">
               <p className="font-semibold">បញ្ជាក់៖</p>
-              <p>(១) បើទ្រព្យBC ឱ្យសរសេរកែ/bនៃទំហំប័ណ្ណសម្គាល់សិទ្ធិ</p>
-              <p>
-                (២) ចំពោះប័ណ្ណសម្គាល់សិទ្ធិដែលមិនត្រូវកែផ្ទេរសិទ្ធិ
-                ពុំឱ្យសរសេរចូលឡើយ
-              </p>
-              <p>
-                (៣) អ្នកដែលនៅរស់ត្រូវជាប្ដីឬប្រពន្ធ ឬកូននៃខ្មោចហើយជាអាណាព្យាបាល
-                និងជាមេគ្រួសារនៅ។
-              </p>
+              {NOTES_COUNCIL.map((n) => (
+                <p key={n}>{n}</p>
+              ))}
             </div>
 
             <div className="text-center text-[9.5pt]">
               <p className="font-medium">បានឃើញ និងបញ្ជាក់ថាត្រឹមត្រូវ</p>
-              <div className={ROW}>
-                <L>ថ្ងៃ</L>
-                <D
-                  v={
-                    lunar
-                      ? `${lunar.weekday.replace(/^ថ្ងៃ/, "")} ${toKhmerNum(lunar.lunarDay)}${lunar.lunarPhase}`
-                      : ""
-                  }
-                  grow={1.8}
-                />
-                <L>ខែ</L>
-                <D v={lunar?.lunarMonthName} grow={1.2} />
-                <L>ឆ្នាំ</L>
-                <D
-                  v={lunar ? `${lunar.zodiacYear} ${lunar.sakYear}` : ""}
-                  grow={1.5}
-                />
-                <L>ព.ស២៥</L>
-                <D
-                  v={
-                    lunar
-                      ? toKhmerNum(String(lunar.buddhistEra).replace(/^25/, ""))
-                      : ""
-                  }
-                  grow={0.8}
-                />
-              </div>
-              <div className={cn(ROW, "mt-0.5 justify-center")}>
-                <L>ថ្ងៃទី</L>
-                <D v={dateParts(data.date).day} grow={0.8} />
-                <L>ខែ</L>
-                <D v={dateParts(data.date).month} grow={1.2} />
-                <L>ឆ្នាំ២០</L>
-                <D
-                  v={sign.year ? kh(String(sign.year).replace(/^20/, "")) : ""}
-                  grow={0.8}
-                />
-              </div>
-              <p className="mt-2 font-moul text-[10pt]">ចៅសង្កាត់</p>
-              <p className="mt-7 font-semibold">
-                {data.communeChiefName || "\u00A0"}
-              </p>
+              <LunarLine d={sd} shortEra />
+              <PlaceDateLine d={sd} label="ថ្ងៃទី" />
+              <ChiefSign name={x.communeChiefName} className="mt-1" />
             </div>
           </div>
         </A4Page>
       )}
 
       {/* ═══════════════════════════ PAGE 5 ═══════════════════════════ */}
-      {/* សំបុត្របញ្ជាក់ទាយាទ (Heir Certification Letter) */}
-      {showP5 && (
-        <A4Page
-          mode="fixed"
-          className="flex flex-col font-battambang text-[10.5pt] leading-[1.5] text-neutral-950"
-        >
-          {/* Kingdom Header */}
+      {/* សំបុត្របញ្ជាក់ទាយាទ */}
+      {show(5) && (
+        <A4Page mode="fixed" className={PAGE}>
+          {/* kingdom header, logo on the right */}
           <div className="relative">
-            <div className="absolute right-0 top-1">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={FORM.logo}
-                alt={FORM.logoAlt}
-                className="h-6 w-auto object-contain"
-              />
-            </div>
-
-            <div className="text-center pt-1">
-              <h1 className="font-moul text-[13.5pt] tracking-wide text-neutral-900">
+            <Img
+              src={FORM.logo}
+              alt={FORM.logoAlt}
+              className="absolute right-0 top-[22mm] h-[8mm] w-auto"
+            />
+            <div className="pt-1 text-center">
+              <h1 className="font-moul text-[13.5pt] font-normal tracking-wide text-neutral-900">
                 ព្រះរាជាណាចក្រកម្ពុជា
               </h1>
-              <h2 className="font-moul text-[11.5pt] tracking-wide text-neutral-900 mt-1">
+              <h2 className="mt-1 font-moul text-[11.5pt] font-normal tracking-wide text-neutral-900">
                 ជាតិ សាសនា ព្រះមហាក្សត្រ
               </h2>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/symbol-3.png"
-                alt="divider"
-                className="mx-auto my-1.5 h-[5mm] w-auto object-contain"
-              />
+              <Ornament src={FORM.divider} className="h-[5mm]" />
             </div>
 
-            <div className="mt-1 w-[65mm] space-y-1 text-[10pt]">
+            <div className="mt-1 w-[65mm] text-[10pt]">
               <p className="font-semibold">រាជធានីភ្នំពេញ</p>
               <div className={ROW}>
                 <L>ខណ្ឌ :</L>
@@ -1028,150 +1025,110 @@ export function InheritanceRequestPrint({
             </div>
           </div>
 
-          <div className="text-center mt-2.5">
-            <h3 className="font-moul text-[13.5pt] text-neutral-900">
-              សំបុត្របញ្ជាក់ទាយាទ
-            </h3>
-          </div>
+          <h3 className="mt-2 text-center font-moul text-[13.5pt] font-normal text-neutral-900">
+            សំបុត្របញ្ជាក់ទាយាទ
+          </h3>
 
-          {/* Commune statement */}
-          <div className="mt-2.5">
+          {/* statement */}
+          <div className="mt-2">
             <div className={ROW}>
-              <L className="pl-[8mm]">យើង</L>
-              <D v={data.communeChiefName} grow={2} />
+              <L className="pl-[14mm]">យើង</L>
+              <D v={x.communeChiefName} grow={2.4} />
               <L>ចៅសង្កាត់</L>
-              <D v={sangkat} grow={1.5} />
+              <D v={sangkat} grow={2} />
               <L>សូមបញ្ជាក់ និងប្រកាស</L>
             </div>
             <div className={ROW}>
-              <L>ដល់ អាជ្ញាធរមានសមត្ថកិច្ចថា៖ ខ្មោចឈ្មោះ</L>
+              <L>ដល់អាជ្ញាធរមានសមត្ថកិច្ចថា៖ ខ្មោចឈ្មោះ</L>
               <D v={d1.name} grow={2.5} />
-              <L>និងខ្មោចខាង</L>
+              <L>និងខ្មោចនាង</L>
+              <D v={d2.name} grow={2.5} />
             </div>
             <div className={ROW}>
-              <D v={d2.name} grow={2} />
               <L>កើតឆ្នាំ</L>
               <D v={kh(d1.birthYear)} grow={1} />
               <L>និងឆ្នាំ</L>
               <D v={kh(d2.birthYear)} grow={1} />
               <L>ស្លាប់ថ្ងៃទី</L>
-              <D v={kh(d1DeathParts.day || d1.deathDate)} grow={1.2} />
+              <Pair a={death1.day} b={death2.day} grow={0.8} />
             </div>
             <div className={ROW}>
               <L>ខែ</L>
-              <D v={kh(d1DeathParts.month || d2DeathParts.month)} grow={1.2} />
+              <Pair a={death1.month} b={death2.month} grow={1} />
               <L>ឆ្នាំ</L>
-              <D v={kh(d1DeathParts.year || d2DeathParts.year)} grow={1.2} />
+              <Pair a={death1.year} b={death2.year} grow={1} />
               <L>នៅសង្កាត់</L>
-              <D v={data.deceasedSangkat || sangkat} grow={1.8} />
+              <D v={deathSangkat} grow={1.8} />
               <L>និង</L>
             </div>
             <div className={ROW}>
               <L>សង្កាត់</L>
-              <D v={data.deceasedSangkat || sangkat} grow={1.8} />
-              <L>ដូចមានសំបុត្រមរណភាពលេខ</L>
-              <D
-                v={[d1.deathCertNo, d2.deathCertNo]
-                  .filter(Boolean)
-                  .map(kh)
-                  .join(" និង ")}
-                grow={1.5}
-              />
+              <D v={deathSangkat} grow={1.8} />
+              <L>ដូចមានសំបុត្រមរណភាពលេខ៖</L>
+              <D v={certNumbers} grow={1.5} />
               <L>ចុះថ្ងៃទី</L>
-              <D v={kh(d1CertParts.day || d1.deathCertDate)} grow={1.2} />
+              <Pair a={cert1.day} b={cert2.day} grow={0.7} />
             </div>
             <div className={ROW}>
               <L>ខែ</L>
-              <D v={kh(d1CertParts.month || d2CertParts.month)} grow={1.2} />
+              <Pair a={cert1.month} b={cert2.month} grow={1} />
               <L>ឆ្នាំ</L>
-              <D v={kh(d1CertParts.year || d2CertParts.year)} grow={1.2} />
+              <Pair a={cert1.year} b={cert2.year} grow={1} />
               <L>។</L>
             </div>
           </div>
 
-          <p className="mt-2 font-semibold text-center">
-            ដែលអនិច្ចកម្មឥតមានបណ្ដាំ ហើយបានបន្សល់ទុកទាយាទដូចមានរាយនាមខាងក្រោមនេះ
-            ៖
+          <p className="mt-2 pl-[8mm]">
+            ដែលអនិច្ចកម្មឥតមានបណ្ដាំ
+            ហើយបានបន្សល់ទុកទាយាទដូចមានរាយនាមខាងក្រោមនេះ៖
           </p>
 
-          {/* 8 Heirs list */}
-          <div className="mt-1.5 space-y-0.5">
-            {Array.from({ length: 8 }, (_, i) => {
-              const child = data.children[i];
-              const numKh = kh(i + 1);
-              return (
-                <div key={i} className={ROW}>
-                  <L className="w-[18mm]">{numKh}- ឈ្មោះ</L>
-                  <D v={child?.name} grow={3.5} />
-                  <L>ភេទ</L>
-                  <D v={child?.gender} grow={1} />
-                  <L>អាយុ</L>
-                  <D v={child ? ageNumber(child.dob) : ""} grow={1} />
-                  <L>ឆ្នាំត្រូវជាកូនទី{numKh}នៃខ្មោច</L>
-                </div>
-              );
-            })}
+          {/* heirs */}
+          <div className="mt-1">
+            {heirs.map((c, i) => (
+              <div key={i} className={ROW}>
+                <L className="w-[18mm]">{kh(i + 1)}- ឈ្មោះ:</L>
+                <D v={c.name} grow={3.5} />
+                <L>ភេទ</L>
+                <D v={c.gender} grow={1} />
+                <L>អាយុ</L>
+                <D v={ageNumber(c.dob)} grow={1} />
+                <L>ឆ្នាំ ត្រូវជាកូនទី{kh(i + 1)}នៃខ្មោច</L>
+                {c.note && (
+                  <span className="shrink-0 font-semibold text-neutral-900">
+                    ({c.note.replace(/[()]/g, "").trim()})
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
 
-          <div className="mt-2.5">
+          <div className="mt-1.5">
             <div className={ROW}>
               <L className="pl-[8mm]">
-                ដែលជាទាយាទមានសិទ្ធិក្នុងចំណែកមរតកនៃខ្មោចឈ្មោះ
+                ដែលជាទាយាទមានសិទ្ធិក្នុងចំណែកមរតកនៃខ្មោចឈ្មោះ៖
               </L>
               <D v={d1.name} grow={2} />
-              <L>និងខ្មោចខាង</L>
+              <L>និងខ្មោចនាង</L>
             </div>
             <div className={ROW}>
               <D v={d2.name} grow={1} />
               <L>។</L>
             </div>
-            <p className="mt-1 text-[10pt]">
+            <p className="pl-[8mm]">
               សេចក្តីបញ្ជាក់នេះចេញឱ្យទាយាទប្រើប្រាស់តាមការដែលអាចប្រើបាន។
             </p>
           </div>
 
-          <div className="mt-3 flex justify-end">
-            <div className="w-[110mm] text-center">
-              <div className={cn(ROW, "justify-center")}>
-                <L className="font-moul">លេខ:</L>
-                <D v={kh(data.heirCertNo)} grow={1} />
-              </div>
-              <div className={cn(ROW, "mt-1")}>
-                <L>ថ្ងៃ</L>
-                <D
-                  v={
-                    lunar
-                      ? `${lunar.weekday.replace(/^ថ្ងៃ/, "")} ${toKhmerNum(lunar.lunarDay)}${lunar.lunarPhase}`
-                      : ""
-                  }
-                  grow={1.8}
-                />
-                <L>ខែ</L>
-                <D v={lunar?.lunarMonthName} grow={1.2} />
-                <L>ឆ្នាំ</L>
-                <D
-                  v={lunar ? `${lunar.zodiacYear} ${lunar.sakYear}` : ""}
-                  grow={1.5}
-                />
-                <L>ព.ស.</L>
-                <D v={lunar ? toKhmerNum(lunar.buddhistEra) : ""} grow={1} />
-              </div>
-              <div className={cn(ROW, "mt-0.5 justify-center")}>
-                <L>រាជធានីភ្នំពេញ ថ្ងៃទី</L>
-                <D v={dateParts(data.date).day} grow={0.8} />
-                <L>ខែ</L>
-                <D v={dateParts(data.date).month} grow={1.2} />
-                <L>ឆ្នាំ២០</L>
-                <D
-                  v={sign.year ? kh(String(sign.year).replace(/^20/, "")) : ""}
-                  grow={0.8}
-                />
-              </div>
-              <p className="mt-2.5 font-moul text-[11pt]">ចៅសង្កាត់</p>
-              <p className="mt-8 font-semibold">
-                {data.communeChiefName || "\u00A0"}
-              </p>
+          {/* number, date, chief */}
+          <div className="ml-auto mt-2 w-[110mm] text-center">
+            <div className={cn(ROW, "justify-center")}>
+              <L className="font-moul">លេខ:</L>
+              <D v={kh(x.heirCertNo)} grow={1} />
             </div>
+            <LunarLine d={sd} />
+            <PlaceDateLine d={sd} />
+            <ChiefSign name={x.communeChiefName} className="mt-1" />
           </div>
         </A4Page>
       )}
