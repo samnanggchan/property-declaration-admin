@@ -7,15 +7,28 @@ import {
   RotateCcwIcon,
   SparklesIcon,
   Trash2Icon,
+  CloudUploadIcon,
+  FolderOpenIcon,
+  FilePlusIcon,
+  CheckIcon,
+  Loader2Icon,
+  SearchIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { inheritanceApi } from "@/lib/api";
 import { InheritanceRequestPrint } from "@/components/inheritance-request-print";
 import { printCleanDocument } from "@/lib/print-service";
-import { cn } from "@/lib/utils";
+import { cn, calculateAgeFromDob } from "@/lib/utils";
 import {
   Applicant,
   APPLICANT_SLOTS,
@@ -110,6 +123,11 @@ function getLastFilledIndex<T extends object>(list: T[] = []): number {
 export function InheritanceRequestForm() {
   const [data, setData] = React.useState<InheritanceRequest>(emptyRequest);
   const [hydrated, setHydrated] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [isDbListOpen, setIsDbListOpen] = React.useState(false);
+  const [dbList, setDbList] = React.useState<InheritanceRequest[]>([]);
+  const [loadingDbList, setLoadingDbList] = React.useState(false);
+  const [searchFilter, setSearchFilter] = React.useState("");
   const [visibleDeceased, setVisibleDeceased] = React.useState<number>(1);
   const [visibleApplicants, setVisibleApplicants] = React.useState<number>(1);
   const [visibleWitnesses, setVisibleWitnesses] = React.useState<number>(1);
@@ -118,6 +136,22 @@ export function InheritanceRequestForm() {
   const [pageFilter, setPageFilter] = React.useState<"all" | 1 | 2 | 3 | 4 | 5>(
     "all",
   );
+
+  const fetchDbList = React.useCallback(async () => {
+    try {
+      setLoadingDbList(true);
+      const res = await inheritanceApi.list({ limit: 50, order: "desc" });
+      setDbList(res.data || []);
+    } catch (err) {
+      console.warn("Could not load inheritance requests from DB", err);
+    } finally {
+      setLoadingDbList(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchDbList();
+  }, [fetchDbList]);
 
   // load saved draft once (after mount, so server/client HTML match)
   React.useEffect(() => {
@@ -280,6 +314,91 @@ export function InheritanceRequestForm() {
     toast.success("បានដាក់ទិន្នន័យគំរូ");
   };
 
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      let res: InheritanceRequest;
+      if (data.id) {
+        res = await inheritanceApi.update(data.id, data);
+        toast.success("បានធ្វើបច្ចុប្បន្នភាពក្នុង DB ជោគជ័យ!");
+      } else {
+        res = await inheritanceApi.create(data);
+        toast.success("បានរក្សាទុកក្នុង DB ជោគជ័យ!");
+      }
+      const normalized = normalizeRequest(res);
+      setData(normalized);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+      fetchDbList();
+    } catch (err) {
+      console.error("Failed to save to DB", err);
+      toast.error("មានបញ្ហាក្នុងការរក្សាទុកទៅ DB!");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleNew = () => {
+    const empty = emptyRequest();
+    setData(empty);
+    localStorage.removeItem(STORAGE_KEY);
+    setVisibleDeceased(1);
+    setVisibleApplicants(1);
+    setVisibleWitnesses(1);
+    setVisibleChildren(1);
+    setVisibleRelatives(1);
+    toast.info("បានបង្កើតឯកសារថ្មី");
+  };
+
+  const handleLoad = (item: InheritanceRequest) => {
+    const normalized = normalizeRequest(item);
+    setData(normalized);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    setVisibleDeceased(getLastFilledIndex(normalized.deceased));
+    setVisibleApplicants(getLastFilledIndex(normalized.applicants));
+    setVisibleWitnesses(getLastFilledIndex(normalized.witnesses));
+    setVisibleChildren(getLastFilledIndex(normalized.children));
+    setVisibleRelatives(getLastFilledIndex(normalized.relatives));
+    setIsDbListOpen(false);
+    toast.success("បានបើកឯកសារជោគជ័យ!");
+  };
+
+  const handleDeleteDb = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("តើអ្នកពិតជាចង់លុបឯកសារនេះពី DB ឬ?")) return;
+    try {
+      await inheritanceApi.remove(id);
+      toast.success("បានលុបឯកសារពី DB រួចរាល់!");
+      if (data.id === id) {
+        setData((p) => ({ ...p, id: undefined }));
+      }
+      fetchDbList();
+    } catch (err) {
+      console.error(err);
+      toast.error("មិនអាចលុបឯកសារបានទេ!");
+    }
+  };
+
+  const filteredDbList = React.useMemo(() => {
+    if (!searchFilter.trim()) return dbList;
+    const term = searchFilter.toLowerCase();
+    return dbList.filter((item) => {
+      const decMatch = (item.deceased || []).some((d) =>
+        d.name?.toLowerCase().includes(term),
+      );
+      const appMatch = (item.applicants || []).some((a) =>
+        a.name?.toLowerCase().includes(term),
+      );
+      return (
+        item.refNo?.toLowerCase().includes(term) ||
+        item.title?.toLowerCase().includes(term) ||
+        item.authorizedPerson?.toLowerCase().includes(term) ||
+        item.location?.toLowerCase().includes(term) ||
+        decMatch ||
+        appMatch
+      );
+    });
+  }, [dbList, searchFilter]);
+
   const deceasedNamed = countNamed(data.deceased);
   const applicantsNamed = countNamed(data.applicants);
   const witnessesNamed = countNamed(data.witnesses);
@@ -313,6 +432,56 @@ export function InheritanceRequestForm() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {data.id ? (
+              <Badge className="bg-emerald-600 text-white text-xs gap-1 py-1">
+                <CheckIcon className="size-3" /> បានរក្សាទុកក្នុង DB
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="text-xs text-amber-600 border-amber-300 dark:border-amber-800 py-1"
+              >
+                ● សេចក្តីព្រាង (មិនទាន់ Save)
+              </Badge>
+            )}
+
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={saving}
+              className="h-8 gap-1.5 bg-blue-600 text-white hover:bg-blue-700 cursor-pointer text-xs"
+            >
+              {saving ? (
+                <Loader2Icon className="size-3.5 animate-spin" />
+              ) : (
+                <CloudUploadIcon className="size-3.5" />
+              )}
+              {saving ? "កំពុងរក្សាទុក..." : "រក្សាទុកក្នុង DB"}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                fetchDbList();
+                setIsDbListOpen(true);
+              }}
+              className="h-8 gap-1.5 text-xs cursor-pointer"
+            >
+              <FolderOpenIcon className="size-3.5" />
+              បញ្ជីក្នុង DB {dbList.length > 0 ? `(${dbList.length})` : ""}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNew}
+              className="h-8 gap-1.5 text-xs cursor-pointer"
+            >
+              <FilePlusIcon className="size-3.5" />
+              ឯកសារថ្មី
+            </Button>
+
             <Button
               variant="outline"
               size="sm"
@@ -381,7 +550,10 @@ export function InheritanceRequestForm() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,480px)_minmax(0,1fr)] print:block print:p-0 print:m-0 print:gap-0">
         {/* ═══════════════ EDITOR (never printed) ═══════════════ */}
         <div className="no-print space-y-4">
-          <Card title="ព័ត៌មានទូទៅ">
+          <Card
+            title="ព័ត៌មានទូទៅ"
+            hint="ព័ត៌មានលិខិត, អចលនវត្ថុ/ដី, និងអាជ្ញាធរ"
+          >
             <div className="grid grid-cols-2 gap-3">
               <Field
                 label="ចំណងជើង"
@@ -395,10 +567,35 @@ export function InheritanceRequestForm() {
                 onChange={(v) => setField("refNo", v)}
               />
               <Field
-                label="ប្រភេទទ្រព្យ"
+                label="កាលបរិច្ឆេទ (ថ្ងៃ.ខែ.ឆ្នាំ)"
+                value={data.date}
+                onChange={(v) => setField("date", v)}
+                placeholder="08.10.2026"
+              />
+
+              <div className="col-span-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">
+                  ព័ត៌មានអចលនវត្ថុ / ដី
+                </span>
+              </div>
+
+              <Field
+                label="ប័ណ្ណសម្គាល់សិទ្ធិលេខ"
+                value={data.titleDeedNo}
+                onChange={(v) => setField("titleDeedNo", v)}
+                placeholder="ឧ. ១២-៣៤-៥៦-៧៨៩"
+              />
+              <Field
+                label="ប្រភេទដី"
                 value={data.propertyType}
                 onChange={(v) => setField("propertyType", v)}
-                placeholder="ឧ. ដីលំនៅដ្ឋាន"
+                placeholder="ឧ. លំនៅឋាន"
+              />
+              <Field
+                label="ក្បាលដីលេខ"
+                value={data.plotNo}
+                onChange={(v) => setField("plotNo", v)}
+                placeholder="ឧ. ១២៨"
               />
               <Field
                 label="ទំហំ"
@@ -407,17 +604,84 @@ export function InheritanceRequestForm() {
                 placeholder="93 ម²"
               />
               <Field
-                label="ទីតាំង"
+                label="ផ្លូវលេខ"
+                value={data.streetNo}
+                onChange={(v) => setField("streetNo", v)}
+                placeholder="ឧ. ១៩៣"
+              />
+              <Field
+                label="ភូមិ"
+                value={data.village}
+                onChange={(v) => setField("village", v)}
+                placeholder="ឧ. ភូមិ៣"
+              />
+              <Field
+                label="សង្កាត់"
+                value={data.sangkat}
+                onChange={(v) => setField("sangkat", v)}
+                placeholder="ឧ. ទឹកល្អក់ទី១"
+              />
+              <Field
+                label="ខណ្ឌ"
+                value={data.khan}
+                onChange={(v) => setField("khan", v)}
+                placeholder="ឧ. ទួលគោក"
+              />
+              <Field
+                label="ទីតាំង (ពេញលេញ)"
                 value={data.location}
                 onChange={(v) => setField("location", v)}
                 className="col-span-2"
               />
+
+              <div className="col-span-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">
+                  អ្នកទទួលសិទ្ធិ និងអាជ្ញាធរ (ទំព័រ ៣, ៤, ៥)
+                </span>
+              </div>
+
               <Field
-                label="កាលបរិច្ឆេទ (ថ្ងៃ.ខែ.ឆ្នាំ)"
-                value={data.date}
-                onChange={(v) => setField("date", v)}
-                placeholder="08.10.2026"
+                label="ឈ្មោះអ្នកទទួលសិទ្ធិចាត់ចែង (ខាង)"
+                value={data.authorizedPerson}
+                onChange={(v) => setField("authorizedPerson", v)}
+                placeholder="ឧ. ជា សុវណ្ណា"
                 className="col-span-2"
+              />
+              <Field
+                label="ត្រូវជា...នៃខ្មោច"
+                value={data.authorizedRelationDeceased}
+                onChange={(v) => setField("authorizedRelationDeceased", v)}
+                placeholder="ឧ. ប្រពន្ធ / ប្ដី"
+              />
+              <Field
+                label="ត្រូវជា...នៃយើងខ្ញុំ"
+                value={data.authorizedRelationHeirs}
+                onChange={(v) => setField("authorizedRelationHeirs", v)}
+                placeholder="ឧ. ម្ដាយ / ឪពុក"
+              />
+              <Field
+                label="ឈ្មោះចៅសង្កាត់"
+                value={data.communeChiefName}
+                onChange={(v) => setField("communeChiefName", v)}
+                placeholder="ទុកទំនេរសម្រាប់ចុះហត្ថលេខា"
+              />
+              <Field
+                label="លេខសំបុត្របញ្ជាក់ទាយាទ (ទំព័រ ៥)"
+                value={data.heirCertNo}
+                onChange={(v) => setField("heirCertNo", v)}
+                placeholder="ឧ. ០៤២/២៦"
+              />
+              <Field
+                label="លិខិតដំណាលលេខ (ទំព័រ ៤)"
+                value={data.letterRefNo}
+                onChange={(v) => setField("letterRefNo", v)}
+                placeholder="ឧ. ០១២/២៦"
+              />
+              <Field
+                label="ចុះថ្ងៃទី (លិខិតដំណាល)"
+                value={data.letterRefDate}
+                onChange={(v) => setField("letterRefDate", v)}
+                placeholder="ឧ. ០៥.១០.២០២៦"
               />
             </div>
           </Card>
@@ -554,10 +818,14 @@ export function InheritanceRequestForm() {
                       onChange={(v) => patchApplicant(i, { name: v })}
                     />
                     <Field
-                      label="ថ្ងៃ ខែ ឆ្នាំកំណើត"
+                      label={
+                        a.dob && calculateAgeFromDob(a.dob)
+                          ? `ថ្ងៃ ខែ ឆ្នាំកំណើត (${calculateAgeFromDob(a.dob)})`
+                          : "ថ្ងៃ ខែ ឆ្នាំកំណើត"
+                      }
                       value={a.dob}
                       onChange={(v) => patchApplicant(i, { dob: v })}
-                      placeholder="22.02.1980"
+                      placeholder="01.01.1949"
                     />
                     <Field
                       label="អាសយដ្ឋាន"
@@ -983,99 +1251,6 @@ export function InheritanceRequestForm() {
               )}
             </div>
           </Card>
-
-          <Card
-            title="ព័ត៌មានអចលនវត្ថុ និងអាជ្ញាធរ (ទំព័រ ៣, ៤, ៥)"
-            hint="សម្រាប់សេចក្តីព្រមព្រៀង, ក្រុមប្រឹក្សាញាតិ, បញ្ជាក់ទាយាទ"
-          >
-            <div className="grid grid-cols-2 gap-3">
-              <Field
-                label="ប័ណ្ណសម្គាល់សិទ្ធិលេខ"
-                value={data.titleDeedNo}
-                onChange={(v) => setField("titleDeedNo", v)}
-                placeholder="ឧ. ១២-៣៤-៥៦-៧៨៩"
-              />
-              <Field
-                label="ប្រភេទទ្រព្យ"
-                value={data.propertyType}
-                onChange={(v) => setField("propertyType", v)}
-                placeholder="ឧ. ដីលំនៅដ្ឋាន"
-              />
-              <Field
-                label="ក្បាលដីលេខ"
-                value={data.plotNo}
-                onChange={(v) => setField("plotNo", v)}
-                placeholder="ឧ. ១២៨"
-              />
-              <Field
-                label="ផ្លូវលេខ"
-                value={data.streetNo}
-                onChange={(v) => setField("streetNo", v)}
-                placeholder="ឧ. ១៩៣"
-              />
-              <Field
-                label="ភូមិ"
-                value={data.village}
-                onChange={(v) => setField("village", v)}
-                placeholder="ឧ. ភូមិ៣"
-              />
-              <Field
-                label="សង្កាត់"
-                value={data.sangkat}
-                onChange={(v) => setField("sangkat", v)}
-                placeholder="ឧ. ទឹកល្អក់ទី១"
-              />
-              <Field
-                label="ខណ្ឌ"
-                value={data.khan}
-                onChange={(v) => setField("khan", v)}
-                placeholder="ឧ. ទួលគោក"
-              />
-              <Field
-                label="ឈ្មោះអ្នកទទួលសិទ្ធិចាត់ចែង (ខាង)"
-                value={data.authorizedPerson}
-                onChange={(v) => setField("authorizedPerson", v)}
-                placeholder="ឧ. ជា សុវណ្ណា"
-                className="col-span-2"
-              />
-              <Field
-                label="ត្រូវជា...នៃខ្មោច"
-                value={data.authorizedRelationDeceased}
-                onChange={(v) => setField("authorizedRelationDeceased", v)}
-                placeholder="ឧ. ប្រពន្ធ / ប្ដី"
-              />
-              <Field
-                label="ត្រូវជា...នៃយើងខ្ញុំ"
-                value={data.authorizedRelationHeirs}
-                onChange={(v) => setField("authorizedRelationHeirs", v)}
-                placeholder="ឧ. ម្ដាយ / ឪពុក"
-              />
-              <Field
-                label="ឈ្មោះចៅសង្កាត់"
-                value={data.communeChiefName}
-                onChange={(v) => setField("communeChiefName", v)}
-                placeholder="ទុកទំនេរសម្រាប់ចុះហត្ថលេខា"
-              />
-              <Field
-                label="លេខសំបុត្របញ្ជាក់ទាយាទ (ទំព័រ ៥)"
-                value={data.heirCertNo}
-                onChange={(v) => setField("heirCertNo", v)}
-                placeholder="ឧ. ០៤២/២៦"
-              />
-              <Field
-                label="លិខិតដំណាលលេខ (ទំព័រ ៤)"
-                value={data.letterRefNo}
-                onChange={(v) => setField("letterRefNo", v)}
-                placeholder="ឧ. ០១២/២៦"
-              />
-              <Field
-                label="ចុះថ្ងៃទី (លិខិតដំណាល)"
-                value={data.letterRefDate}
-                onChange={(v) => setField("letterRefDate", v)}
-                placeholder="ឧ. ០៥.១០.២០២៦"
-              />
-            </div>
-          </Card>
         </div>
 
         {/* ═══════════════ PRINTABLE FORM (5 × A4) ═══════════════ */}
@@ -1083,6 +1258,129 @@ export function InheritanceRequestForm() {
           <InheritanceRequestPrint data={data} pageFilter={pageFilter} />
         </div>
       </div>
+
+      {/* ── Modal Dialog: List of Saved DB Records ── */}
+      <Dialog open={isDbListOpen} onOpenChange={setIsDbListOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-semibold">
+              <FolderOpenIcon className="size-5 text-blue-600" />
+              បញ្ជីពាក្យស្នើសុំដែលបានរក្សាទុកក្នុង DB ({dbList.length})
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="relative mt-2">
+            <SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+            <Input
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              placeholder="ស្វែងរកតាមលេខយោង, ឈ្មោះអ្នកស្នើសុំ, ឈ្មោះខ្មោច, ឬទីតាំង..."
+              className="h-9 pl-9 text-xs"
+            />
+          </div>
+
+          <div className="mt-3 flex-1 overflow-y-auto space-y-2 pr-1 min-h-[250px] max-h-[450px]">
+            {loadingDbList ? (
+              <div className="flex h-32 items-center justify-center text-xs text-muted-foreground gap-2">
+                <Loader2Icon className="size-4 animate-spin text-blue-600" />
+                កំពុងទាញយកទិន្នន័យពី DB...
+              </div>
+            ) : filteredDbList.length === 0 ? (
+              <div className="flex h-32 flex-col items-center justify-center text-xs text-muted-foreground">
+                <FolderOpenIcon className="size-8 text-muted-foreground/40 mb-2" />
+                ពុំមានឯកសារនៅក្នុង DB ទេ
+              </div>
+            ) : (
+              filteredDbList.map((item) => {
+                const isCurrent = item.id === data.id;
+                const decNames = (item.deceased || [])
+                  .map((d) => d.name)
+                  .filter(Boolean)
+                  .join(", ");
+                const appNames = (item.applicants || [])
+                  .map((a) => a.name)
+                  .filter(Boolean)
+                  .join(", ");
+
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => handleLoad(item)}
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer text-xs hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-950/20",
+                      isCurrent &&
+                        "border-blue-600 bg-blue-50/50 dark:bg-blue-950/30",
+                    )}
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-foreground">
+                          {item.refNo ? `លេខយោង៖ ${item.refNo}` : "គ្មានលេខយោង"}
+                        </span>
+                        {isCurrent && (
+                          <Badge
+                            variant="default"
+                            className="text-[10px] bg-blue-600 py-0"
+                          >
+                            បច្ចុប្បន្ន
+                          </Badge>
+                        )}
+                        {item.date && (
+                          <span className="text-[11px] text-muted-foreground">
+                            ចុះថ្ងៃ៖ {item.date}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground flex flex-wrap gap-x-3">
+                        {appNames && (
+                          <span>
+                            អ្នកស្នើសុំ៖{" "}
+                            <strong className="text-foreground">
+                              {appNames}
+                            </strong>
+                          </span>
+                        )}
+                        {decNames && (
+                          <span>
+                            ខ្មោច៖{" "}
+                            <strong className="text-foreground">
+                              {decNames}
+                            </strong>
+                          </span>
+                        )}
+                        {item.location && <span>ទីតាំង៖ {item.location}</span>}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pl-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs px-2.5 cursor-pointer hover:bg-blue-600 hover:text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLoad(item);
+                        }}
+                      >
+                        បើក
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs px-2 text-destructive hover:bg-destructive/10 cursor-pointer"
+                        title="លុបចេញពី DB"
+                        onClick={(e) => item.id && handleDeleteDb(item.id, e)}
+                      >
+                        <Trash2Icon className="size-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

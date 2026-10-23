@@ -48,11 +48,14 @@ export interface Relative {
 }
 
 export interface InheritanceRequest {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
   title: string;
   refNo: string; // លេខយោង
   location: string; // ទីតាំង
   area: string; // ទំហំ
-  propertyType: string; // ប្រភេទទ្រព្យ (ឧ. ដីលំនៅដ្ឋាន)
+  propertyType: string; // ប្រភេទដី (ឧ. លំនៅឋាន)
   date: string; // dd.mm.yyyy – date printed above the signatures
   deceasedSangkat: string; // នៅសង្កាត់
 
@@ -170,6 +173,9 @@ export function normalizeRequest(raw: unknown): InheritanceRequest {
   if (!raw || typeof raw !== "object") return base;
   const r = raw as Partial<InheritanceRequest>;
   return {
+    id: typeof r.id === "string" ? r.id : undefined,
+    createdAt: typeof r.createdAt === "string" ? r.createdAt : undefined,
+    updatedAt: typeof r.updatedAt === "string" ? r.updatedAt : undefined,
     title: typeof r.title === "string" && r.title ? r.title : base.title,
     refNo: typeof r.refNo === "string" ? r.refNo : "",
     location: typeof r.location === "string" ? r.location : "",

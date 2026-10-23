@@ -1,4 +1,5 @@
 import { LandDeclaration, PaginatedResponse, PaginationParams } from "./types";
+import { InheritanceRequest } from "./inheritance-request-types";
 
 const rawBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3003";
 const API_BASE = rawBase.endsWith("/api/v1")
@@ -48,7 +49,9 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 
 export const declarationsApi = {
   list: (params?: PaginationParams) =>
-    request<PaginatedResponse<LandDeclaration>>(`${API_BASE}/declarations${buildQuery(params)}`),
+    request<PaginatedResponse<LandDeclaration>>(
+      `${API_BASE}/declarations${buildQuery(params)}`,
+    ),
   get: (id: string) =>
     request<LandDeclaration>(`${API_BASE}/declarations/${id}`),
   create: (initial?: Partial<LandDeclaration>) =>
@@ -76,8 +79,31 @@ export interface UserSummary {
 
 export const usersApi = {
   list: (params?: PaginationParams) =>
-    request<PaginatedResponse<UserSummary>>(`${API_BASE}/users${buildQuery(params)}`),
-  get: (id: string) =>
-    request<UserSummary>(`${API_BASE}/users/${id}`),
+    request<PaginatedResponse<UserSummary>>(
+      `${API_BASE}/users${buildQuery(params)}`,
+    ),
+  get: (id: string) => request<UserSummary>(`${API_BASE}/users/${id}`),
 };
 
+export const inheritanceApi = {
+  list: (params?: PaginationParams) =>
+    request<PaginatedResponse<InheritanceRequest>>(
+      `${API_BASE}/inheritance-requests${buildQuery(params)}`,
+    ),
+  get: (id: string) =>
+    request<InheritanceRequest>(`${API_BASE}/inheritance-requests/${id}`),
+  create: (initial: Partial<InheritanceRequest>) =>
+    request<InheritanceRequest>(`${API_BASE}/inheritance-requests`, {
+      method: "POST",
+      body: JSON.stringify(initial),
+    }),
+  update: (id: string, input: Partial<InheritanceRequest>) =>
+    request<InheritanceRequest>(`${API_BASE}/inheritance-requests/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  remove: (id: string) =>
+    request<void>(`${API_BASE}/inheritance-requests/${id}`, {
+      method: "DELETE",
+    }),
+};

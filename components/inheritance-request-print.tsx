@@ -421,6 +421,41 @@ export function InheritanceRequestPrint({
     .filter(Boolean)
     .join(" និង ");
 
+  /* active applicants & witnesses for signatures */
+  const activeApplicants = data.applicants.filter((a) => a.name?.trim());
+  const activeWitnesses = data.witnesses.filter((w) => w.name?.trim());
+
+  /* surviving spouse (page 1) */
+  const spouseApplicant =
+    data.applicants.find(
+      (a) =>
+        a.relationDeceased?.includes("ប្រពន្ធ") ||
+        a.relationDeceased?.includes("ប្ដី") ||
+        a.relationHeirs?.includes("ម្ដាយ") ||
+        a.relationHeirs?.includes("ឪពុក"),
+    ) ||
+    (data.authorizedRelationDeceased?.includes("ប្រពន្ធ") ||
+    data.authorizedRelationDeceased?.includes("ប្ដី")
+      ? { name: data.authorizedPerson, dob: "", address: "" }
+      : null) ||
+    data.applicants.find((a) => a.name?.trim()) ||
+    data.applicants[0];
+
+  const spouseName = (
+    (data as unknown as { spouseName?: string }).spouseName ||
+    spouseApplicant?.name ||
+    data.authorizedPerson ||
+    ""
+  ).trim();
+
+  const spouseAge =
+    (data as unknown as { spouseAge?: string }).spouseAge ||
+    (spouseApplicant?.dob
+      ? ageNumber(spouseApplicant.dob)
+      : a1?.dob
+        ? ageNumber(a1.dob)
+        : "");
+
   /* children */
   const p1Children = data.children.slice(0, FORM.pageOneChildren);
   const p2Children = data.children.slice(FORM.pageOneChildren);
@@ -516,7 +551,7 @@ export function InheritanceRequestPrint({
             <div className="absolute left-0 top-[10mm] w-[48mm]">
               <div className={ROW}>
                 <L>អ្នកតែងលិខិត</L>
-                <D grow={1} />  
+                <D grow={1} />
               </div>
             </div>
 
@@ -579,7 +614,7 @@ export function InheritanceRequestPrint({
 
           <Ornament />
 
-          {/* surviving spouse (filled by hand) */}
+          {/* surviving spouse */}
           <div className="flex items-stretch gap-1.5">
             <div className="w-[34mm] shrink-0 self-center text-center leading-tight">
               <p>ប្ដីពោះម៉ាយ (២)</p>
@@ -590,13 +625,13 @@ export function InheritanceRequestPrint({
             <div className="min-w-0 flex-1">
               <div className={ROW}>
                 <L>ឈ្មោះ</L>
-                <D grow={3} />
+                <D v={spouseName} grow={3} />
                 <L>អាយុ</L>
-                <D grow={1} />
+                <D v={spouseAge} grow={1} />
                 <L>ឆ្នាំ ជាប្ដី ឬប្រពន្ធដើមនៃខ្មោចឈ្មោះ</L>
               </div>
               <div className={ROW}>
-                <D grow={2} />
+                <D v={deceasedNames} grow={2} />
                 <L>ដូចមានសំបុត្រអាពាហ៍ពិពាហ៍លេខ</L>
                 <D grow={2} />
               </div>
@@ -726,25 +761,56 @@ export function InheritanceRequestPrint({
           </div>
 
           {/* signatures */}
-          <div className="mt-4 grid grid-cols-[1.15fr_1fr] gap-6 break-inside-avoid">
-            <div>
+          <div className="mt-4 grid grid-cols-[1.3fr_1fr] gap-4 break-inside-avoid">
+            <div className="pl-[4mm]">
               <p className="text-center">ហត្ថលេខា ឬ ស្នាមមេដៃស្តាំ</p>
-              <div className="mt-1 grid grid-cols-2 gap-3 pl-[20mm] text-center">
+              <div
+                className={cn(
+                  "mt-1 text-center",
+                  activeWitnesses.length >= 2 && activeApplicants.length < 2
+                    ? "grid grid-cols-[1fr_1.6fr] gap-3"
+                    : activeApplicants.length >= 2 && activeWitnesses.length < 2
+                      ? "grid grid-cols-[1.6fr_1fr] gap-3"
+                      : "grid grid-cols-2 gap-3",
+                )}
+              >
                 <div>
                   <p>អ្នកប្តឹង</p>
-                  {data.applicants.map((a, i) => (
-                    <p key={i} className="mt-10 font-semibold">
-                      {a.name || "\u00A0"}
-                    </p>
-                  ))}
+                  <div className="mt-30">
+                    {activeApplicants.length >= 2 ? (
+                      <div className="grid grid-cols-2 gap-2 text-center">
+                        <p className="font-semibold">
+                          {activeApplicants[0].name}
+                        </p>
+                        <p className="font-semibold">
+                          {activeApplicants[1].name}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-center font-semibold">
+                        {activeApplicants[0]?.name || "\u00A0"}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <p>កសិណ</p>
-                  {data.witnesses.map((w, i) => (
-                    <p key={i} className="mt-10 font-semibold">
-                      {w.name || "\u00A0"}
-                    </p>
-                  ))}
+                  <div className="mt-30">
+                    {activeWitnesses.length >= 2 ? (
+                      <div className="grid grid-cols-2 gap-2 text-center">
+                        <p className="font-semibold">
+                          {activeWitnesses[0].name}
+                        </p>
+                        <p className="font-semibold">
+                          {activeWitnesses[1].name}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-center font-semibold">
+                        {activeWitnesses[0]?.name || "\u00A0"}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -754,7 +820,7 @@ export function InheritanceRequestPrint({
                 <L>បញ្ជាក់ចុះលេខ</L>
                 <D grow={1} />
               </div>
-              <p className="pl-[30mm]">ហត្ថលេខា និងត្រាចៅសង្កាត់ដែលបញ្ជាក់</p>
+              <p className="pl-[25mm]">ហត្ថលេខា និងត្រាចៅសង្កាត់ដែលបញ្ជាក់</p>
             </div>
           </div>
 
