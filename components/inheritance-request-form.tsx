@@ -399,6 +399,26 @@ export function InheritanceRequestForm() {
     });
   }, [dbList, searchFilter]);
 
+  // Sync browser document title dynamically based on form title & refNo
+  React.useEffect(() => {
+    const mainTitle =
+      data.title || "ពាក្យស្នើសុំផ្ទេរសិទ្ធិកាន់កាប់អចលនវត្ថុជាមរតក";
+    const refSuffix = data.refNo ? ` - លេខ ${data.refNo}` : "";
+    document.title = `${mainTitle}${refSuffix} | Request Form`;
+  }, [data.title, data.refNo]);
+
+  // Document title used when printing / downloading as PDF
+  const printTitle = React.useMemo(() => {
+    const mainTitle =
+      data.title || "ពាក្យស្នើសុំផ្ទេរសិទ្ធិកាន់កាប់អចលនវត្ថុជាមរតក";
+    const parts = [
+      mainTitle,
+      data.refNo ? `លេខ ${data.refNo}` : "",
+      pageFilter !== "all" ? `ទំព័រ ${pageFilter}` : "",
+    ].filter(Boolean);
+    return parts.join(" - ");
+  }, [data.title, data.refNo, pageFilter]);
+
   const deceasedNamed = countNamed(data.deceased);
   const applicantsNamed = countNamed(data.applicants);
   const witnessesNamed = countNamed(data.witnesses);
@@ -502,12 +522,13 @@ export function InheritanceRequestForm() {
             </Button>
             <Button
               size="sm"
-              onClick={() => printCleanDocument("printable-document")}
-              className="h-8 gap-1.5 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900"
+              onClick={() => printCleanDocument("printable-document", printTitle)}
+              title="ទាញយកជា PDF ឬបោះពុម្ព (Download PDF / Print)"
+              className="h-8 gap-1.5 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900 cursor-pointer shadow-xs"
             >
               <PrinterIcon className="size-3.5" />
               {pageFilter === "all"
-                ? "បោះពុម្ព (Print)"
+                ? "ទាញយក PDF / បោះពុម្ព"
                 : `បោះពុម្ពទំព័រ ${pageFilter} (Print Page ${pageFilter})`}
             </Button>
           </div>

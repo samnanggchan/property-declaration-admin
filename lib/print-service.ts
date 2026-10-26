@@ -1,10 +1,20 @@
 "use client";
 
-export function printCleanDocument(elementId: string = "printable-document") {
+export function printCleanDocument(
+  elementId: string = "printable-document",
+  documentTitle?: string
+) {
   const target =
     document.getElementById(elementId) || document.querySelector(".printable-area");
   if (!target) {
-    window.print();
+    if (documentTitle) {
+      const prevTitle = document.title;
+      document.title = documentTitle;
+      window.print();
+      document.title = prevTitle;
+    } else {
+      window.print();
+    }
     return;
   }
 
@@ -28,7 +38,14 @@ export function printCleanDocument(elementId: string = "printable-document") {
 
   const iframeDoc = iframe.contentWindow?.document;
   if (!iframeDoc) {
-    window.print();
+    if (documentTitle) {
+      const prevTitle = document.title;
+      document.title = documentTitle;
+      window.print();
+      document.title = prevTitle;
+    } else {
+      window.print();
+    }
     return;
   }
 
@@ -46,6 +63,8 @@ export function printCleanDocument(elementId: string = "printable-document") {
     .map((el) => el.outerHTML)
     .join("\n");
 
+  const title = documentTitle || document.title || "បោះពុម្ពឯកសារផ្លូវការ";
+
   iframeDoc.open();
   iframeDoc.write(`
 <!DOCTYPE html>
@@ -53,7 +72,7 @@ export function printCleanDocument(elementId: string = "printable-document") {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>បោះពុម្ពឯកសារផ្លូវការ</title>
+    <title>${title}</title>
     ${fontLinks}
     ${styleElements}
     <style>
@@ -125,13 +144,20 @@ export function printCleanDocument(elementId: string = "printable-document") {
   iframeDoc.close();
 
   const triggerPrint = () => {
+    const prevTitle = document.title;
     try {
+      if (documentTitle) {
+        document.title = documentTitle;
+      }
       iframe.contentWindow?.focus();
       iframe.contentWindow?.print();
     } catch {
       window.print();
     } finally {
       setTimeout(() => {
+        if (documentTitle) {
+          document.title = prevTitle;
+        }
         iframe.remove();
       }, 1500);
     }

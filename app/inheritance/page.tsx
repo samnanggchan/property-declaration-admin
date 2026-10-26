@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { InheritanceRequestForm } from "@/components/inheritance-request-form";
 
 export const metadata: Metadata = {
-  title: "ពាក្យស្នើសុំ | Request Form",
+  title: "ពាក្យស្នើសុំផ្ទេរសិទ្ធិកាន់កាប់អចលនវត្ថុជាមរតក",
+  description: "ទម្រង់ពាក្យស្នើសុំផ្ទេរសិទ្ធិកាន់កាប់អចលនវត្ថុជាមរតក",
 };
 
 export default function InheritanceRequestPage() {

@@ -56,7 +56,7 @@ const NOTES_CONSENT = [
 
 /** page 4 – សំបុត្រអនុញ្ញាតពីក្រុមប្រឹក្សាញាតិ (line 1 is a best guess – check it against the paper form) */
 const NOTES_COUNCIL = [
-  "(១) ចុះឈ្មោះសហព័ទ្ធដែលស្លាប់",
+  "(១) បើទ្រព្យBC ឱ្យសរសេរតែ១/២នៃទំហំប័ណ្ណសម្គាល់សិទ្ធិ",
   "(២) ចំពោះប័ណ្ណសម្គាល់សិទ្ធិដែលមិនត្រូវកែផ្ទេរសិទ្ធិ ពុំឱ្យសរសេរចូលឡើយ",
   "(៣) អ្នកដែលនៅរស់ត្រូវជាប្ដីឬប្រពន្ធ ឬកូននៃខ្មោចហើយជាអាណាព្យាបាល និងជាមេគ្រួសារនៅ។",
 ];
@@ -710,7 +710,7 @@ export function InheritanceRequestPrint({
               <D v={deceasedNames} grow={2} />
             </div>
             <div className={ROW}>
-              <L>ដែលអនិច្ចកម្មឥតមានសំបុត្របណ្ដាំ។</L>
+              <L>ដែលអនិច្ចកម្មដោយឥតមានសំបុត្របណ្ដាំ។</L>
             </div>
           </div>
 
@@ -845,7 +845,7 @@ export function InheritanceRequestPrint({
               <L>យើងខ្ញុំទាំងអស់គ្នាជាទាយាទរបស់ខ្មោច (នាង) (២)</L>
               <D v={deceasedNames} grow={1} />
             </div>
-            <p className="text-[9.5pt] leading-snug text-neutral-800">
+            <p className="text-[11pt] leading-snug text-neutral-800">
               (សរសេរតែឈ្មោះកូនដែលមានអាយុពី១៨ឆ្នាំឡើងទៅ
               ឬកូនដែលបានទទួលអត្ថាធិនភាពហើយ)
             </p>
@@ -1040,7 +1040,7 @@ export function InheritanceRequestPrint({
 
           {/* notes (left) + verification (right) */}
           <div className="mt-auto grid grid-cols-2 gap-4 pb-2">
-            <div className="text-[8.5pt] leading-relaxed text-neutral-800">
+            <div className="text-[8.4pt] leading-relaxed text-neutral-800">
               <p className="font-semibold">បញ្ជាក់៖</p>
               {NOTES_COUNCIL.map((n) => (
                 <p key={n}>{n}</p>
@@ -1105,7 +1105,7 @@ export function InheritanceRequestPrint({
               <L>សូមបញ្ជាក់ និងប្រកាស</L>
             </div>
             <div className={ROW}>
-              <L>ដល់អាជ្ញាធរមានសមត្ថកិច្ចថា៖ ខ្មោចឈ្មោះ</L>
+              <L>ដល់ អាជ្ញាធរមានសមត្ថកិច្ចថា៖ ខ្មោចឈ្មោះ</L>
               <D v={d1.name} grow={2.5} />
               <L>និងខ្មោចនាង</L>
               <D v={d2.name} grow={2.5} />
