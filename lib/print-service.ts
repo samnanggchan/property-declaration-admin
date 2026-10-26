@@ -1,15 +1,27 @@
 "use client";
 
+export function sanitizePrintTitle(title: string): string {
+  return (title || "")
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\s*-\s*-\s*/g, " - ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function printCleanDocument(
   elementId: string = "printable-document",
-  documentTitle?: string
+  documentTitle?: string,
 ) {
+  const sanitizedTitle = documentTitle
+    ? sanitizePrintTitle(documentTitle)
+    : undefined;
   const target =
-    document.getElementById(elementId) || document.querySelector(".printable-area");
+    document.getElementById(elementId) ||
+    document.querySelector(".printable-area");
   if (!target) {
-    if (documentTitle) {
+    if (sanitizedTitle) {
       const prevTitle = document.title;
-      document.title = documentTitle;
+      document.title = sanitizedTitle;
       window.print();
       document.title = prevTitle;
     } else {
@@ -50,20 +62,23 @@ export function printCleanDocument(
   }
 
   const styleElements = Array.from(
-    document.querySelectorAll("link[rel='stylesheet'], style")
+    document.querySelectorAll("link[rel='stylesheet'], style"),
   )
     .map((el) => el.outerHTML)
     .join("\n");
 
   const fontLinks = Array.from(
     document.querySelectorAll(
-      "link[rel='preconnect'], link[rel='preload'], link[href*='font']"
-    )
+      "link[rel='preconnect'], link[rel='preload'], link[href*='font']",
+    ),
   )
     .map((el) => el.outerHTML)
     .join("\n");
 
-  const title = documentTitle || document.title || "បោះពុម្ពឯកសារផ្លូវការ";
+  const title =
+    sanitizedTitle ||
+    sanitizePrintTitle(document.title) ||
+    "បោះពុម្ពឯកសារផ្លូវការ";
 
   iframeDoc.open();
   iframeDoc.write(`
@@ -146,8 +161,8 @@ export function printCleanDocument(
   const triggerPrint = () => {
     const prevTitle = document.title;
     try {
-      if (documentTitle) {
-        document.title = documentTitle;
+      if (title) {
+        document.title = title;
       }
       iframe.contentWindow?.focus();
       iframe.contentWindow?.print();

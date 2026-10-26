@@ -41,6 +41,7 @@ import {
   RELATIVE_SLOTS,
   Witness,
   WITNESS_SLOTS,
+  buildAddressString,
   countNamed,
   emptyApplicant,
   emptyChild,
@@ -48,6 +49,7 @@ import {
   emptyRelative,
   emptyRequest,
   emptyWitness,
+  extractPlotNo,
   normalizeRequest,
   sampleRequest,
   toKhmerDigits as kh,
@@ -402,18 +404,24 @@ export function InheritanceRequestForm() {
   // Sync browser document title dynamically based on form title & refNo
   React.useEffect(() => {
     const mainTitle =
-      data.title || "ពាក្យស្នើសុំផ្ទេរសិទ្ធិកាន់កាប់អចលនវត្ថុជាមរតក";
-    const refSuffix = data.refNo ? ` - លេខ ${data.refNo}` : "";
-    document.title = `${mainTitle}${refSuffix} | Request Form`;
+      !data.title || data.title === "ពាក្យស្នើសុំ"
+        ? "ពាក្យស្នើសុំផ្ទេរសិទ្ធិកាន់កាប់អចលនវត្ថុជាមរតក"
+        : data.title;
+    const cleanRefNo = data.refNo?.replace(/[\\/:*?"<>|]/g, "-").trim();
+    const refSuffix = cleanRefNo ? ` - លេខ ${cleanRefNo}` : "";
+    document.title = `${mainTitle}${refSuffix}`;
   }, [data.title, data.refNo]);
 
   // Document title used when printing / downloading as PDF
   const printTitle = React.useMemo(() => {
     const mainTitle =
-      data.title || "ពាក្យស្នើសុំផ្ទេរសិទ្ធិកាន់កាប់អចលនវត្ថុជាមរតក";
+      !data.title || data.title === "ពាក្យស្នើសុំ"
+        ? "ពាក្យស្នើសុំផ្ទេរសិទ្ធិកាន់កាប់អចលនវត្ថុជាមរតក"
+        : data.title;
+    const cleanRefNo = data.refNo?.replace(/[\\/:*?"<>|]/g, "-").trim();
     const parts = [
       mainTitle,
-      data.refNo ? `លេខ ${data.refNo}` : "",
+      cleanRefNo ? `លេខ ${cleanRefNo}` : "",
       pageFilter !== "all" ? `ទំព័រ ${pageFilter}` : "",
     ].filter(Boolean);
     return parts.join(" - ");
@@ -522,7 +530,9 @@ export function InheritanceRequestForm() {
             </Button>
             <Button
               size="sm"
-              onClick={() => printCleanDocument("printable-document", printTitle)}
+              onClick={() =>
+                printCleanDocument("printable-document", printTitle)
+              }
               title="ទាញយកជា PDF ឬបោះពុម្ព (Download PDF / Print)"
               className="h-8 gap-1.5 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900 cursor-pointer shadow-xs"
             >
@@ -577,12 +587,6 @@ export function InheritanceRequestForm() {
           >
             <div className="grid grid-cols-2 gap-3">
               <Field
-                label="ចំណងជើង"
-                value={data.title}
-                onChange={(v) => setField("title", v)}
-                className="col-span-2"
-              />
-              <Field
                 label="លេខយោង"
                 value={data.refNo}
                 onChange={(v) => setField("refNo", v)}
@@ -603,8 +607,20 @@ export function InheritanceRequestForm() {
               <Field
                 label="ប័ណ្ណសម្គាល់សិទ្ធិលេខ"
                 value={data.titleDeedNo}
-                onChange={(v) => setField("titleDeedNo", v)}
-                placeholder="ឧ. ១២-៣៤-៥៦-៧៨៩"
+                onChange={(v) => {
+                  const autoPlot = extractPlotNo(v);
+                  setData((p) => {
+                    const next = { ...p, titleDeedNo: v };
+                    if (
+                      autoPlot &&
+                      (!p.plotNo || p.plotNo === extractPlotNo(p.titleDeedNo))
+                    ) {
+                      next.plotNo = autoPlot;
+                    }
+                    return next;
+                  });
+                }}
+                placeholder="ឧ. 12060201-1608"
               />
               <Field
                 label="ប្រភេទដី"
@@ -613,46 +629,88 @@ export function InheritanceRequestForm() {
                 placeholder="ឧ. លំនៅឋាន"
               />
               <Field
-                label="ក្បាលដីលេខ"
+                label="ក្បាលដីលេខ (បំពេញស្វ័យប្រវត្តិ)"
                 value={data.plotNo}
                 onChange={(v) => setField("plotNo", v)}
-                placeholder="ឧ. ១២៨"
+                placeholder="ឧ. ១៦០៨"
               />
               <Field
                 label="ទំហំ"
                 value={data.area}
                 onChange={(v) => setField("area", v)}
-                placeholder="93 ម²"
+                placeholder="58 (ម២)"
               />
               <Field
                 label="ផ្លូវលេខ"
                 value={data.streetNo}
-                onChange={(v) => setField("streetNo", v)}
+                onChange={(v) => {
+                  setData((p) => {
+                    const next = { ...p, streetNo: v };
+                    next.location = buildAddressString({
+                      streetNo: v,
+                      village: next.village,
+                      sangkat: next.sangkat,
+                      khan: next.khan,
+                      city: next.city,
+                    });
+                    return next;
+                  });
+                }}
                 placeholder="ឧ. ១៩៣"
               />
               <Field
                 label="ភូមិ"
                 value={data.village}
-                onChange={(v) => setField("village", v)}
-                placeholder="ឧ. ភូមិ៣"
+                onChange={(v) => {
+                  setData((p) => {
+                    const next = { ...p, village: v };
+                    next.location = buildAddressString({
+                      streetNo: next.streetNo,
+                      village: v,
+                      sangkat: next.sangkat,
+                      khan: next.khan,
+                      city: next.city,
+                    });
+                    return next;
+                  });
+                }}
+                placeholder="ឧ. ចំរើនផល"
               />
               <Field
                 label="សង្កាត់"
                 value={data.sangkat}
-                onChange={(v) => setField("sangkat", v)}
-                placeholder="ឧ. ទឹកល្អក់ទី១"
+                onChange={(v) => {
+                  setData((p) => {
+                    const next = { ...p, sangkat: v };
+                    next.location = buildAddressString({
+                      streetNo: next.streetNo,
+                      village: next.village,
+                      sangkat: v,
+                      khan: next.khan,
+                      city: next.city,
+                    });
+                    return next;
+                  });
+                }}
+                placeholder="ឧ. បឹងទំពុនទី១"
               />
               <Field
                 label="ខណ្ឌ"
                 value={data.khan}
-                onChange={(v) => setField("khan", v)}
-                placeholder="ឧ. ទួលគោក"
-              />
-              <Field
-                label="ទីតាំង (ពេញលេញ)"
-                value={data.location}
-                onChange={(v) => setField("location", v)}
-                className="col-span-2"
+                onChange={(v) => {
+                  setData((p) => {
+                    const next = { ...p, khan: v };
+                    next.location = buildAddressString({
+                      streetNo: next.streetNo,
+                      village: next.village,
+                      sangkat: next.sangkat,
+                      khan: v,
+                      city: next.city,
+                    });
+                    return next;
+                  });
+                }}
+                placeholder="ឧ. មានជ័យ"
               />
 
               <div className="col-span-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
@@ -849,11 +907,77 @@ export function InheritanceRequestForm() {
                       placeholder="01.01.1949"
                     />
                     <Field
-                      label="អាសយដ្ឋាន"
-                      value={a.address}
-                      onChange={(v) => patchApplicant(i, { address: v })}
+                      label="ភូមិ (ទីលំនៅ)"
+                      value={a.village || ""}
+                      onChange={(v) => {
+                        const full = buildAddressString({
+                          village: v,
+                          sangkat: a.sangkat || data.sangkat,
+                          khan: a.khan || data.khan,
+                        });
+                        patchApplicant(i, { village: v, address: full });
+                      }}
+                      placeholder={
+                        data.village ? `ឧ. ${data.village}` : "ភូមិ..."
+                      }
+                    />
+                    <Field
+                      label="សង្កាត់"
+                      value={a.sangkat || ""}
+                      onChange={(v) => {
+                        const full = buildAddressString({
+                          village: a.village || data.village,
+                          sangkat: v,
+                          khan: a.khan || data.khan,
+                        });
+                        patchApplicant(i, { sangkat: v, address: full });
+                      }}
+                      placeholder={
+                        data.sangkat ? `ឧ. ${data.sangkat}` : "សង្កាត់..."
+                      }
+                    />
+                    <Field
+                      label="ខណ្ឌ"
+                      value={a.khan || ""}
+                      onChange={(v) => {
+                        const full = buildAddressString({
+                          village: a.village || data.village,
+                          sangkat: a.sangkat || data.sangkat,
+                          khan: v,
+                        });
+                        patchApplicant(i, { khan: v, address: full });
+                      }}
+                      placeholder={data.khan ? `ឧ. ${data.khan}` : "ខណ្ឌ..."}
                       className="col-span-2"
                     />
+
+                    {(!a.village || !a.sangkat || !a.khan) &&
+                      (data.village || data.sangkat || data.khan) && (
+                        <div className="col-span-2 -mt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const v = data.village;
+                              const s = data.sangkat;
+                              const k = data.khan;
+                              patchApplicant(i, {
+                                village: v,
+                                sangkat: s,
+                                khan: k,
+                                address: buildAddressString({
+                                  village: v,
+                                  sangkat: s,
+                                  khan: k,
+                                }),
+                              });
+                            }}
+                            className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                          >
+                            + យកតាមអាសយដ្ឋានដី (ភូមិ{data.village} សង្កាត់
+                            {data.sangkat} ខណ្ឌ{data.khan})
+                          </button>
+                        </div>
+                      )}
                     <Field
                       label="ឈ្មោះឪពុក"
                       value={a.fatherName}

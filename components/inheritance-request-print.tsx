@@ -11,6 +11,7 @@ import {
 import {
   Child,
   emptyRelative,
+  extractPlotNo,
   InheritanceRequest,
   parseDateParts,
   Relative,
@@ -157,6 +158,23 @@ function padRows(list: Child[], min: number): Child[] {
       () => EMPTY_CHILD,
     ),
   ];
+}
+
+/** Formats area into Khmer standard notation with unit (e.g. "58" -> "៥៨ (ម២)") */
+function formatLandArea(raw: string | undefined | null): string {
+  if (!raw || !raw.trim()) return "";
+  const trimmed = raw.trim();
+  if (trimmed.includes("ម²")) {
+    return kh(trimmed);
+  }
+  const cleaned = trimmed
+    .replace(/\s*(ម[²]|ម²|m[2²]|ម៉ែត្រការ៉េ)\s*$/i, "")
+    .trim();
+  const khDigits = kh(cleaned);
+  if (khDigits) {
+    return `${khDigits} ម²`;
+  }
+  return kh(trimmed);
 }
 
 /** "08.10.2026" → day / Khmer month name / year (in Khmer digits) */
@@ -465,6 +483,10 @@ export function InheritanceRequestPrint({
     FORM.adultsOnly ? named.filter(isAdultOrUnknown) : named,
     FORM.minHeirRows,
   );
+  /* adult heirs who consent and sign on page 3 */
+  const consentHeirs = (
+    FORM.adultsOnly ? named.filter(isAdultOrUnknown) : named
+  ).filter((c) => c.name?.trim());
 
   /* addresses + property */
   const w1Addr = splitAddress(w1.address);
@@ -475,7 +497,14 @@ export function InheritanceRequestPrint({
   const sangkat = x.sangkat || data.deceasedSangkat || loc.commune;
   const khan = x.khan || loc.district;
   const titleDeedNo = kh(x.titleDeedNo || data.refNo);
-  const area = kh(data.area);
+  const plotNo = kh(x.plotNo || extractPlotNo(x.titleDeedNo));
+  const area = formatLandArea(data.area);
+
+  /* applicant address parts (falls back to property address) */
+  const a1Village = a1.village || a1Addr.village || village;
+  const a1Sangkat = a1.sangkat || a1Addr.commune || sangkat;
+  const a1Khan = a1.khan || a1Addr.district || khan;
+  const a1City = a1.city || a1Addr.city || x.city || "រាជធានីភ្នំពេញ";
 
   /* council members = 8 relatives for page 4 */
   const councilRelatives = Array.from(
@@ -499,7 +528,9 @@ export function InheritanceRequestPrint({
   const death2 = dateParts(d2.deathDate);
   const cert1 = dateParts(d1.deathCertDate);
   const cert2 = dateParts(d2.deathCertDate);
+  const hasDeceased2 = Boolean(d2.name?.trim());
   const deathSangkat = data.deceasedSangkat || sangkat;
+  const deathSangkat2 = hasDeceased2 ? (data.deceasedSangkat || sangkat) : "";
   const certNumbers = [d1.deathCertNo, d2.deathCertNo]
     .filter(Boolean)
     .map(kh)
@@ -734,13 +765,13 @@ export function InheritanceRequestPrint({
               <D v={a1.name} grow={2} />
               <L>អាយុ</L>
               <D v={ageNumber(a1.dob)} grow={0.6} />
-              <L>ឆ្នាំប្រពន្ធ</L>
+              <L>ឆ្នាំ ប្រពន្ធ</L>
             </div>
             <div className={ROW}>
               <L>ឈ្មោះ</L>
               <D v={a2.name} grow={2.5} />
               <L>នៅសង្កាត់</L>
-              <D v={a1Addr.commune} grow={2} />
+              <D v={a1Sangkat} grow={2} />
               <L>យកមកប្តឹងយើង។</L>
             </div>
           </div>
@@ -912,19 +943,35 @@ export function InheritanceRequestPrint({
             យើងខ្ញុំទាំងអស់គ្នាសូមផ្តិតមេដៃស្តាំទុកជាភស្តុតាងស្រាប់។
           </p>
 
-          {/* notes + thumbprint area */}
-          <div className="mt-2.5 grid grid-cols-2 gap-4">
-            <div className="space-y-0.5 text-[9pt] leading-tight text-neutral-800">
-              {NOTES_CONSENT.map((n) => (
-                <p key={n}>{n}</p>
-              ))}
+          {/* notes (left) + right thumbprints & consenting heirs (right) */}
+          <div className="mt-2.5 grid grid-cols-[1fr_1.4fr] gap-4">
+            {/* Left: Notes & ឈ្មោះ label */}
+            <div className="flex flex-col justify-between">
+              <div className="space-y-0.5 text-[9pt] leading-tight text-neutral-800">
+                {NOTES_CONSENT.map((n) => (
+                  <p key={n}>{n}</p>
+                ))}
+              </div>
+              <div className={ROW}>
+                <L>ឈ្មោះ:</L>
+                <D grow={1} />
+              </div>
             </div>
-            <p className="text-center font-medium">ស្នាមមេដៃស្តាំ</p>
-          </div>
-          <div className="h-[22mm]" />
-          <div className={ROW}>
-            <L>ឈ្មោះ:</L>
-            <D grow={1} />
+
+            {/* Right: Thumbprint header, thumbprint gap, and adult heir names */}
+            <div className="flex flex-col text-center">
+              <p className="font-medium">ស្នាមមេដៃស្តាំ</p>
+              <div className="h-[20mm]" />
+              <div className={ROW}>
+                {consentHeirs.length > 0 ? (
+                  consentHeirs.map((h, idx) => (
+                    <D key={idx} v={h.name} grow={1} />
+                  ))
+                ) : (
+                  <D grow={1} />
+                )}
+              </div>
+            </div>
           </div>
 
           {/* commune chief */}
@@ -1001,7 +1048,7 @@ export function InheritanceRequestPrint({
               <L>តាមប័ណ្ណសម្គាល់សិទ្ធិកាន់កាប់អចលនវត្ថុលេខ(២)</L>
               <D v={titleDeedNo} grow={1.5} />
               <L>ស្ថិតនៅក្បាលដីលេខ</L>
-              <D v={kh(x.plotNo)} grow={1} />
+              <D v={plotNo} grow={1} />
               <L>ផ្លូវ</L>
               <D v={kh(x.streetNo)} grow={1} />
             </div>
@@ -1124,14 +1171,20 @@ export function InheritanceRequestPrint({
               <L>ឆ្នាំ</L>
               <Pair a={death1.year} b={death2.year} grow={1} />
               <L>នៅសង្កាត់</L>
-              <D v={deathSangkat} grow={1.8} />
-              <L>និង</L>
+              <D v={deathSangkat} grow={hasDeceased2 ? 1.8 : 2.5} />
+              {hasDeceased2 && <L>និង</L>}
             </div>
             <div className={ROW}>
-              <L>សង្កាត់</L>
-              <D v={deathSangkat} grow={1.8} />
-              <L>ដូចមានសំបុត្រមរណភាពលេខ៖</L>
-              <D v={certNumbers} grow={1.5} />
+              {hasDeceased2 && (
+                <>
+                  <L>សង្កាត់</L>
+                  <D v={deathSangkat2} grow={1.8} />
+                </>
+              )}
+              <L className={hasDeceased2 ? "" : "pl-[10mm]"}>
+                ដូចមានសំបុត្រមរណភាពលេខ៖
+              </L>
+              <D v={certNumbers} grow={hasDeceased2 ? 1.5 : 2} />
               <L>ចុះថ្ងៃទី</L>
               <Pair a={cert1.day} b={cert2.day} grow={0.7} />
             </div>
