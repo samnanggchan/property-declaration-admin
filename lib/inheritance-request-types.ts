@@ -126,7 +126,7 @@ export const emptyDeceased = (): Deceased => ({
 });
 
 export const emptyRequest = (): InheritanceRequest => ({
-  title: "ពាក្យស្នើសុំ",
+  title: "ពាក្យស្នើសុំផ្ទេរសិទ្ធិកាន់កាប់អចលនវត្ថុជាមរតក",
   refNo: "",
   location: "",
   area: "",
