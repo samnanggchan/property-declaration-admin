@@ -51,6 +51,7 @@ import {
   emptyWitness,
   extractPlotNo,
   normalizeRequest,
+  PROPERTY_TYPES,
   sampleRequest,
   toKhmerDigits as kh,
 } from "@/lib/inheritance-request-types";
@@ -103,6 +104,156 @@ function Field({
         placeholder={placeholder}
         className="h-8 text-xs"
       />
+    </div>
+  );
+}
+
+function PropertyTypeSelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [search, setSearch] = React.useState("");
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = React.useMemo(() => {
+    if (!search.trim()) return PROPERTY_TYPES;
+    return PROPERTY_TYPES.filter((t) =>
+      t.toLowerCase().includes(search.trim().toLowerCase()),
+    );
+  }, [search]);
+
+  const handleSelect = (item: string) => {
+    onChange(item);
+    setSearch("");
+    setIsOpen(false);
+  };
+
+  return (
+    <div ref={containerRef} className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <Label className="text-[11px] text-muted-foreground flex items-center gap-1">
+          <span className="text-destructive font-bold">*</span> ជ្រើសរើសប្រភេទទ្រព្យ
+        </Label>
+        {value && (
+          <button
+            type="button"
+            onClick={() => {
+              onChange("");
+              setSearch("");
+            }}
+            className="text-[10px] text-muted-foreground hover:text-destructive cursor-pointer transition-colors"
+          >
+            សម្អាត
+          </button>
+        )}
+      </div>
+
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          value={isOpen ? search : value || search}
+          onChange={(e) => {
+            const v = e.target.value;
+            setSearch(v);
+            onChange(v);
+            if (!isOpen) setIsOpen(true);
+          }}
+          onFocus={() => {
+            setIsOpen(true);
+            setSearch("");
+          }}
+          placeholder="ជ្រើសរើស ឬស្វែងរកប្រភេទទ្រព្យ..."
+          className="h-8 pr-8 text-xs rounded-md bg-background transition-all"
+        />
+        <button
+          type="button"
+          onClick={() => {
+            setIsOpen((prev) => !prev);
+            inputRef.current?.focus();
+          }}
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+          title="ស្វែងរកប្រភេទទ្រព្យ"
+        >
+          <SearchIcon className="size-3.5" />
+        </button>
+
+        {/* Floating Dropdown */}
+        {isOpen && (
+          <div className="absolute left-0 top-full z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-neutral-200 bg-popover p-1 shadow-lg dark:border-neutral-800 animate-in fade-in-50 duration-150">
+            {filtered.length === 0 ? (
+              <div className="px-3 py-2 text-xs text-muted-foreground text-center">
+                ពុំមានប្រភេទទ្រព្យនេះទេ (អាចវាយបញ្ចូលដោយផ្ទាល់)
+              </div>
+            ) : (
+              filtered.map((item) => {
+                const isSelected = value === item;
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => handleSelect(item)}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-sm px-2.5 py-1.5 text-xs text-left transition-colors cursor-pointer",
+                      isSelected
+                        ? "bg-blue-600 text-white font-medium"
+                        : "text-foreground hover:bg-accent hover:text-accent-foreground",
+                    )}
+                  >
+                    <span>{item}</span>
+                    {isSelected && <CheckIcon className="size-3.5" />}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Quick shortcuts */}
+      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+        {(
+          [
+            "ទ្រព្យរួមប្តីប្រពន្ធ",
+            "ទ្រព្យខាងប្រពន្ធ",
+            "ទ្រព្យខាងប្តី",
+            "ទ្រព្យលីវ",
+            "ទ្រព្យផ្ទាល់ខ្លួន",
+            "ទ្រព្យរួម",
+          ] as const
+        ).map((pt) => (
+          <button
+            key={pt}
+            type="button"
+            onClick={() => onChange(value === pt ? "" : pt)}
+            className={cn(
+              "px-2.5 py-0.5 rounded-full text-[11px] border transition-colors cursor-pointer",
+              value === pt
+                ? "bg-primary text-primary-foreground border-primary font-medium"
+                : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            {pt}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -809,64 +960,23 @@ export function InheritanceRequestForm() {
             hint="ព័ត៌មានអ្នកស្នើសុំ"
           >
             <div className="space-y-3">
-              <div className="space-y-1">
-                <Field
-                  label="ប្រភេទទ្រព្យ"
-                  value={
-                    data.applicantPropertyType ??
-                    data.applicants[0]?.propertyType ??
-                    ""
-                  }
-                  onChange={(v) => {
-                    setData((p) => ({
-                      ...p,
-                      applicantPropertyType: v,
-                      applicants: p.applicants.map((a) => ({
-                        ...a,
-                        propertyType: v,
-                      })),
-                    }));
-                  }}
-                  placeholder="ឧ. ទ្រព្យផ្ទាល់ខ្លួន ឬ ទ្រព្យរួម"
-                />
-                <div className="flex gap-2 text-[11px]">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setData((p) => ({
-                        ...p,
-                        applicantPropertyType: "ទ្រព្យផ្ទាល់ខ្លួន",
-                        applicants: p.applicants.map((a) => ({
-                          ...a,
-                          propertyType: "ទ្រព្យផ្ទាល់ខ្លួន",
-                        })),
-                      }));
-                    }}
-                    className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-                  >
-                    + ទ្រព្យផ្ទាល់ខ្លួន
-                  </button>
-                  <span className="text-neutral-300 dark:text-neutral-700">
-                    |
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setData((p) => ({
-                        ...p,
-                        applicantPropertyType: "ទ្រព្យរួម",
-                        applicants: p.applicants.map((a) => ({
-                          ...a,
-                          propertyType: "ទ្រព្យរួម",
-                        })),
-                      }));
-                    }}
-                    className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-                  >
-                    + ទ្រព្យរួម
-                  </button>
-                </div>
-              </div>
+              <PropertyTypeSelect
+                value={
+                  data.applicantPropertyType ??
+                  data.applicants[0]?.propertyType ??
+                  ""
+                }
+                onChange={(v) => {
+                  setData((p) => ({
+                    ...p,
+                    applicantPropertyType: v,
+                    applicants: p.applicants.map((a) => ({
+                      ...a,
+                      propertyType: v,
+                    })),
+                  }));
+                }}
+              />
 
               {data.applicants.slice(0, visibleApplicants).map((a, i) => (
                 <div
