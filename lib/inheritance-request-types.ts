@@ -24,6 +24,7 @@ export interface Applicant {
   motherName: string;
   relationDeceased: string; // ត្រូវជា...នៃខ្មោច (ឧ. ប្រពន្ធ / ប្ដី)
   relationHeirs: string; // និងជា...នៃយើងខ្ញុំ (ឧ. ម្ដាយ / ឪពុក)
+  propertyType?: string; // ប្រភេទទ្រព្យ (ឧ. ទ្រព្យផ្ទាល់ខ្លួន / ទ្រព្យរួម)
 }
 
 export interface Witness {
@@ -78,6 +79,7 @@ export interface InheritanceRequest {
   heirCertNo: string; // លេខសំបុត្របញ្ជាក់ទាយាទ
   letterRefNo: string; // លិខិតតំណាង/ដំណាលលេខ
   letterRefDate: string; // ចុះថ្ងៃទី
+  applicantPropertyType?: string; // ប្រភេទទ្រព្យអ្នកស្នើសុំ (ឧ. ទ្រព្យផ្ទាល់ខ្លួន / ទ្រព្យរួម)
 
   deceased: Deceased[];
   applicants: Applicant[];
@@ -98,6 +100,7 @@ export const emptyApplicant = (): Applicant => ({
   motherName: "",
   relationDeceased: "",
   relationHeirs: "",
+  propertyType: "",
 });
 
 export const emptyWitness = (): Witness => ({
@@ -155,6 +158,7 @@ export const emptyRequest = (): InheritanceRequest => ({
   heirCertNo: "",
   letterRefNo: "",
   letterRefDate: "",
+  applicantPropertyType: "",
   deceased: Array.from({ length: DECEASED_SLOTS }, emptyDeceased),
   applicants: Array.from({ length: APPLICANT_SLOTS }, emptyApplicant),
   witnesses: Array.from({ length: WITNESS_SLOTS }, emptyWitness),
@@ -272,6 +276,7 @@ export function normalizeApplicant(raw: unknown): Applicant {
     relationDeceased:
       typeof a.relationDeceased === "string" ? a.relationDeceased : "",
     relationHeirs: typeof a.relationHeirs === "string" ? a.relationHeirs : "",
+    propertyType: typeof a.propertyType === "string" ? a.propertyType : "",
   };
 }
 
@@ -336,6 +341,13 @@ export function normalizeRequest(raw: unknown): InheritanceRequest {
     heirCertNo: typeof r.heirCertNo === "string" ? r.heirCertNo : "",
     letterRefNo: typeof r.letterRefNo === "string" ? r.letterRefNo : "",
     letterRefDate: typeof r.letterRefDate === "string" ? r.letterRefDate : "",
+    applicantPropertyType:
+      typeof r.applicantPropertyType === "string"
+        ? r.applicantPropertyType
+        : Array.isArray(r.applicants) &&
+            typeof r.applicants[0]?.propertyType === "string"
+          ? r.applicants[0].propertyType
+          : "",
     deceased: fixedList(r.deceased, emptyDeceased, DECEASED_SLOTS),
     applicants: Array.isArray(r.applicants)
       ? Array.from({ length: APPLICANT_SLOTS }, (_, i) =>
@@ -398,6 +410,7 @@ export function sampleRequest(): InheritanceRequest {
   r.heirCertNo = "០៤២/២៦";
   r.letterRefNo = "០១២/២៦";
   r.letterRefDate = "០៥.១០.២០២៦";
+  r.applicantPropertyType = "ទ្រព្យផ្ទាល់ខ្លួន";
   r.deceased[0] = {
     name: "រស់ ហន",
     birthYear: "1947",
@@ -417,6 +430,7 @@ export function sampleRequest(): InheritanceRequest {
     motherName: "",
     relationDeceased: "ប្រពន្ធ",
     relationHeirs: "ម្ដាយ",
+    propertyType: "ទ្រព្យផ្ទាល់ខ្លួន",
   };
   r.applicants[1] = {
     name: "ជា សុភី",

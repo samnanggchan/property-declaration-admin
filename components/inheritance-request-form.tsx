@@ -581,10 +581,7 @@ export function InheritanceRequestForm() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,480px)_minmax(0,1fr)] print:block print:p-0 print:m-0 print:gap-0">
         {/* ═══════════════ EDITOR (never printed) ═══════════════ */}
         <div className="no-print space-y-4">
-          <Card
-            title="ព័ត៌មានទូទៅ"
-            hint="ព័ត៌មានលិខិត, អចលនវត្ថុ/ដី, និងអាជ្ញាធរ"
-          >
+          <Card title="ព័ត៌មានទូទៅ" hint="ព័ត៌មានលិខិត, និងអចលនវត្ថុ/ដី">
             <div className="grid grid-cols-2 gap-3">
               <Field
                 label="លេខយោង"
@@ -712,56 +709,6 @@ export function InheritanceRequestForm() {
                 }}
                 placeholder="ឧ. មានជ័យ"
               />
-
-              <div className="col-span-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
-                <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">
-                  អ្នកទទួលសិទ្ធិ និងអាជ្ញាធរ (ទំព័រ ៣, ៤, ៥)
-                </span>
-              </div>
-
-              <Field
-                label="ឈ្មោះអ្នកទទួលសិទ្ធិចាត់ចែង (ខាង)"
-                value={data.authorizedPerson}
-                onChange={(v) => setField("authorizedPerson", v)}
-                placeholder="ឧ. ជា សុវណ្ណា"
-                className="col-span-2"
-              />
-              <Field
-                label="ត្រូវជា...នៃខ្មោច"
-                value={data.authorizedRelationDeceased}
-                onChange={(v) => setField("authorizedRelationDeceased", v)}
-                placeholder="ឧ. ប្រពន្ធ / ប្ដី"
-              />
-              <Field
-                label="ត្រូវជា...នៃយើងខ្ញុំ"
-                value={data.authorizedRelationHeirs}
-                onChange={(v) => setField("authorizedRelationHeirs", v)}
-                placeholder="ឧ. ម្ដាយ / ឪពុក"
-              />
-              <Field
-                label="ឈ្មោះចៅសង្កាត់"
-                value={data.communeChiefName}
-                onChange={(v) => setField("communeChiefName", v)}
-                placeholder="ទុកទំនេរសម្រាប់ចុះហត្ថលេខា"
-              />
-              <Field
-                label="លេខសំបុត្របញ្ជាក់ទាយាទ (ទំព័រ ៥)"
-                value={data.heirCertNo}
-                onChange={(v) => setField("heirCertNo", v)}
-                placeholder="ឧ. ០៤២/២៦"
-              />
-              <Field
-                label="លិខិតដំណាលលេខ (ទំព័រ ៤)"
-                value={data.letterRefNo}
-                onChange={(v) => setField("letterRefNo", v)}
-                placeholder="ឧ. ០១២/២៦"
-              />
-              <Field
-                label="ចុះថ្ងៃទី (លិខិតដំណាល)"
-                value={data.letterRefDate}
-                onChange={(v) => setField("letterRefDate", v)}
-                placeholder="ឧ. ០៥.១០.២០២៦"
-              />
             </div>
           </Card>
 
@@ -862,6 +809,65 @@ export function InheritanceRequestForm() {
             hint="ព័ត៌មានអ្នកស្នើសុំ"
           >
             <div className="space-y-3">
+              <div className="space-y-1">
+                <Field
+                  label="ប្រភេទទ្រព្យ"
+                  value={
+                    data.applicantPropertyType ??
+                    data.applicants[0]?.propertyType ??
+                    ""
+                  }
+                  onChange={(v) => {
+                    setData((p) => ({
+                      ...p,
+                      applicantPropertyType: v,
+                      applicants: p.applicants.map((a) => ({
+                        ...a,
+                        propertyType: v,
+                      })),
+                    }));
+                  }}
+                  placeholder="ឧ. ទ្រព្យផ្ទាល់ខ្លួន ឬ ទ្រព្យរួម"
+                />
+                <div className="flex gap-2 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setData((p) => ({
+                        ...p,
+                        applicantPropertyType: "ទ្រព្យផ្ទាល់ខ្លួន",
+                        applicants: p.applicants.map((a) => ({
+                          ...a,
+                          propertyType: "ទ្រព្យផ្ទាល់ខ្លួន",
+                        })),
+                      }));
+                    }}
+                    className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                  >
+                    + ទ្រព្យផ្ទាល់ខ្លួន
+                  </button>
+                  <span className="text-neutral-300 dark:text-neutral-700">
+                    |
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setData((p) => ({
+                        ...p,
+                        applicantPropertyType: "ទ្រព្យរួម",
+                        applicants: p.applicants.map((a) => ({
+                          ...a,
+                          propertyType: "ទ្រព្យរួម",
+                        })),
+                      }));
+                    }}
+                    className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                  >
+                    + ទ្រព្យរួម
+                  </button>
+                </div>
+              </div>
+
               {data.applicants.slice(0, visibleApplicants).map((a, i) => (
                 <div
                   key={i}
@@ -951,33 +957,6 @@ export function InheritanceRequestForm() {
                       className="col-span-2"
                     />
 
-                    {(!a.village || !a.sangkat || !a.khan) &&
-                      (data.village || data.sangkat || data.khan) && (
-                        <div className="col-span-2 -mt-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const v = data.village;
-                              const s = data.sangkat;
-                              const k = data.khan;
-                              patchApplicant(i, {
-                                village: v,
-                                sangkat: s,
-                                khan: k,
-                                address: buildAddressString({
-                                  village: v,
-                                  sangkat: s,
-                                  khan: k,
-                                }),
-                              });
-                            }}
-                            className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-                          >
-                            + យកតាមអាសយដ្ឋានដី (ភូមិ{data.village} សង្កាត់
-                            {data.sangkat} ខណ្ឌ{data.khan})
-                          </button>
-                        </div>
-                      )}
                     <Field
                       label="ឈ្មោះឪពុក"
                       value={a.fatherName}

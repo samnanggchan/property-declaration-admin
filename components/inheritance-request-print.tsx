@@ -77,6 +77,7 @@ interface PrintExtras {
   letterRefNo: string;
   letterRefDate: string;
   heirCertNo: string;
+  applicantPropertyType?: string;
 }
 
 const PAGE =
@@ -512,15 +513,54 @@ export function InheritanceRequestPrint({
     (_, i) => data.relatives?.[i] || emptyRelative(),
   );
 
-  /* the person who is authorised (pages 3–4) */
-  const authPerson = x.authorizedPerson || a1.name;
+  const wrapPropType = (t?: string) => {
+    const clean = (t || "").trim();
+    if (!clean) return "";
+    return clean.startsWith("(") && clean.endsWith(")") ? clean : `(${clean})`;
+  };
+
+  const sharedPropertyType = (
+    x.applicantPropertyType ||
+    (data as unknown as { applicantPropertyType?: string })
+      .applicantPropertyType ||
+    a1.propertyType ||
+    a2.propertyType ||
+    ""
+  ).trim();
+
+  const applicantNames =
+    activeApplicants.length >= 2
+      ? activeApplicants.map((a) => a.name.trim()).join(" និង ")
+      : a1.name?.trim() || "";
+
+  /* the person(s) who are authorised on page 3 */
+  let authPerson = "";
+  if (x.authorizedPerson) {
+    const pt = wrapPropType(sharedPropertyType);
+    authPerson = pt ? `${x.authorizedPerson} ${pt}` : x.authorizedPerson;
+  } else if (applicantNames) {
+    const pt = wrapPropType(sharedPropertyType);
+    authPerson = pt ? `${applicantNames} ${pt}` : applicantNames;
+  }
+
   const relDeceased =
     x.authorizedRelationDeceased ||
-    a1.relationDeceased ||
+    (activeApplicants.length >= 2
+      ? activeApplicants
+          .map((a) => a.relationDeceased?.trim())
+          .filter(Boolean)
+          .join(" និង ")
+      : a1.relationDeceased) ||
     FORM.defaults.relationToDeceased;
+
   const relHeirs =
     x.authorizedRelationHeirs ||
-    a1.relationHeirs ||
+    (activeApplicants.length >= 2
+      ? activeApplicants
+          .map((a) => a.relationHeirs?.trim())
+          .filter(Boolean)
+          .join(" និង ")
+      : a1.relationHeirs) ||
     FORM.defaults.relationToHeirs;
 
   /* deceased dates (pairs "d1 / d2") */
@@ -530,7 +570,7 @@ export function InheritanceRequestPrint({
   const cert2 = dateParts(d2.deathCertDate);
   const hasDeceased2 = Boolean(d2.name?.trim());
   const deathSangkat = data.deceasedSangkat || sangkat;
-  const deathSangkat2 = hasDeceased2 ? (data.deceasedSangkat || sangkat) : "";
+  const deathSangkat2 = hasDeceased2 ? data.deceasedSangkat || sangkat : "";
   const certNumbers = [d1.deathCertNo, d2.deathCertNo]
     .filter(Boolean)
     .map(kh)
@@ -626,7 +666,7 @@ export function InheritanceRequestPrint({
               <L>និងថ្ងៃ</L>
               <D v={kh(d2.deathCertDate)} grow={1.5} />
               <L>នៅសង្កាត់</L>
-              <D v={data.deceasedSangkat} grow={1.5} />
+              <D v={deathSangkat} grow={1.5} />
             </div>
 
             <p className="my-1.5 text-center font-battambang text-[12pt] font-bold">
@@ -751,7 +791,7 @@ export function InheritanceRequestPrint({
               <L className="pl-[18mm]">យើង (២)</L>
               <D grow={2.5} />
               <L>ចៅសង្កាត់</L>
-              <D grow={2} />
+              <D v={deathSangkat} grow={2} />
               <L>បានពិនិត្យ</L>
             </div>
             <div className={ROW} style={{ letterSpacing: "1.4px" }}>
@@ -781,7 +821,7 @@ export function InheritanceRequestPrint({
             <LunarLine d={sd} indentClass="pl-[22mm]" />
             <div className={ROW}>
               <L>ធ្វើនៅសង្កាត់ (៣)</L>
-              <D grow={2} />
+              <D v={deathSangkat} grow={2} />
               <L>នៅថ្ងៃទី</L>
               <D v={sd.day} grow={0.8} />
               <L>ខែ</L>
@@ -1063,9 +1103,9 @@ export function InheritanceRequestPrint({
             </div>
             <div className={ROW}>
               <L>ដោយសម្គាល់ឃើញថាឈ្មោះ (នាង)(៣)</L>
-              <D v={authPerson} grow={1.8} />
+              <D grow={1.2} />
               <L>បានព្រមព្រៀងអោយឈ្មោះ</L>
-              <D grow={1.8} />
+              <D v={applicantNames} grow={2} />
             </div>
             <div className={ROW}>
               <L className="pl-[8mm]">
@@ -1133,7 +1173,7 @@ export function InheritanceRequestPrint({
               </div>
               <div className={ROW}>
                 <L>សង្កាត់ :</L>
-                <D v={sangkat} grow={1} />
+                <D v={deathSangkat} grow={1} />
               </div>
             </div>
           </div>
@@ -1148,7 +1188,7 @@ export function InheritanceRequestPrint({
               <L className="pl-[14mm]">យើង</L>
               <D v={x.communeChiefName} grow={2.4} />
               <L>ចៅសង្កាត់</L>
-              <D v={sangkat} grow={2} />
+              <D v={deathSangkat} grow={2} />
               <L>សូមបញ្ជាក់ និងប្រកាស</L>
             </div>
             <div className={ROW}>
