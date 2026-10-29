@@ -530,8 +530,15 @@ export function InheritanceRequestPrint({
 
   const applicantNames =
     activeApplicants.length >= 2
-      ? activeApplicants.map((a) => a.name.trim()).join(" និង ")
-      : a1.name?.trim() || "";
+      ? activeApplicants
+          .map((a) =>
+            a.gender === "ស្រី" ? `នាង ${a.name.trim()}` : a.name.trim(),
+          )
+          .join(" និង ")
+      : (() => {
+          const n = a1.name?.trim() || "";
+          return n && a1.gender === "ស្រី" ? `នាង ${n}` : n;
+        })();
 
   /* the person(s) who are authorised on page 3 */
   let authPerson = "";

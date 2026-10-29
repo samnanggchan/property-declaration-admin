@@ -912,6 +912,31 @@ export function InheritanceRequestForm() {
                       onChange={(v) => patchApplicant(i, { dob: v })}
                       placeholder="01.01.1949"
                     />
+                    {/* ភេទ — gender toggle */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-muted-foreground">ភេទ</span>
+                      <div className="flex gap-2">
+                        {(["ប្រុស", "ស្រី"] as const).map((g) => (
+                          <button
+                            key={g}
+                            type="button"
+                            onClick={() =>
+                              patchApplicant(i, {
+                                gender: a.gender === g ? "" : g,
+                              })
+                            }
+                            className={cn(
+                              "px-3 py-1 rounded-full text-xs border transition-colors",
+                              a.gender === g
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "border-border text-muted-foreground hover:bg-muted",
+                            )}
+                          >
+                            {g}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     <Field
                       label="ភូមិ (ទីលំនៅ)"
                       value={a.village || ""}

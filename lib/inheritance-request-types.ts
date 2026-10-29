@@ -25,6 +25,7 @@ export interface Applicant {
   relationDeceased: string; // ត្រូវជា...នៃខ្មោច (ឧ. ប្រពន្ធ / ប្ដី)
   relationHeirs: string; // និងជា...នៃយើងខ្ញុំ (ឧ. ម្ដាយ / ឪពុក)
   propertyType?: string; // ប្រភេទទ្រព្យ (ឧ. ទ្រព្យផ្ទាល់ខ្លួន / ទ្រព្យរួម)
+  gender?: string; // ភេទ: "ប្រុស" | "ស្រី" | ""
 }
 
 export interface Witness {
@@ -101,6 +102,7 @@ export const emptyApplicant = (): Applicant => ({
   relationDeceased: "",
   relationHeirs: "",
   propertyType: "",
+  gender: "",
 });
 
 export const emptyWitness = (): Witness => ({
@@ -277,6 +279,7 @@ export function normalizeApplicant(raw: unknown): Applicant {
       typeof a.relationDeceased === "string" ? a.relationDeceased : "",
     relationHeirs: typeof a.relationHeirs === "string" ? a.relationHeirs : "",
     propertyType: typeof a.propertyType === "string" ? a.propertyType : "",
+    gender: typeof a.gender === "string" ? a.gender : "",
   };
 }
 
