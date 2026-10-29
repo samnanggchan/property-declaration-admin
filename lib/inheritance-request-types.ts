@@ -37,6 +37,8 @@ export interface Applicant {
   name: string;
   dob: string;
   address: string;
+  houseNo?: string;
+  streetNo?: string;
   village?: string;
   sangkat?: string;
   khan?: string;
@@ -114,6 +116,8 @@ export const emptyApplicant = (): Applicant => ({
   name: "",
   dob: "",
   address: "",
+  houseNo: "",
+  streetNo: "",
   village: "",
   sangkat: "",
   khan: "",
@@ -271,6 +275,8 @@ export function normalizeApplicant(raw: unknown): Applicant {
   let khan = typeof a.khan === "string" ? a.khan : "";
   let city = typeof a.city === "string" ? a.city : "រាជធានីភ្នំពេញ";
   let address = typeof a.address === "string" ? a.address : "";
+  let houseNo = typeof a.houseNo === "string" ? a.houseNo : "";
+  let streetNo = typeof a.streetNo === "string" ? a.streetNo : "";
 
   // If address exists but village/sangkat/khan were not set, split address
   if (address && (!village || !sangkat || !khan)) {
@@ -290,6 +296,8 @@ export function normalizeApplicant(raw: unknown): Applicant {
     name: typeof a.name === "string" ? a.name : "",
     dob: typeof a.dob === "string" ? a.dob : "",
     address,
+    houseNo,
+    streetNo,
     village,
     sangkat,
     khan,

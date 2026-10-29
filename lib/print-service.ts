@@ -125,13 +125,13 @@ export function printCleanDocument(
         box-shadow: none !important;
       }
       .a4-sheet {
-        display: block !important;
         box-sizing: border-box !important;
         width: 210mm !important;
         max-width: 210mm !important;
         min-width: 210mm !important;
         min-height: calc(297mm - 1mm) !important;
         margin: 0 auto !important;
+        padding: 10mm 20mm 10mm 22mm !important;
         border: none !important;
         border-radius: 0 !important;
         box-shadow: none !important;

@@ -286,9 +286,9 @@ export function InheritanceRequestForm() {
   const [visibleWitnesses, setVisibleWitnesses] = React.useState<number>(1);
   const [visibleChildren, setVisibleChildren] = React.useState<number>(1);
   const [visibleRelatives, setVisibleRelatives] = React.useState<number>(1);
-  const [pageFilter, setPageFilter] = React.useState<"all" | 1 | 2 | 3 | 4 | 5>(
-    "all",
-  );
+  const [pageFilter, setPageFilter] = React.useState<
+    "all" | 1 | 2 | 3 | 4 | 5 | 6 | 7
+  >("all");
 
   const fetchDbList = React.useCallback(async () => {
     try {
@@ -701,12 +701,14 @@ export function InheritanceRequestForm() {
             មើលទំព័រ៖
           </span>
           {[
-            { id: "all", label: "ទាំងអស់ (៥ ទំព័រ)" },
-            { id: 1, label: "ទំព័រ ១ (ដំណរវង្ស)" },
-            { id: 2, label: "ទំព័រ ២ (ដំណរវង្ស-ត)" },
-            { id: 3, label: "ទំព័រ ៣ (ព្រមព្រៀង)" },
-            { id: 4, label: "ទំព័រ ៤ (ក្រុមប្រឹក្សាញាតិ)" },
-            { id: 5, label: "ទំព័រ ៥ (បញ្ជាក់ទាយាទ)" },
+            { id: "all", label: "ទាំងអស់ (៧ ទំព័រ)" },
+            { id: 1, label: "ទំព័រ ១ (ពាក្យស្នើសុំ)" },
+            { id: 2, label: "ទំព័រ ២ (ដំណរវង្ស)" },
+            { id: 3, label: "ទំព័រ ៣ (ដំណរវង្ស-ត)" },
+            { id: 4, label: "ទំព័រ ៤ (ព្រមព្រៀង)" },
+            { id: 5, label: "ទំព័រ ៥ (ក្រុមប្រឹក្សាញាតិ)" },
+            { id: 6, label: "ទំព័រ ៦ (បញ្ជាក់ទាយាទ)" },
+            { id: 7, label: "ទំព័រ ៧ (កិច្ចសន្យាធានាអះអាង)" },
           ].map((tab) => {
             const active = pageFilter === tab.id;
             return (
@@ -1514,7 +1516,7 @@ export function InheritanceRequestForm() {
           </Card>
         </div>
 
-        {/* ═══════════════ PRINTABLE FORM (5 × A4) ═══════════════ */}
+        {/* ═══════════════ PRINTABLE FORM (7 × A4) ═══════════════ */}
         <div id="printable-document" className="printable-area">
           <InheritanceRequestPrint data={data} pageFilter={pageFilter} />
         </div>

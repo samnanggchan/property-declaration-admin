@@ -2,14 +2,18 @@
   --paper-w: 210mm;
   --paper-h: 297mm;
   --paper-pad-top: 10mm;
-  --paper-pad-x: 12mm;
+  --paper-pad-left: 22mm;
+  --paper-pad-right: 20mm;
+  --paper-pad-x: 20mm;
   --paper-pad-bottom: 10mm;
 }
 
 @media screen and (max-width: 640px) {
   :root {
     --paper-pad-top: 8mm;
-    --paper-pad-x: 6mm;
+    --paper-pad-left: 12mm;
+    --paper-pad-right: 10mm;
+    --paper-pad-x: 10mm;
     --paper-pad-bottom: 8mm;
   }
 }
@@ -26,7 +30,8 @@
     /* per-sheet override:  style={{ "--sheet-pad": "20mm 15mm" }}  or <A4Page padding="20mm 15mm"> */
     padding: var(
       --sheet-pad,
-      var(--paper-pad-top) var(--paper-pad-x) var(--paper-pad-bottom)
+      var(--paper-pad-top) var(--paper-pad-right, var(--paper-pad-x))
+        var(--paper-pad-bottom) var(--paper-pad-left, var(--paper-pad-x))
     );
     background: #ffffff;
     color: #171717;
@@ -192,7 +197,8 @@
     min-width: var(--paper-w) !important;
     min-height: calc(var(--paper-h) - 2mm) !important;
     margin: 0 auto !important;
-    padding: var(--paper-pad-top) var(--paper-pad-x) var(--paper-pad-bottom) !important;
+    padding: var(--paper-pad-top) var(--paper-pad-right, var(--paper-pad-x))
+      var(--paper-pad-bottom) var(--paper-pad-left, var(--paper-pad-x)) !important;
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;

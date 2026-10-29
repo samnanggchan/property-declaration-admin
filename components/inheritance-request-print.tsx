@@ -70,6 +70,7 @@ interface PrintExtras {
   titleDeedNo: string;
   plotNo: string;
   streetNo: string;
+  houseNo?: string;
   authorizedPerson: string;
   authorizedRelationDeceased: string;
   authorizedRelationHeirs: string;
@@ -127,6 +128,15 @@ function ageNumber(dob: string) {
       .replace(/\s*ឆ្នាំ\s*$/, "")
       .trim(),
   );
+}
+
+/** Extracts birth year in Khmer digits (e.g. "01.01.1949" -> "១៩៤៩", "1974" -> "១៩៧៤") */
+function getBirthYear(dob?: string) {
+  if (!dob?.trim()) return "";
+  const parts = parseDateParts(dob);
+  if (parts.year) return kh(parts.year);
+  const match = dob.match(/\b(19\d\d|20\d\d)\b/);
+  return match ? kh(match[1]) : "";
 }
 
 /** under 18 → false; unknown age → true */
@@ -275,7 +285,7 @@ function Footnotes({
   withArticle?: boolean;
 }) {
   return (
-    <div className="absolute bottom-[var(--paper-pad-bottom)] left-[var(--paper-pad-x)] right-[var(--paper-pad-x)]">
+    <div className="absolute bottom-[var(--paper-pad-bottom)] left-[var(--paper-pad-left,var(--paper-pad-x))] right-[var(--paper-pad-right,var(--paper-pad-x))]">
       <div className="border-t border-neutral-900" />
       <div className="mt-1 space-y-0.5 text-[9pt] leading-[1.45] text-neutral-900">
         {notes.map((n) => (
@@ -426,13 +436,13 @@ export function InheritanceRequestPrint({
   pageFilter = "all",
 }: {
   data: InheritanceRequest;
-  pageFilter?: "all" | 1 | 2 | 3 | 4 | 5;
+  pageFilter?: "all" | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 }) {
   const x = data as InheritanceRequest & Partial<PrintExtras>;
   const [d1, d2] = [data.deceased[0], data.deceased[1]];
   const [a1, a2] = [data.applicants[0], data.applicants[1]];
   const [w1, w2] = [data.witnesses[0], data.witnesses[1]];
-  const show = (n: 1 | 2 | 3 | 4 | 5) =>
+  const show = (n: 1 | 2 | 3 | 4 | 5 | 6 | 7) =>
     pageFilter === "all" || pageFilter === n;
 
   const deceasedNames = data.deceased
@@ -506,6 +516,34 @@ export function InheritanceRequestPrint({
   const a1Sangkat = a1.sangkat || a1Addr.commune || sangkat;
   const a1Khan = a1.khan || a1Addr.district || khan;
   const a1City = a1.city || a1Addr.city || x.city || "រាជធានីភ្នំពេញ";
+
+  /* page 6: កិច្ចសន្យាធានាអះអាង variables */
+  const a1HouseMatch = (a1.address || "").match(/(?:ផ្ទះលេខ|ផ្ទះ)\s*([^\s,]+)/);
+  const a1HouseNo =
+    a1.houseNo || x.houseNo || (a1HouseMatch ? a1HouseMatch[1] : "");
+
+  const a1StreetMatch = (a1.address || "").match(
+    /(?:ផ្លូវលេខ|ផ្លូវ)\s*([^\s,]+)/,
+  );
+  const a1StreetNo =
+    a1.streetNo || x.streetNo || (a1StreetMatch ? a1StreetMatch[1] : "");
+
+  const declarantGender =
+    a1.gender ||
+    (a1.relationDeceased?.includes("ប្រពន្ធ") ||
+    a1.relationHeirs?.includes("ម្ដាយ")
+      ? "ស្រី"
+      : a1.relationDeceased?.includes("ប្ដី") ||
+          a1.relationHeirs?.includes("ឪពុក")
+        ? "ប្រុស"
+        : "");
+
+  const declarantAge = a1.dob ? ageNumber(a1.dob) : spouseAge;
+  const declarantRelation =
+    a1.relationDeceased || FORM.defaults.relationToDeceased;
+  const childCountKh =
+    named.length > 0 ? kh(String(named.length).padStart(2, "0")) : "";
+  const affidavitChildren = padRows(named, 7);
 
   /* council members = 8 relatives for page 4 */
   const councilRelatives = Array.from(
@@ -609,10 +647,265 @@ export function InheritanceRequestPrint({
     yearShort: sign.year ? kh(String(sign.year).replace(/^20/, "")) : "",
   };
 
+  /* page 1: ពាក្យស្នើសុំសន្តតិកម្ម variables */
+  const a2Addr = splitAddress(a2?.address || "");
+  const a2Sangkat = a2?.sangkat || a2Addr.commune || sangkat;
+  const a2Khan = a2?.khan || a2Addr.district || khan;
+  const a2City = a2?.city || a2Addr.city || a1City;
+
+  const a2HouseMatch = (a2?.address || "").match(
+    /(?:ផ្ទះលេខ|ផ្ទះ)\s*([^\s,]+)/,
+  );
+  const a2HouseNo = a2?.houseNo || (a2HouseMatch ? a2HouseMatch[1] : "");
+
+  const a2StreetMatch = (a2?.address || "").match(
+    /(?:ផ្លូវលេខ|ផ្លូវ)\s*([^\s,]+)/,
+  );
+  const a2StreetNo = a2?.streetNo || (a2StreetMatch ? a2StreetMatch[1] : "");
+
+  const a2Gender =
+    a2?.gender ||
+    (a2?.relationDeceased?.includes("ប្រពន្ធ") ||
+    a2?.relationHeirs?.includes("ម្ដាយ")
+      ? "ស្រី"
+      : a2?.relationDeceased?.includes("ប្ដី") ||
+          a2?.relationHeirs?.includes("ឪពុក")
+        ? "ប្រុស"
+        : "");
+
+  const a1BirthYear = getBirthYear(a1.dob);
+  const a2BirthYear = getBirthYear(a2?.dob);
+
+  const deedDate = dateParts(
+    (x as unknown as { titleDeedDate?: string }).titleDeedDate ||
+      x.letterRefDate ||
+      "",
+  );
+
+  const formatFullDateKh = (dp: {
+    day: string;
+    month: string;
+    year: string;
+  }) => {
+    if (dp.day && dp.month && dp.year) {
+      return `${dp.day} ${dp.month} ${dp.year}`;
+    }
+    return [dp.day, dp.month, dp.year].filter(Boolean).join(" ");
+  };
+
+  const deathDateFormatted =
+    hasDeceased2 && d2.deathDate
+      ? `${formatFullDateKh(death1)} / ${formatFullDateKh(death2)}`
+      : formatFullDateKh(death1) || kh(d1.deathDate);
+
+  const certDateFormatted =
+    hasDeceased2 && d2.deathCertDate
+      ? `${formatFullDateKh(cert1)} / ${formatFullDateKh(cert2)}`
+      : formatFullDateKh(cert1) || kh(d1.deathCertDate);
+
+  const targetInheritanceText =
+    authPerson ||
+    (sharedPropertyType
+      ? `${applicantNames} ${wrapPropType(sharedPropertyType)}`
+      : applicantNames);
+
   return (
     <div className="flex flex-col gap-6 print:block print:p-0 print:m-0 print:gap-0">
       {/* ═══════════════════════════ PAGE 1 ═══════════════════════════ */}
+      {/* ពាក្យស្នើសុំសន្តតិកម្ម */}
       {show(1) && (
+        <A4Page mode="fixed" className={PAGE}>
+          {/* Kingdom Header */}
+          <div className="pt-1 text-center">
+            <h1 className="font-moul text-[13.5pt] font-normal tracking-wide text-neutral-900">
+              ព្រះរាជាណាចក្រកម្ពុជា
+            </h1>
+            <h2 className="mt-1 font-moul text-[11.5pt] font-normal tracking-wide text-neutral-900">
+              ជាតិ សាសនា ព្រះមហាក្សត្រ
+            </h2>
+            <Ornament src={FORM.divider} className="h-[5mm]" />
+          </div>
+
+          <h3 className="mt-2 text-center font-moul text-[13.5pt] font-normal text-neutral-900">
+            ពាក្យស្នើសុំសន្តតិកម្ម
+          </h3>
+
+          {/* Applicant 1 & Applicant 2 */}
+          <div className="mt-3 space-y-0.5">
+            {/* Applicant 1 */}
+            <div className={ROW}>
+              <L>ខ្ញុំបាទ/នាងខ្ញុំ ឈ្មោះ:</L>
+              <D v={a1.name} grow={3.5} />
+              <L>ភេទ</L>
+              <D v={declarantGender} grow={0.8} />
+              <L>ឆ្នាំកំណើត</L>
+              <D v={a1BirthYear} grow={1} />
+              <L>សញ្ជាតិ</L>
+              <D v={a1.name ? "ខ្មែរ" : ""} grow={1} />
+            </div>
+            <div className={ROW}>
+              <L>ទីលំនៅផ្ទះលេខ</L>
+              <D v={kh(a1HouseNo)} grow={1} />
+              <L>ផ្លូវលេខ</L>
+              <D v={kh(a1StreetNo)} grow={1.2} />
+              <L>សង្កាត់</L>
+              <D v={a1Sangkat} grow={2} />
+              <L>ខណ្ឌ</L>
+              <D v={a1Khan} grow={2} />
+              <L>{a1City || "រាជធានីភ្នំពេញ"}។</L>
+            </div>
+
+            {/* Applicant 2 */}
+            <div className={ROW}>
+              <L>ខ្ញុំបាទ/នាងខ្ញុំ ឈ្មោះ:</L>
+              <D v={a2?.name} grow={3.5} />
+              <L>ភេទ</L>
+              <D v={a2Gender} grow={0.8} />
+              <L>ឆ្នាំកំណើត</L>
+              <D v={a2BirthYear} grow={1} />
+              <L>សញ្ជាតិ</L>
+              <D v={a2?.name ? "ខ្មែរ" : ""} grow={1} />
+            </div>
+            <div className={ROW}>
+              <L>ទីលំនៅផ្ទះលេខ</L>
+              <D v={a2?.name ? kh(a2HouseNo) : ""} grow={1} />
+              <L>ផ្លូវលេខ</L>
+              <D v={a2?.name ? kh(a2StreetNo) : ""} grow={1.2} />
+              <L>សង្កាត់</L>
+              <D v={a2?.name ? a2Sangkat : ""} grow={2} />
+              <L>ខណ្ឌ</L>
+              <D v={a2?.name ? a2Khan : ""} grow={2} />
+              <L>{a2City || "រាជធានីភ្នំពេញ"}។</L>
+            </div>
+          </div>
+
+          {/* Addressed To */}
+          <div className="mt-4 text-center">
+            <h4 className="font-moul text-[11pt] font-normal text-neutral-900 underline">
+              សូមគោរពជូន
+            </h4>
+            <h5 className="mt-1 font-moul text-[10.5pt] font-normal text-neutral-900">
+              លោកប្រធានមន្ទីររៀបចំដែនដី នគរូបនីយកម្ម សំណង់ និងសុរិយោដី{" "}
+              {x.city || "រាជធានីភ្នំពេញ"}
+            </h5>
+          </div>
+
+          {/* Body Lines */}
+          <div className="mt-3 space-y-1">
+            {/* តាមរយៈ */}
+            <div className={ROW}>
+              <L className="w-[20mm] font-semibold">តាមរយៈ :</L>
+              <L>លោកចៅសង្កាត់</L>
+              <D v={deathSangkat || sangkat} grow={1} />
+            </div>
+
+            {/* កម្មវត្ថុ */}
+            <div className={ROW}>
+              <L className="w-[20mm] font-semibold">កម្មវត្ថុ :</L>
+              <L>ស្នើសុំសន្តតិកម្ម ដី-ផ្ទះមានប័ណ្ណកម្មសិទ្ធិលេខ</L>
+              <D v={titleDeedNo} grow={2} />
+              <L>ចុះថ្ងៃទី</L>
+              <D v={deedDate.day} grow={0.8} />
+              <L>ខែ</L>
+              <D v={deedDate.month} grow={1.2} />
+            </div>
+            <div className={ROW}>
+              <span className="w-[20mm] shrink-0" />
+              <L>ឆ្នាំ</L>
+              <D v={deedDate.year} grow={1} />
+              <L>ដែលស្ថិតនៅភូមិ</L>
+              <D v={village} grow={1.5} />
+              <L>សង្កាត់</L>
+              <D v={sangkat} grow={1.5} />
+              <L>ខណ្ឌ</L>
+              <D v={khan} grow={1.5} />
+            </div>
+            <div className={ROW}>
+              <span className="w-[20mm] shrink-0" />
+              <L>{a1City || "រាជធានីភ្នំពេញ"} មកជា</L>
+              <D v={targetInheritanceText} grow={1} />
+              <L>។</L>
+            </div>
+
+            {/* មូលហេតុ */}
+            <div className={ROW}>
+              <L className="w-[20mm] font-semibold">មូលហេតុ :</L>
+              <L>ដី-ផ្ទះនេះជាទ្រព្យរបស់ខ្មោចឈ្មោះ</L>
+              <D v={deceasedNames} grow={2.5} />
+              <L>បានទទួលមរណៈភាព</L>
+            </div>
+            <div className={ROW}>
+              <span className="w-[20mm] shrink-0" />
+              <L>កាលពីថ្ងៃទី</L>
+              <D v={deathDateFormatted} grow={1.5} />
+              <L>មានសំបុត្រមរណៈភាពលេខ</L>
+              <D v={certNumbers} grow={1.5} />
+              <L>ចុះថ្ងៃទី</L>
+              <D v={certDateFormatted} grow={1.5} />
+              <L>។</L>
+            </div>
+          </div>
+
+          {/* Closing Statement */}
+          <div className="mt-3 space-y-0.5">
+            <p className="pl-[20mm]">
+              អាស្រ័យដូចបានជម្រាបជូនខាងលើ សូមលោក{" "}
+              <span className="font-moul">ប្រធានមន្ទីរ</span> មេត្តាពិនិត្យ
+              និងសម្រេចអនុញ្ញាតឲ្យ
+            </p>
+            <p>ចុះបញ្ជីតាមសំណើខាងលើដោយអនុគ្រោះ។</p>
+          </div>
+
+          {/* Signatures & Certification block */}
+          <div className="mt-auto flex items-start justify-between gap-x-4 pt-2">
+            {/* Left: Commune Chief verification */}
+            <div className="w-[80mm] shrink-0 text-[9.5pt] leading-normal">
+              <div className={cn(ROW, "w-[50mm]")}>
+                <L className="font-semibold">លេខ</L>
+                <D v={kh(x.letterRefNo)} grow={1} />
+              </div>
+              <p className="mt-1 text-center font-semibold text-[10pt]">
+                បានឃើញ និងបញ្ជាក់ថា
+              </p>
+              <p className="text-center font-semibold text-[10pt]">
+                ស្នាមមេដៃស្តាំខាងលើពិតជាស្នាមមេដៃ
+              </p>
+              <div className={cn(ROW, "justify-center")}>
+                <L>ឈ្មោះ</L>
+                <D v={a1.name} grow={1} />
+                <L>និង</L>
+                <D v={a2?.name} grow={1} />
+              </div>
+              <p className="text-center">បានផ្តិតចំពោះមុខយើងប្រាកដមែន។</p>
+              <div className="mt-0.5">
+                <LunarLine d={sd} shortEra />
+                <PlaceDateLine
+                  d={sd}
+                  label={`${a1City || "រាជធានីភ្នំពេញ"} ថ្ងៃទី`}
+                />
+              </div>
+              <div className={cn(ROW, "justify-center mt-1")}>
+                <L className="font-moul text-[9.5pt]">ចៅសង្កាត់</L>
+                <D v={x.communeChiefName} grow={1} />
+              </div>
+            </div>
+
+            {/* Right: Applicant dates & thumbprint */}
+            <div className="w-[80mm] shrink-0 text-center text-[9.5pt] leading-normal">
+              <LunarLine d={sd} shortEra />
+              <PlaceDateLine
+                d={sd}
+                label={`${a1City || "រាជធានីភ្នំពេញ"} ថ្ងៃទី`}
+              />
+              <p className="mt-1 font-moul text-[10.5pt]">ស្នាមមេដៃស្តាំ</p>
+              <div className="h-[25mm]" />
+            </div>
+          </div>
+        </A4Page>
+      )}
+
+      {/* ═══════════════════════════ PAGE 2 ═══════════════════════════ */}
+      {show(2) && (
         <A4Page mode="fixed" className={PAGE}>
           {/* header: storage line centred on the page, logo box on the right */}
           <div className="relative h-[28mm]">
@@ -746,8 +1039,8 @@ export function InheritanceRequestPrint({
         </A4Page>
       )}
 
-      {/* ═══════════════════════════ PAGE 2 ═══════════════════════════ */}
-      {show(2) && (
+      {/* ═══════════════════════════ PAGE 3 ═══════════════════════════ */}
+      {show(3) && (
         <A4Page mode="fixed" className={PAGE}>
           <div>
             {p2Children.map((c, i) => (
@@ -906,9 +1199,9 @@ export function InheritanceRequestPrint({
         </A4Page>
       )}
 
-      {/* ═══════════════════════════ PAGE 3 ═══════════════════════════ */}
+      {/* ═══════════════════════════ PAGE 4 ═══════════════════════════ */}
       {/* សេចក្តីព្រមព្រៀង និងអនុញ្ញាត */}
-      {show(3) && (
+      {show(4) && (
         <A4Page mode="fixed" className={PAGE}>
           <TitleBar title="សេចក្តីព្រមព្រៀង និងអនុញ្ញាត" withOrnament />
 
@@ -1035,9 +1328,9 @@ export function InheritanceRequestPrint({
         </A4Page>
       )}
 
-      {/* ═══════════════════════════ PAGE 4 ═══════════════════════════ */}
+      {/* ═══════════════════════════ PAGE 5 ═══════════════════════════ */}
       {/* សំបុត្រអនុញ្ញាតពីក្រុមប្រឹក្សាញាតិ */}
-      {show(4) && (
+      {show(5) && (
         <A4Page mode="fixed" className={PAGE}>
           <TitleBar title="សំបុត្រអនុញ្ញាតពីក្រុមប្រឹក្សាញាតិ" />
 
@@ -1151,9 +1444,9 @@ export function InheritanceRequestPrint({
         </A4Page>
       )}
 
-      {/* ═══════════════════════════ PAGE 5 ═══════════════════════════ */}
+      {/* ═══════════════════════════ PAGE 6 ═══════════════════════════ */}
       {/* សំបុត្របញ្ជាក់ទាយាទ */}
-      {show(5) && (
+      {show(6) && (
         <A4Page mode="fixed" className={PAGE}>
           {/* kingdom header, logo on the right */}
           <div className="relative">
@@ -1295,6 +1588,172 @@ export function InheritanceRequestPrint({
             <LunarLine d={sd} />
             <PlaceDateLine d={sd} />
             <ChiefSign name={x.communeChiefName} className="mt-1" />
+          </div>
+        </A4Page>
+      )}
+
+      {/* ═══════════════════════════ PAGE 7 ═══════════════════════════ */}
+      {/* កិច្ចសន្យាធានាអះអាង */}
+      {show(7) && (
+        <A4Page mode="fixed" className={PAGE}>
+          {/* Kingdom Header */}
+          <div className="pt-1 text-center">
+            <h1 className="font-moul text-[13.5pt] font-normal tracking-wide text-neutral-900">
+              ព្រះរាជាណាចក្រកម្ពុជា
+            </h1>
+            <h2 className="mt-1 font-moul text-[11.5pt] font-normal tracking-wide text-neutral-900">
+              ជាតិ សាសនា ព្រះមហាក្សត្រ
+            </h2>
+            <Ornament src={FORM.divider} className="h-[5mm]" />
+          </div>
+
+          <h3 className="mt-2 text-center font-moul text-[13.5pt] font-normal text-neutral-900">
+            កិច្ចសន្យាធានាអះអាង
+          </h3>
+
+          {/* Declarant section */}
+          <div className="mt-3 space-y-0.5">
+            <div className={ROW}>
+              <L>ខ្ញុំបាទ/នាងខ្ញុំឈ្មោះ:</L>
+              <D v={a1.name} grow={3} />
+              <L>ភេទ</L>
+              <D v={declarantGender} grow={1} />
+              <L>អាយុ</L>
+              <D v={declarantAge} grow={1} />
+              <L>ឆ្នាំ សញ្ជាតិ</L>
+              <D v="ខ្មែរ" grow={1} />
+            </div>
+            <div className={ROW}>
+              <L>មានទីលំនៅបច្ចុប្បន្នផ្ទះលេខ</L>
+              <D v={kh(a1HouseNo)} grow={1} />
+              <L>ផ្លូវលេខ</L>
+              <D v={kh(a1StreetNo)} grow={1.2} />
+              <L>ភូមិ</L>
+              <D v={a1Village} grow={1.8} />
+              <L>ឃុំ-សង្កាត់</L>
+              <D v={a1Sangkat} grow={2} />
+            </div>
+            <div className={ROW}>
+              <L>ក្រុង-ស្រុក-ខណ្ឌ</L>
+              <D v={a1Khan} grow={1.5} />
+              <L>រាជធានី-ខេត្ត</L>
+              <D v={a1City} grow={1.5} />
+              <L>ដែលត្រូវជា</L>
+              <D v={declarantRelation} grow={1.2} />
+              <L>នៃមរតកជនឈ្មោះ:</L>
+              <D v={d1.name} grow={2.2} />
+              <L>។</L>
+            </div>
+          </div>
+
+          {/* Guarantee statement heading */}
+          <h4 className="mt-3 text-center font-moul text-[11pt] font-normal text-neutral-900">
+            សូមធ្វើការធានាអះអាងថា
+          </h4>
+
+          {/* Statement lines */}
+          <div className="mt-1 space-y-0.5">
+            <div className={ROW}>
+              <L>មរតកជនឈ្មោះ:</L>
+              <D v={d1.name} grow={2.5} />
+              <L>ពិតជាមានកូនបង្កើតចំនួន</L>
+              <D v={childCountKh} grow={1} />
+              <L>នាក់ប៉ុណ្ណោះ និង ពុំមានកូនណាមួយ</L>
+            </div>
+            <div className={ROW}>
+              <L>ដែលនៅសល់ដោយមិនរាយការណ៍ឡើយ ដូចមានរាយនាមដូចខាងក្រោមនេះ៖</L>
+            </div>
+          </div>
+
+          {/* List of children (7 rows) */}
+          <div className="mt-1 space-y-0.5">
+            {affidavitChildren
+              .slice(0, Math.max(7, named.length))
+              .map((c, i) => (
+                <div key={i} className={cn(ROW, "pl-[8mm]")}>
+                  <L className="w-[18mm]">{kh(i + 1)}- ឈ្មោះ:</L>
+                  <D v={c.name} grow={3.5} />
+                  <L>ភេទ</L>
+                  <D v={c.gender} grow={1} />
+                  <L>អាយុ</L>
+                  <D v={ageNumber(c.dob)} grow={1} />
+                  <L>ឆ្នាំ ត្រូវជាកូនទី{kh(i + 1)}</L>
+                </div>
+              ))}
+          </div>
+
+          {/* Liability / confirmation */}
+          <div className="mt-2 space-y-0.5">
+            <div className={ROW}>
+              <L>
+                បើការអះអាងខាងលើនេះខុសពីការពិត និង/ឬ មានជនណាមួយមកអះអាងបន្ថែមថា
+                កូនបង្កើត ឬកូនចិញ្ចឹមនៃមរតកជន
+              </L>
+            </div>
+            <div className={ROW}>
+              <D v={d1.name} grow={2} />
+              <L>និងមរតកជន</L>
+              <D v={d2.name} grow={2} />
+              <L>នោះ ខ្ញុំបាទ-នាងខ្ញុំ សូមចេញមុខទទួលខុសត្រូវ</L>
+            </div>
+            <div className={ROW}>
+              <L>និងទទួលទោសតាមច្បាប់បញ្ញត្តិជាធរមាន។</L>
+            </div>
+            <div className={cn(ROW, "pl-[8mm]")}>
+              <L>
+                ក្រែងពុំប្រាកដ ខ្ញុំបាទ/នាងខ្ញុំ
+                សូមផ្តិតមេដៃស្តាំទុកជាភស្តុតាងស្រាប់។
+              </L>
+            </div>
+          </div>
+
+          {/* Signatures & Certification block */}
+          <div className="mt-auto flex items-start justify-between gap-x-4 pt-2">
+            {/* Left column: Commune chief certification */}
+            <div className="w-[80mm] shrink-0 text-[9.5pt] leading-normal">
+              <div className={cn(ROW, "w-[50mm]")}>
+                <L className="font-semibold">លេខ:</L>
+                <D v={kh(x.letterRefNo)} grow={1} />
+              </div>
+              <p className="mt-1 text-center font-semibold text-[10pt]">
+                បានឃើញ និងបញ្ជាក់ថា
+              </p>
+              <p className="text-center font-semibold text-[10pt]">
+                ស្នាមមេដៃនេះពិតជាស្នាមមេដៃ
+              </p>
+              <div className={cn(ROW, "justify-center")}>
+                <L>របស់ឈ្មោះ</L>
+                <D v={a1.name} grow={1} />
+                <L>ពិតប្រាកដមែន។</L>
+              </div>
+              <div className="mt-0.5">
+                <LunarLine d={sd} shortEra />
+                <PlaceDateLine
+                  d={sd}
+                  label={`${a1City || "រាជធានីភ្នំពេញ"} ថ្ងៃទី`}
+                />
+              </div>
+              <div className={cn(ROW, "mt-1")}>
+                <L className="font-moul text-[9.5pt]">មេឃុំ-ចៅសង្កាត់</L>
+                <D v={x.communeChiefName} grow={1} />
+              </div>
+            </div>
+
+            {/* Right column: Declarant date, thumbprint, and signature */}
+            <div className="w-[80mm] shrink-0 text-center text-[9.5pt] leading-normal">
+              <LunarLine d={sd} shortEra />
+              <PlaceDateLine
+                d={sd}
+                label={`${a1City || "រាជធានីភ្នំពេញ"} ថ្ងៃទី`}
+              />
+              <p className="mt-1 font-moul text-[10.5pt]">ស្នាមមេដៃស្តាំ</p>
+              <div className="h-[18mm]" />
+              <div className="flex justify-center">
+                <div className={cn(ROW, "w-[60mm] justify-center")}>
+                  <D v={a1.name} grow={1} />
+                </div>
+              </div>
+            </div>
           </div>
         </A4Page>
       )}
