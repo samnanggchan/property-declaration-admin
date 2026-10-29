@@ -883,18 +883,28 @@ export function InheritanceRequestForm() {
                         {a.name ? `: ${a.name}` : ""}
                       </span>
                     </span>
-                    {visibleApplicants > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveApplicant(i)}
-                        className="h-6 px-1.5 text-[11px] text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
-                        title="ដកចេញ"
-                      >
-                        <Trash2Icon className="size-3" />
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {a.gender && (
+                        <Badge
+                          variant="secondary"
+                          className="h-5 px-1.5 text-[10px]"
+                        >
+                          {a.gender}
+                        </Badge>
+                      )}
+                      {visibleApplicants > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveApplicant(i)}
+                          className="h-6 px-1.5 text-[11px] text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                          title="ដកចេញ"
+                        >
+                          <Trash2Icon className="size-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <Field
@@ -912,30 +922,22 @@ export function InheritanceRequestForm() {
                       onChange={(v) => patchApplicant(i, { dob: v })}
                       placeholder="01.01.1949"
                     />
-                    {/* ភេទ — gender toggle */}
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs text-muted-foreground">ភេទ</span>
-                      <div className="flex gap-2">
-                        {(["ប្រុស", "ស្រី"] as const).map((g) => (
-                          <button
-                            key={g}
-                            type="button"
-                            onClick={() =>
-                              patchApplicant(i, {
-                                gender: a.gender === g ? "" : g,
-                              })
-                            }
-                            className={cn(
-                              "px-3 py-1 rounded-full text-xs border transition-colors",
-                              a.gender === g
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "border-border text-muted-foreground hover:bg-muted",
-                            )}
-                          >
-                            {g}
-                          </button>
-                        ))}
-                      </div>
+                    {/* ភេទ — dropdown select */}
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground">
+                        ភេទ
+                      </Label>
+                      <select
+                        value={a.gender || ""}
+                        onChange={(e) =>
+                          patchApplicant(i, { gender: e.target.value })
+                        }
+                        className="h-8 w-full rounded-3xl border border-transparent bg-input/50 px-3 text-xs outline-none transition-[color,box-shadow,background-color] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 cursor-pointer"
+                      >
+                        <option value="">—</option>
+                        <option value="ប្រុស">ប្រុស</option>
+                        <option value="ស្រី">ស្រី</option>
+                      </select>
                     </div>
                     <Field
                       label="ភូមិ (ទីលំនៅ)"
