@@ -3,7 +3,7 @@
 import * as React from "react";
 import { A4Page } from "@/components/a4-page";
 import { KHMER_GREGORIAN_MONTHS } from "@/components/cis-date-fill";
-import { cn, calculateAgeFromDob, toKhmerNum } from "@/lib/utils";
+import { cn, calculateAgeFromDob, toArabicNum, toKhmerNum } from "@/lib/utils";
 import {
   dateStringToKhmerLunar,
   KhmerLunarDate,
@@ -59,7 +59,7 @@ const NOTES_CONSENT = [
 const NOTES_COUNCIL = [
   "(១) បើទ្រព្យBC ឱ្យសរសេរតែ១/២នៃទំហំប័ណ្ណសម្គាល់សិទ្ធិ",
   "(២) ចំពោះប័ណ្ណសម្គាល់សិទ្ធិដែលមិនត្រូវកែផ្ទេរសិទ្ធិ ពុំឱ្យសរសេរចូលឡើយ",
-  "(៣) អ្នកដែលនៅរស់ត្រូវជាប្ដីឬប្រពន្ធ ឬកូននៃខ្មោចហើយជាអាណាព្យាបាល និងជាមេគ្រួសារនៅ។",
+  "(៣) អ្នកដែលនៅរស់ត្រូវជាប្ដីឬប្រពន្ធ ឬកូននៃមតកជនហើយជាអាណាព្យាបាល និងជាមេគ្រួសារនៅ។",
 ];
 
 /** fields the print needs beyond the base form – optional, so it compiles with or without them */
@@ -139,14 +139,78 @@ function getBirthYear(dob?: string) {
   return match ? kh(match[1]) : "";
 }
 
-/** under 18 → false; unknown age → true */
-function isAdultOrUnknown(c: Child) {
-  if (!c.dob?.trim()) return true;
-  const n = parseInt(
-    String(calculateAgeFromDob(c.dob) ?? "").replace(/\D/g, ""),
-    10,
-  );
-  return Number.isNaN(n) || n >= 18;
+/** Parses child age as a number from DOB, date, year, or age string */
+function parseChildAge(c: Child): number | null {
+  if (!c.dob?.trim()) return null;
+  const clean = c.dob.trim();
+  const normalized = toArabicNum(clean);
+
+  const dmyMatch = normalized.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  const ymdMatch = normalized.match(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})$/);
+  const yearOnlyMatch = normalized.match(/^(\d{4})$/);
+
+  let birthDate: Date | null = null;
+  if (dmyMatch) {
+    birthDate = new Date(
+      parseInt(dmyMatch[3], 10),
+      parseInt(dmyMatch[2], 10) - 1,
+      parseInt(dmyMatch[1], 10),
+    );
+  } else if (ymdMatch) {
+    birthDate = new Date(
+      parseInt(ymdMatch[1], 10),
+      parseInt(ymdMatch[2], 10) - 1,
+      parseInt(ymdMatch[3], 10),
+    );
+  } else if (yearOnlyMatch) {
+    const year = parseInt(yearOnlyMatch[1], 10);
+    if (year >= 1900 && year <= new Date().getFullYear()) {
+      birthDate = new Date(year, 0, 1);
+    }
+  }
+
+  if (birthDate && !Number.isNaN(birthDate.getTime())) {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    if (age >= 0 && age < 130) {
+      return age;
+    }
+  }
+
+  const numMatch = normalized.match(/\b(\d{1,3})\b/);
+  if (numMatch) {
+    const n = parseInt(numMatch[1], 10);
+    if (n < 130) return n;
+  }
+
+  return null;
+}
+
+/**
+ * Filter for Page 4: "សរសេរតែឈ្មោះកូនដែលមានអាយុពី១៨ឆ្នាំឡើងទៅ ឬកូនដែលបានទទួលអត្ថាធិនភាពហើយ"
+ * Excludes children under 18 unless emancipated (អត្ថាធិនភាព).
+ */
+function isAdultOrEmancipated(c: Child): boolean {
+  // If child has received emancipation (អត្ថាធិនភាព / អត្ថាធីនភាព), allow regardless of age
+  const note = (c.note || "").toLowerCase();
+  if (
+    note.includes("អត្ថាធិន") ||
+    note.includes("អត្ថាធីន") ||
+    note.includes("emancipat")
+  ) {
+    return true;
+  }
+
+  const age = parseChildAge(c);
+  if (age !== null) {
+    return age >= 18;
+  }
+
+  return true;
 }
 
 const EMPTY_CHILD: Child = {
@@ -490,14 +554,10 @@ export function InheritanceRequestPrint({
   const p2Children = data.children.slice(FORM.pageOneChildren);
   const named = data.children.filter((c) => c.name.trim());
   const heirs = padRows(named, FORM.minHeirRows);
-  const adultHeirs = padRows(
-    FORM.adultsOnly ? named.filter(isAdultOrUnknown) : named,
-    FORM.minHeirRows,
-  );
-  /* adult heirs who consent and sign on page 3 */
-  const consentHeirs = (
-    FORM.adultsOnly ? named.filter(isAdultOrUnknown) : named
-  ).filter((c) => c.name?.trim());
+  const adultNamed = named.filter(isAdultOrEmancipated);
+  const adultHeirs = padRows(adultNamed, FORM.minHeirRows);
+  /* adult heirs who consent and sign on page 4 */
+  const consentHeirs = adultNamed.filter((c) => c.name?.trim());
 
   /* addresses + property */
   const w1Addr = splitAddress(w1.address);
@@ -830,7 +890,7 @@ export function InheritanceRequestPrint({
             {/* មូលហេតុ */}
             <div className={ROW}>
               <L className="w-[20mm] font-semibold">មូលហេតុ :</L>
-              <L>ដី-ផ្ទះនេះជាទ្រព្យរបស់ខ្មោចឈ្មោះ</L>
+              <L>ដី-ផ្ទះនេះជាទ្រព្យរបស់មតកជនឈ្មោះ</L>
               <D v={deceasedNames} grow={2.5} />
               <L>បានទទួលមរណៈភាព</L>
             </div>
@@ -941,7 +1001,7 @@ export function InheritanceRequestPrint({
           <div className="mt-2">
             <div className={ROW}>
               <L className="pl-[18mm] font-battambang text-[12pt] font-bold">
-                សំបុត្រដំណរវង្សត្រកូលនៃខ្មោច (១)
+                សំបុត្រដំណរវង្សត្រកូលនៃមតកជន (១)
               </L>
               <D v={deceasedNames} grow={1} />
             </div>
@@ -999,7 +1059,7 @@ export function InheritanceRequestPrint({
                 <D v={spouseName} grow={3} />
                 <L>អាយុ</L>
                 <D v={spouseAge} grow={1} />
-                <L>ឆ្នាំ ជាប្ដី ឬប្រពន្ធដើមនៃខ្មោចឈ្មោះ</L>
+                <L>ឆ្នាំ ជាប្ដី ឬប្រពន្ធដើមនៃមតកជនឈ្មោះ</L>
               </div>
               <div className={ROW}>
                 <D v={deceasedNames} grow={2} />
@@ -1077,7 +1137,7 @@ export function InheritanceRequestPrint({
             </div>
             <div className={ROW}>
               <D v={w2Addr.city} grow={2} />
-              <L>បានពិនិត្យបញ្ជាក់ថា សំបុត្រដំណរវង្សត្រកូលនៃខ្មោចឈ្មោះ (១)</L>
+              <L>បានពិនិត្យបញ្ជាក់ថា សំបុត្រដំណរវង្សត្រកូលនៃមតកជនឈ្មោះ (១)</L>
               <D v={deceasedNames} grow={2} />
             </div>
             <div className={ROW}>
@@ -1208,12 +1268,12 @@ export function InheritanceRequestPrint({
           <div className="mt-1">
             <div className={ROW}>
               <L className="pl-[8mm]">
-                ឱ្យផ្ទេរសិទ្ធិកាន់កាប់នូវមរតករបស់ខ្មោច (នាង)(១)
+                ឱ្យផ្ទេរសិទ្ធិកាន់កាប់នូវអចលនវត្ថុរបស់មរតកជន (នាង)(១)
               </L>
               <D v={deceasedNames} grow={1} />
             </div>
             <div className={ROW}>
-              <L>យើងខ្ញុំទាំងអស់គ្នាជាទាយាទរបស់ខ្មោច (នាង) (២)</L>
+              <L>យើងខ្ញុំទាំងអស់គ្នាជាកូនបង្កើតរបស់មរតកជន (នាង) (២)</L>
               <D v={deceasedNames} grow={1} />
             </div>
             <p className="text-[11pt] leading-snug text-neutral-800">
@@ -1253,7 +1313,7 @@ export function InheritanceRequestPrint({
             <div className={ROW}>
               <L>ដែលត្រូវជា(៤)</L>
               <D v={relDeceased} grow={1.2} />
-              <L>នៃខ្មោច និងជា(៥)</L>
+              <L>នៃមរតកជន និងជា(៥)</L>
               <D v={relHeirs} grow={1.2} />
               <L>នៃយើងខ្ញុំទាំងអស់គ្នា បានចាត់ចែង</L>
               <D v={FORM.defaults.action} grow={1.5} />
@@ -1273,7 +1333,7 @@ export function InheritanceRequestPrint({
               <D v={khan} grow={1.5} />
             </div>
             <div className={ROW}>
-              <L>រាជធានីភ្នំពេញ ជាមរតករបស់ខ្មោច</L>
+              <L>រាជធានីភ្នំពេញ ជាមរតករបស់មរតកជន</L>
               <D v={deceasedNames} grow={1} />
               <L>យើងខ្ញុំ។</L>
             </div>
@@ -1336,7 +1396,7 @@ export function InheritanceRequestPrint({
 
           <div className="mt-1">
             <div className={ROW}>
-              <L className="pl-[16mm]">នៃខ្មោច (នាង)</L>
+              <L className="pl-[16mm]">នៃមតកជន (នាង)</L>
               <D v={deceasedNames} grow={1} />
             </div>
             <div className={cn(ROW, "text-[9.5pt]")}>
@@ -1372,7 +1432,7 @@ export function InheritanceRequestPrint({
           <div className="mt-2.5">
             <div className={ROW}>
               <L className="pl-[8mm]">
-                ជាសាច់សារលោហិត និងជាក្រុមប្រឹក្សាញាតិរបស់ខ្មោច
+                ជាសាច់សារលោហិត និងជាក្រុមប្រឹក្សាញាតិរបស់មតកជន
               </L>
               <D v={deceasedNames} grow={1} />
             </div>
@@ -1492,9 +1552,9 @@ export function InheritanceRequestPrint({
               <L>សូមបញ្ជាក់ និងប្រកាស</L>
             </div>
             <div className={ROW}>
-              <L>ដល់ អាជ្ញាធរមានសមត្ថកិច្ចថា៖ ខ្មោចឈ្មោះ</L>
+              <L>ដល់ អាជ្ញាធរមានសមត្ថកិច្ចថា៖ មតកជនឈ្មោះ</L>
               <D v={d1.name} grow={2.5} />
-              <L>និងខ្មោចនាង</L>
+              <L>និងមតកជននាង</L>
               <D v={d2.name} grow={2.5} />
             </div>
             <div className={ROW}>
@@ -1552,7 +1612,7 @@ export function InheritanceRequestPrint({
                 <D v={c.gender} grow={1} />
                 <L>អាយុ</L>
                 <D v={ageNumber(c.dob)} grow={1} />
-                <L>ឆ្នាំ ត្រូវជាកូនទី{kh(i + 1)}នៃខ្មោច</L>
+                <L>ឆ្នាំ ត្រូវជាកូនទី{kh(i + 1)}នៃមតកជន</L>
                 {c.note && (
                   <span className="shrink-0 font-semibold text-neutral-900">
                     ({c.note.replace(/[()]/g, "").trim()})
@@ -1565,10 +1625,10 @@ export function InheritanceRequestPrint({
           <div className="mt-1.5">
             <div className={ROW}>
               <L className="pl-[8mm]">
-                ដែលជាទាយាទមានសិទ្ធិក្នុងចំណែកមរតកនៃខ្មោចឈ្មោះ៖
+                ដែលជាទាយាទមានសិទ្ធិក្នុងចំណែកមរតកនៃមតកជនឈ្មោះ៖
               </L>
               <D v={d1.name} grow={2} />
-              <L>និងខ្មោចនាង</L>
+              <L>និងមតកជននាង</L>
             </div>
             <div className={ROW}>
               <D v={d2.name} grow={1} />

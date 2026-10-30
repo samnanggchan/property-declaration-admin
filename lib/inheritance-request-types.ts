@@ -26,7 +26,7 @@ export const PROPERTY_TYPES = [
 ] as const;
 
 export interface Deceased {
-  name: string; // ឈ្មោះខ្មោច
+  name: string; // ឈ្មោះមតកជន
   birthYear: string; // កើតនៅឆ្នាំ
   deathDate: string; // ស្លាប់នៅថ្ងៃ
   deathCertNo: string; // សំបុត្រមរណៈភាពលេខ
@@ -45,7 +45,7 @@ export interface Applicant {
   city?: string;
   fatherName: string;
   motherName: string;
-  relationDeceased: string; // ត្រូវជា...នៃខ្មោច (ឧ. ប្រពន្ធ / ប្ដី)
+  relationDeceased: string; // ត្រូវជា...នៃមតកជន (ឧ. ប្រពន្ធ / ប្ដី)
   relationHeirs: string; // និងជា...នៃយើងខ្ញុំ (ឧ. ម្ដាយ / ឪពុក)
   propertyType?: string; // ប្រភេទទ្រព្យ (ឧ. ទ្រព្យផ្ទាល់ខ្លួន / ទ្រព្យរួម)
   gender?: string; // ភេទ: "ប្រុស" | "ស្រី" | ""
@@ -97,7 +97,7 @@ export interface InheritanceRequest {
   khan: string; // ខណ្ឌ
   city: string; // រាជធានី/ខេត្ត
   authorizedPerson: string; // ឈ្មោះអ្នកទទួលសិទ្ធិចាត់ចែង (ខាង)
-  authorizedRelationDeceased: string; // ត្រូវជា...នៃខ្មោច (ឧ. ប្រពន្ធ / ប្ដី)
+  authorizedRelationDeceased: string; // ត្រូវជា...នៃមតកជន (ឧ. ប្រពន្ធ / ប្ដី)
   authorizedRelationHeirs: string; // និងជា...នៃយើងខ្ញុំទាំងអស់គ្នា (ឧ. ម្ដាយ / ឪពុក)
   communeChiefName: string; // ឈ្មោះចៅសង្កាត់
   heirCertNo: string; // លេខសំបុត្របញ្ជាក់ទាយាទ

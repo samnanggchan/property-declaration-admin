@@ -591,7 +591,7 @@ export function InheritanceRequestForm() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="text-xs">
-              ខ្មោច {deceasedNamed}/{DECEASED_SLOTS}
+              មតកជន {deceasedNamed}/{DECEASED_SLOTS}
             </Badge>
             <Badge variant="outline" className="text-xs">
               អ្នកស្នើសុំ {applicantsNamed}/{data.applicants.length}
@@ -866,7 +866,7 @@ export function InheritanceRequestForm() {
           </Card>
 
           <Card
-            title={`សំបុត្រដំណរវង្សត្រកូលនៃខ្មោច (${deceasedNamed}/${DECEASED_SLOTS} នាក់)`}
+            title={`សំបុត្រដំណរវង្សត្រកូលនៃមតកជន (${deceasedNamed}/${DECEASED_SLOTS} នាក់)`}
             hint="ព័ត៌មានឪពុក-ម្តាយ ឬអ្នកចែកឋាន"
           >
             <div className="space-y-3">
@@ -888,7 +888,7 @@ export function InheritanceRequestForm() {
                         {i + 1}
                       </span>
                       <span>
-                        ខ្មោចទី {kh(i + 1)}
+                        មតកជនទី {kh(i + 1)}
                         {d.name ? `: ${d.name}` : ""}
                       </span>
                     </span>
@@ -907,7 +907,7 @@ export function InheritanceRequestForm() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Field
-                      label="ឈ្មោះខ្មោច"
+                      label="ឈ្មោះមតកជន"
                       value={d.name}
                       onChange={(v) => patchDeceased(i, { name: v })}
                       placeholder="ឈ្មោះ..."
@@ -950,7 +950,7 @@ export function InheritanceRequestForm() {
                   className="w-full gap-1.5 border-dashed text-xs text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   <PlusIcon className="size-3.5" />
-                  បន្ថែមខ្មោចទី {kh(visibleDeceased + 1)} (អតិបរមា{" "}
+                  បន្ថែមមតកជនទី {kh(visibleDeceased + 1)} (អតិបរមា{" "}
                   {kh(DECEASED_SLOTS)} នាក់)
                 </Button>
               )}
@@ -1107,7 +1107,7 @@ export function InheritanceRequestForm() {
                       onChange={(v) => patchApplicant(i, { motherName: v })}
                     />
                     <Field
-                      label="ត្រូវជា (នៃខ្មោច)"
+                      label="ត្រូវជា (នៃមតកជន)"
                       value={a.relationDeceased}
                       onChange={(v) =>
                         patchApplicant(i, { relationDeceased: v })
@@ -1537,7 +1537,7 @@ export function InheritanceRequestForm() {
             <Input
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              placeholder="ស្វែងរកតាមលេខយោង, ឈ្មោះអ្នកស្នើសុំ, ឈ្មោះខ្មោច, ឬទីតាំង..."
+              placeholder="ស្វែងរកតាមលេខយោង, ឈ្មោះអ្នកស្នើសុំ, ឈ្មោះមតកជន, ឬទីតាំង..."
               className="h-9 pl-9 text-xs"
             />
           </div>
@@ -1605,7 +1605,7 @@ export function InheritanceRequestForm() {
                         )}
                         {decNames && (
                           <span>
-                            ខ្មោច៖{" "}
+                            មតកជន៖{" "}
                             <strong className="text-foreground">
                               {decNames}
                             </strong>
