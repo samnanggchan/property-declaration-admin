@@ -932,59 +932,84 @@ export function InheritanceRequestPrint({
           </div>
 
           {/* Signatures & Certification block */}
-          <div className="mt-1 pt-2">
-            {/* Top Right: Applicant dates & thumbprint header */}
-            <div className="ml-auto w-[88mm] text-center text-[12pt] leading-normal">
+          <div className="mt-1 flex items-start justify-between gap-x-4 pt-2 text-[16px] leading-normal">
+            {/* Left: Commune Chief verification (All centered, font 16px) */}
+            <div className="w-[84mm] shrink-0 pt-[15mm] text-[16px]">
+              {/* លេខ............................ (centered) */}
+              <div className="flex justify-center">
+                <div className={cn(ROW, "w-[48mm] justify-center text-[16px]")}>
+                  <L className="font-semibold">លេខ</L>
+                  <D v={kh(x.letterRefNo)} grow={1} />
+                </div>
+              </div>
+
+              <p className="mt-1 text-center font-normal text-[16px]">
+                បានឃើញ និងបញ្ជាក់ថា
+              </p>
+              <p className="text-center font-normal text-[16px]">
+                ស្នាមមេដៃស្តាំខាងលើពិតជាស្នាមមេដៃ
+              </p>
+
+              {/* ឈ្មោះ: if 1 person -> center; if 2 persons -> left & right */}
+              {activeApplicants.length >= 2 ? (
+                <div className={cn(ROW, "justify-center text-[16px]")}>
+                  <L>ឈ្មោះ</L>
+                  <D v={activeApplicants[0].name} grow={1} />
+                  <L>និង</L>
+                  <D v={activeApplicants[1].name} grow={1} />
+                </div>
+              ) : (
+                <div className={cn(ROW, "justify-center text-[16px]")}>
+                  <L>ឈ្មោះ</L>
+                  <D v={a1.name} grow={1} />
+                </div>
+              )}
+
+              <p className="text-center text-[16px]">
+                បានផ្តិតចំពោះមុខយើងប្រាកដមែន។
+              </p>
+
+              {/* ថ្ងៃ... ខែ... ឆ្នាំ... ព.ស២៥... */}
+              <div className="mt-0.5 text-[16px]">
+                <LunarLine d={sd} shortEra />
+                <PlaceDateLine
+                  d={sd}
+                  label={`${a1City || "រាជធានីភ្នំពេញ"} ថ្ងៃទី`}
+                />
+              </div>
+
+              {/* ចៅសង្កាត់......................... (centered) */}
+              <div className="mt-1 flex justify-center">
+                <div className={cn(ROW, "w-[55mm] justify-center text-[16px]")}>
+                  <L className="font-moul text-[14px]">ចៅសង្កាត់</L>
+                  <D v={x.communeChiefName} grow={1} />
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Applicant dates, thumbprint header, thumbprint space & Applicant Name(s) */}
+            <div className="w-[80mm] shrink-0 text-center text-[16px] leading-normal">
               <LunarLine d={sd} shortEra />
               <PlaceDateLine
                 d={sd}
                 label={`${a1City || "រាជធានីភ្នំពេញ"} ថ្ងៃទី`}
               />
-              <p className="mt-1 font-moul text-[10.5pt]">ស្នាមមេដៃស្តាំ</p>
-            </div>
+              <p className="mt-1 font-moul text-[14px]">ស្នាមមេដៃស្តាំ</p>
 
-            {/* Bottom Row: Left = Commune Chief certification; Right = Thumbprint space */}
-            <div className="flex items-start justify-between gap-x-4 text-[10pt] leading-normal">
-              {/* Left: Commune Chief verification */}
-              <div className="w-[88mm] shrink-0">
-                <div className={cn(ROW, "w-[30mm]")}>
-                  <L className="font-normal text-[10.5pt]">លេខ</L>
-                  <D v={kh(x.letterRefNo)} grow={1} />
-                </div>
-                <p className="mt-1 text-center font-normal text-[10.5pt]">
-                  បានឃើញ និងបញ្ជាក់ថា
-                </p>
-                <p className="text-center font-normal text-[10.5pt]">
-                  ស្នាមមេដៃស្តាំខាងលើពិតជាស្នាមមេដៃ
-                </p>
-                <div className={cn(ROW, "justify-center")}>
-                  <L>ឈ្មោះ</L>
-                  <D v={a1.name} grow={1} />
-                  {Boolean(a2?.name?.trim()) && (
-                    <>
-                      <L>និង</L>
-                      <D v={a2?.name} grow={1} />
-                    </>
-                  )}
-                </div>
-                <p className="text-center">បានផ្តិតចំពោះមុខយើងប្រាកដមែន។</p>
-                <div className="mt-0.5">
-                  <LunarLine d={sd} shortEra />
-                  <PlaceDateLine
-                    d={sd}
-                    label={`${a1City || "រាជធានីភ្នំពេញ"} ថ្ងៃទី`}
-                  />
-                </div>
-                <div className={cn(ROW, "justify-center mt-1")}>
-                  <L className="font-moul text-[10pt]">ចៅសង្កាត់</L>
-                  <D v={x.communeChiefName} grow={1} />
-                </div>
-              </div>
+              {/* Thumbprint space directly under ស្នាមមេដៃស្តាំ */}
+              <div className="h-[22mm]" />
 
-              {/* Right: Thumbprint space directly under ស្នាមមេដៃស្តាំ */}
-              <div className="w-[76mm] shrink-0 text-center">
-                <div className="h-[28mm]" />
-              </div>
+              {/* Applicant Name(s): if 1 person -> center; if 2 persons -> left & right */}
+              {activeApplicants.length >= 2 ? (
+                <div className="grid grid-cols-2 gap-2 text-center font-semibold text-[16px]">
+                  <p>{activeApplicants[0].name}</p>
+                  <p>{activeApplicants[1].name}</p>
+                </div>
+              ) : (
+                <p className="text-center font-semibold text-[16px]">
+                  {a1.name || "\u00A0"}
+                </p>
+              )}
             </div>
           </div>
         </A4Page>
