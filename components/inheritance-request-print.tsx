@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { A4Page } from "@/components/a4-page";
 import { KHMER_GREGORIAN_MONTHS } from "@/components/cis-date-fill";
 import { cn, calculateAgeFromDob, toArabicNum, toKhmerNum } from "@/lib/utils";
@@ -14,7 +15,6 @@ import {
   extractPlotNo,
   InheritanceRequest,
   parseDateParts,
-  Relative,
   RELATIVE_SLOTS,
   toKhmerDigits as kh,
 } from "@/lib/inheritance-request-types";
@@ -309,14 +309,24 @@ function Img({
   src,
   alt,
   className,
+  width = 300,
+  height = 100,
 }: {
   src: string;
   alt: string;
   className?: string;
+  width?: number;
+  height?: number;
 }) {
-  // eslint-disable-next-line @next/next/no-img-element
   return (
-    <img src={src} alt={alt} className={cn("object-contain", className)} />
+    <Image
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      unoptimized
+      className={cn("object-contain", className)}
+    />
   );
 }
 
@@ -331,6 +341,8 @@ function Ornament({
     <Img
       src={src}
       alt="ornament"
+      width={160}
+      height={30}
       className={cn("mx-auto my-1.5 w-auto", className)}
     />
   );
@@ -391,14 +403,18 @@ function TitleBar({
 }) {
   return (
     <div className="relative pt-1 text-center">
-      <Img
-        src={FORM.logo}
-        alt={FORM.logoAlt}
-        className="absolute right-0 top-2 h-[7mm] w-auto"
-      />
-      <h2 className="font-moul text-[13pt] font-normal text-neutral-900">
-        {title}
-      </h2>
+      <div className="relative flex min-h-[7.5mm] items-center justify-center">
+        <h2 className="font-moul text-[16px] font-normal leading-normal text-neutral-900">
+          {title}
+        </h2>
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center">
+          <Img
+            src={FORM.logo}
+            alt={FORM.logoAlt}
+            className="h-[7mm] w-auto max-w-[48mm] object-contain"
+          />
+        </div>
+      </div>
       {withOrnament && <Ornament className="h-[6mm]" />}
     </div>
   );
@@ -810,7 +826,7 @@ export function InheritanceRequestPrint({
           <div className="mt-3 space-y-0.5">
             {/* Applicant 1 */}
             <div className={ROW}>
-              <L className="pl-8">ខ្ញុំបាទ/នាងខ្ញុំ ឈ្មោះ:</L>
+              <L className="pl-[8mm]">ខ្ញុំបាទ/នាងខ្ញុំ ឈ្មោះ:</L>
               <D v={a1.name} grow={3.5} />
               <L>ភេទ</L>
               <D v={declarantGender} grow={0.8} />
@@ -833,7 +849,7 @@ export function InheritanceRequestPrint({
 
             {/* Applicant 2 */}
             <div className={ROW}>
-              <L className="pl-8">ខ្ញុំបាទ/នាងខ្ញុំ ឈ្មោះ:</L>
+              <L className="pl-[8mm]">ខ្ញុំបាទ/នាងខ្ញុំ ឈ្មោះ:</L>
               <D v={a2?.name} grow={3.5} />
               <L>ភេទ</L>
               <D v={a2Gender} grow={0.8} />
@@ -926,8 +942,8 @@ export function InheritanceRequestPrint({
           <div className="mt-3 space-y-0.5">
             <p className="pl-[20mm]">
               អាស្រ័យដូចបានជម្រាបជូនខាងលើ សូមលោក{" "}
-              <span className="font-moul text-sm">ប្រធានមន្ទីរ</span> មេត្តាពិនិត្យ
-              និងសម្រេចអនុញ្ញាតឲ្យចុះបញ្ជីតាមសំណើខាងលើដោយអនុគ្រោះ។
+              <span className="font-moul text-sm">ប្រធានមន្ទីរ</span>{" "}
+              មេត្តាពិនិត្យ និងសម្រេចអនុញ្ញាតឲ្យចុះបញ្ជីតាមសំណើខាងលើដោយអនុគ្រោះ។
             </p>
           </div>
 
@@ -1019,25 +1035,35 @@ export function InheritanceRequestPrint({
       {show(2) && (
         <A4Page mode="fixed" className={PAGE}>
           {/* header: storage line centred on the page, logo box on the right */}
-          <div className="relative h-[28mm]">
-            <div className="absolute inset-x-0 top-[1mm] flex justify-center">
-              <div className={cn(ROW, "w-[68mm]")}>
-                <L className="font-moul text-[12pt]">តំកល់ទុក</L>
-                <L className="font-moul text-[12pt] underline underline-offset-8">
-                  លេខ
-                </L>
-                <D v={kh(data.refNo)} grow={1} />
+          <div className="flex h-[28mm] items-start">
+            {/* Left & Center section */}
+            <div className="flex flex-1 flex-col justify-start min-w-0">
+              {/* Row 1: storage line */}
+              <div className="flex h-[7.4mm] items-baseline pt-[1mm]">
+                {/* spacer above អ្នកតែងលិខិត */}
+                <div className="w-[44mm] shrink-0" />
+                {/* តំកល់ទុក លេខ............................ */}
+                <div className="flex flex-1 items-baseline gap-x-1.5 min-w-0">
+                  <L className="font-moul text-[12pt]">តំកល់ទុក</L>
+                  <L className="font-moul text-[12pt] underline decoration-2 underline-offset-[2px]">
+                    លេខ
+                  </L>
+                  <D v={kh(data.refNo)} grow={1} />
+                </div>
+              </div>
+
+              {/* Row 2: អ្នកតែងលិខិត............................| */}
+              <div className="flex h-[7.4mm] items-baseline pt-[1.5mm]">
+                <div className="flex w-[44mm] shrink-0 items-baseline gap-x-1">
+                  <L>អ្នកតែងលិខិត</L>
+                  <D grow={1} />
+                  <span className="shrink-0 font-bold text-neutral-800">|</span>
+                </div>
               </div>
             </div>
 
-            <div className="absolute left-0 top-[10mm] w-[48mm]">
-              <div className={ROW}>
-                <L>អ្នកតែងលិខិត</L>
-                <D grow={1} />
-              </div>
-            </div>
-
-            <div className="absolute right-0 top-0 w-[54mm] border-b border-l border-neutral-800 pb-1 pl-2 text-[18px] leading-tight">
+            {/* Right: logo box with left and bottom borders */}
+            <div className="w-[52mm] shrink-0 border-b border-l border-neutral-800 pb-1.5 pl-2 pt-1.5 text-[16px] leading-tight">
               <p>ក្រដាសលេខ {FORM.paperNo}</p>
               <p>លេខទីទុកឯកសារ</p>
               <Img
@@ -1414,7 +1440,7 @@ export function InheritanceRequestPrint({
           <div className="mt-2.5 grid grid-cols-[1fr_1.4fr] gap-4">
             {/* Left: Notes & ឈ្មោះ label */}
             <div className="flex flex-col justify-between">
-              <div className="space-y-0.5 text-[9pt] leading-tight text-neutral-800">
+              <div className="space-y-0.5 text-[16px] leading-tight text-neutral-800">
                 {NOTES_CONSENT.map((n) => (
                   <p key={n}>{n}</p>
                 ))}
@@ -1442,7 +1468,7 @@ export function InheritanceRequestPrint({
           </div>
 
           {/* commune chief */}
-          <div className="mt-2 text-center text-[10pt] leading-[1.6]">
+          <div className="mt-2 text-center text-[16px] leading-[1.6]">
             <p>ស្នាមមេដៃទាំងនេះបានផ្តិតនៅចំពោះមុខយើង</p>
             <p>ដែលយើងបានសូត្រសេចក្តីខាងលើនេះយ៉ាងក្បោះក្បាយ</p>
             <p>ហើយអានខ្លាំងៗអោយទាយាទទាំងអស់ស្តាប់មុនពេលផ្តិតមេដៃយល់ព្រម។</p>
@@ -1466,7 +1492,7 @@ export function InheritanceRequestPrint({
               <L className="pl-[16mm]">នៃមតកជន (នាង)</L>
               <D v={deceasedNames} grow={1} />
             </div>
-            <div className={cn(ROW, "text-[9.5pt]")}>
+            <div className={cn(ROW, "text-[16px]")}>
               <L>(លិខិតដំណាលរបស់លិខិតសញ្ញាលក់ផ្ដាច់លេខ</L>
               <D v={kh(x.letterRefNo)} grow={1.5} />
               <L>ចុះថ្ងៃទី</L>
@@ -1475,7 +1501,7 @@ export function InheritanceRequestPrint({
             </div>
           </div>
 
-          <p className="mt-1.5 text-center font-moul text-[13pt]">
+          <p className="my-2 text-center font-moul text-[16px]">
             យើងខ្ញុំទាំងអស់គ្នា
           </p>
 
@@ -1546,23 +1572,27 @@ export function InheritanceRequestPrint({
           </div>
 
           {/* date + thumbprint */}
-          <div className="ml-auto mt-2.5 w-[110mm] text-center">
+          <div className="ml-auto mt-2 w-[100mm] text-center">
             <LunarLine d={sd} shortEra />
             <PlaceDateLine d={sd} label="ធ្វើនៅថ្ងៃទី" />
-            <p className="mt-2 font-medium">ស្នាមមេដៃស្តាំ</p>
+            <p className="mt-1 font-medium">ស្នាមមេដៃស្តាំ</p>
+            {/* space for council thumbprints */}
+            <div className="h-[24mm]" />
           </div>
 
           {/* notes (left) + verification (right) */}
-          <div className="mt-auto grid grid-cols-2 gap-4 pb-2">
-            <div className="text-[8.4pt] leading-relaxed text-neutral-800">
-              <p className="font-semibold">បញ្ជាក់៖</p>
+          <div className="mt-4 flex items-start justify-between pb-1">
+            <div className="w-[65mm] shrink-0 text-[12.5px] leading-[1.6] text-neutral-800">
+              <p className="font-semibold text-neutral-900">បញ្ជាក់៖</p>
               {NOTES_COUNCIL.map((n) => (
                 <p key={n}>{n}</p>
               ))}
             </div>
 
-            <div className="text-center text-[9.5pt]">
-              <p className="font-medium">បានឃើញ និងបញ្ជាក់ថាត្រឹមត្រូវ</p>
+            <div className="w-[100mm] shrink-0 text-center text-[16px]">
+              <p className="font-medium text-neutral-900">
+                បានឃើញ និងបញ្ជាក់ថាត្រឹមត្រូវ
+              </p>
               <LunarLine d={sd} shortEra />
               <PlaceDateLine d={sd} label="ថ្ងៃទី" />
               <ChiefSign name={x.communeChiefName} className="mt-1" />
@@ -1592,8 +1622,8 @@ export function InheritanceRequestPrint({
               <Ornament src={FORM.divider} className="h-[5mm]" />
             </div>
 
-            <div className="mt-1 w-[65mm] text-[10pt]">
-              <p className="font-semibold">រាជធានីភ្នំពេញ</p>
+            <div className="mt-1 w-[65mm] text-[16px]">
+              <p className="font-normal">រាជធានីភ្នំពេញ</p>
               <div className={ROW}>
                 <L>ខណ្ឌ :</L>
                 <D v={khan} grow={1} />
@@ -1707,10 +1737,12 @@ export function InheritanceRequestPrint({
           </div>
 
           {/* number, date, chief */}
-          <div className="ml-auto mt-2 w-[110mm] text-center">
-            <div className={cn(ROW, "justify-center")}>
-              <L className="font-moul">លេខ:</L>
-              <D v={kh(x.heirCertNo)} grow={1} />
+          <div className="ml-auto mt-2 w-[105mm] text-center">
+            <div className="flex justify-center">
+              <div className={cn(ROW, "w-[48mm]")}>
+                <L className="font-moul">លេខ៖</L>
+                <D v={kh(x.heirCertNo)} grow={1} />
+              </div>
             </div>
             <LunarLine d={sd} />
             <PlaceDateLine d={sd} />
@@ -1834,58 +1866,49 @@ export function InheritanceRequestPrint({
             </div>
             <div className={cn(ROW, "pl-[8mm]")}>
               <L>
-                ក្រែងពុំប្រាកដ ខ្ញុំបាទ/នាងខ្ញុំ
-                សូមផ្តិតមេដៃស្តាំទុកជាភស្តុតាងស្រាប់។
+                ក្រែងពុំប្រាកដ ខ្ញុំបាទ. នាងខ្ញុំ
+                សូមផ្តិតមេដៃស្តាំទុកជាភស្តុតាងចំពោះមុខច្បាប់ ។
               </L>
             </div>
           </div>
 
+          {/* Declarant Date & Thumbprint Header (Top Right) */}
+          <div className="ml-auto mt-2 w-[82mm] text-center">
+            <PlaceDateLine d={sd} label="ធ្វើនៅថ្ងៃទី" />
+            <p className="mt-1 font-moul text-[10.5pt]">ស្នាមមេដៃស្តាំ</p>
+          </div>
+
           {/* Signatures & Certification block */}
-          <div className="mt-auto flex items-start justify-between gap-x-4 pt-2">
+          <div className="mt-2 flex items-start justify-between gap-x-4">
             {/* Left column: Commune chief certification */}
-            <div className="w-[80mm] shrink-0 text-[9.5pt] leading-normal">
-              <div className={cn(ROW, "w-[50mm]")}>
-                <L className="font-semibold">លេខ:</L>
+            <div className="w-[82mm] shrink-0 text-center leading-normal">
+              <div className={cn(ROW, "w-[48mm]")}>
+                <L className="font-moul text-[14px]">លេខ៖</L>
                 <D v={kh(x.letterRefNo)} grow={1} />
               </div>
-              <p className="mt-1 text-center font-semibold text-[10pt]">
-                បានឃើញ និងបញ្ជាក់ថា
-              </p>
-              <p className="text-center font-semibold text-[10pt]">
-                ស្នាមមេដៃនេះពិតជាស្នាមមេដៃ
+              <p className="mt-1 font-bold">បានឃើញ និង បញ្ជាក់ថា</p>
+              <p className="mt-0.5">
+                ស្នាមមេដៃស្តាំខាងលើនេះពិតជាស្នាមមេដៃរបស់ឈ្មោះ
               </p>
               <div className={cn(ROW, "justify-center")}>
-                <L>របស់ឈ្មោះ</L>
                 <D v={a1.name} grow={1} />
-                <L>ពិតប្រាកដមែន។</L>
+                <L>ត្រឹមត្រូវប្រាកដមែន ។</L>
               </div>
               <div className="mt-0.5">
-                <LunarLine d={sd} shortEra />
                 <PlaceDateLine
                   d={sd}
-                  label={`${a1City || "រាជធានីភ្នំពេញ"} ថ្ងៃទី`}
+                  label={`${a1CityClean || "ភ្នំពេញ"}, ថ្ងៃទី`}
                 />
               </div>
-              <div className={cn(ROW, "mt-1")}>
-                <L className="font-moul text-[9.5pt]">មេឃុំ-ចៅសង្កាត់</L>
-                <D v={x.communeChiefName} grow={1} />
-              </div>
+              <ChiefSign name={x.communeChiefName} className="mt-1" />
             </div>
 
-            {/* Right column: Declarant date, thumbprint, and signature */}
-            <div className="w-[80mm] shrink-0 text-center text-[9.5pt] leading-normal">
-              <LunarLine d={sd} shortEra />
-              <PlaceDateLine
-                d={sd}
-                label={`${a1City || "រាជធានីភ្នំពេញ"} ថ្ងៃទី`}
-              />
-              <p className="mt-1 font-moul text-[10.5pt]">ស្នាមមេដៃស្តាំ</p>
+            {/* Right column: Thumbprint stamp area and applicant name */}
+            <div className="flex w-[82mm] shrink-0 flex-col items-center text-center leading-normal">
               <div className="h-[18mm]" />
-              <div className="flex justify-center">
-                <div className={cn(ROW, "w-[60mm] justify-center")}>
-                  <D v={a1.name} grow={1} />
-                </div>
-              </div>
+              <p className="font-semibold text-center text-[16px]">
+                {a1.name || "\u00A0"}
+              </p>
             </div>
           </div>
         </A4Page>

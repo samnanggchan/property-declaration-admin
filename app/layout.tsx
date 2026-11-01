@@ -30,7 +30,8 @@ const battambang = Battambang({
 
 export const metadata: Metadata = {
   title: "Property Declaration System",
-  description: "Production-ready Property Declaration & RBAC Admin Management System",
+  description:
+    "Production-ready Property Declaration & RBAC Admin Management System",
 };
 
 export const viewport: Viewport = {
