@@ -39,6 +39,8 @@ const DEFAULT_FORM_DATA: PortraitCadastralData = {
   transferDeedNo: "",
   transferDeedDate: "",
   transferDetails: "",
+  col4Red: "",
+  col4Black: "",
   encumbrance: "",
   remarks: "",
 
@@ -95,6 +97,8 @@ export default function CisPage() {
       transferDeedNo: "",
       transferDeedDate: "",
       transferDetails: "",
+      col4Red: "",
+      col4Black: "",
       encumbrance: "",
       remarks: "",
       owner1Name: "",
@@ -279,6 +283,63 @@ export default function CisPage() {
                 </div>
               </div>
 
+              {/* ── Column 4: លិខិតបញ្ជាក់ ឬ សាលក្រមតុលាការ (Col 4 under ទិញ) ── */}
+              <div className="rounded-lg border border-border/80 bg-white dark:bg-neutral-950 p-3.5 space-y-3">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-xs font-bold text-foreground">
+                      ជួរឈរទី៤ — ក្រោម &quot;ទិញ&quot; (Col 4 under &quot;ទិញ&quot;)
+                    </Label>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] font-normal">
+                    លិខិតសញ្ញា / តុលាការ
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  {/* Line 1: Red Text */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-block size-2 rounded-full bg-red-600 ring-2 ring-red-200 dark:ring-red-950" />
+                        <Label className="text-xs font-semibold text-red-600 dark:text-red-400">
+                          បន្ទាត់ទី១ (ពណ៌ក្រហម Red Text)
+                        </Label>
+                      </div>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={formData.col4Red ?? ""}
+                      onChange={(e) =>
+                        updateField("col4Red", e.target.value)
+                      }
+                      placeholder="ឧ. តាំងពីលើកទី១មកដីនេះ មិនធ្លាប់បាត់សិទ្ធិរបស់គាត់នៅ ក្នុងប្រភេទសម្បទាន"
+                      className="flex w-full rounded-md border border-red-300 dark:border-red-900/50 bg-red-50/20 dark:bg-neutral-950 px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500 resize-none font-khmer"
+                    />
+                  </div>
+
+                  {/* Line 2: Black Text */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-block size-2 rounded-full bg-black ring-2 ring-blue-200 dark:ring-blue-950" />
+                        <Label className="text-xs font-semibold text-black dark:text-blue-400">
+                          បន្ទាត់ទី២ (ពណ៌ខ្មៅ Black Text)
+                        </Label>
+                      </div>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={formData.col4Black ?? ""}
+                      onChange={(e) =>
+                        updateField("col4Black", e.target.value)
+                      }
+                      placeholder="ឧ. សំរាប់ដីរដ្ឋជាដីធ្លីទេ និងប្រាក់១រៀលរៀងរាល់ឆ្នាំជូនរដ្ឋ"
+                      className="flex w-full rounded-md border border-blue-300 dark:border-blue-900/50 bg-blue-50/20 dark:bg-neutral-950 px-3 py-2 text-xs font-medium text-black dark:text-blue-400 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 resize-none font-khmer"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* ── Column 6: សេចក្តីផ្សេងៗ (Remarks: Red line + Blue line) ── */}
               <div className="rounded-lg border border-border/80 bg-white dark:bg-neutral-950 p-3.5 space-y-3">
                 <div className="flex items-center justify-between border-b pb-2">
@@ -315,7 +376,7 @@ export default function CisPage() {
                       <div className="flex items-center gap-1.5">
                         <span className="inline-block size-2 rounded-full bg-black ring-2 ring-blue-200 dark:ring-blue-950" />
                         <Label className="text-xs font-semibold text-black dark:text-blue-400">
-                          បន្ទាត់ទី២ (ពណ៌ខៀវ Black Text)
+                          បន្ទាត់ទី២ (ពណ៌ខ្មៅ Black Text)
                         </Label>
                       </div>
                     </div>

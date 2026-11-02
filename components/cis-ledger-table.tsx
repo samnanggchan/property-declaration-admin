@@ -44,7 +44,14 @@ export const LEDGER_FIELDS = {
     size: "text-[9pt]",
     tweak: "",
   },
-  col4: { ...cell(4, 4), y: 36, align: "center", tweak: "" },
+  col4: {
+    x: 120.5,
+    w: 78,
+    y: 36,
+    align: "left",
+    size: "text-[10pt]",
+    tweak: "",
+  },
   col5: { ...cell(5, 5), y: 36, align: "center", tweak: "" },
   col6: {
     ...cell(6, 6, 1.5),
@@ -73,6 +80,8 @@ export interface LedgerValues {
   col3?: string;
   col4?: string;
   col4Sub?: string;
+  col4Red?: string;
+  col4Black?: string;
   col5?: string;
   remarksRed?: string;
   remarksBlack?: string;
@@ -333,10 +342,28 @@ export function CisLedgerTable({
 
           {hasCol3 && <Field cfg={LEDGER_FIELDS.col3}>{v.col3}</Field>}
 
-          {(has(v.col4) || has(v.col4Sub)) && (
+          {(has(v.col4) ||
+            has(v.col4Red) ||
+            has(v.col4Black) ||
+            has(v.col4Sub)) && (
             <Field cfg={LEDGER_FIELDS.col4}>
               {has(v.col4) && <div className="font-bold">{v.col4}</div>}
-              {has(v.col4Sub) && <div className="text-[10pt]">{v.col4Sub}</div>}
+              <div
+                className={cn(
+                  "space-y-2 leading-snug",
+                  !has(v.col4) && "pt-[6mm] pl-2",
+                )}
+              >
+                {has(v.col4Red) && (
+                  <div className="font-semibold text-red-600">{v.col4Red}</div>
+                )}
+                {has(v.col4Black) && (
+                  <div className="font-semibold text-black">{v.col4Black}</div>
+                )}
+                {!has(v.col4Red) && !has(v.col4Black) && has(v.col4Sub) && (
+                  <div>{v.col4Sub}</div>
+                )}
+              </div>
             </Field>
           )}
 

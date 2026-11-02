@@ -55,6 +55,8 @@ export interface PortraitCadastralData {
   transferDeedNo?: string;
   transferDeedDate?: string;
   transferDetails?: string;
+  col4Red?: string;
+  col4Black?: string;
   encumbrance?: string; // e.g. "គ្មាន"
   remarks?: string;
 
@@ -134,6 +136,8 @@ export function PortraitCadastralDocument({
       col3: data.page2Col3Text || (ownerNames ? ancestryText : ""),
       col4: data.transferType,
       col4Sub: data.transferDetails,
+      col4Red: data.col4Red,
+      col4Black: data.col4Black,
       col5: data.encumbrance,
       remarksRed: data.remarksRed,
       remarksBlack: data.remarksBlack,
@@ -148,6 +152,8 @@ export function PortraitCadastralDocument({
       ancestryText,
       data.transferType,
       data.transferDetails,
+      data.col4Red,
+      data.col4Black,
       data.encumbrance,
       data.remarksRed,
       data.remarksBlack,
