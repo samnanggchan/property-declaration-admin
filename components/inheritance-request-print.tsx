@@ -1013,7 +1013,7 @@ export function InheritanceRequestPrint({
               <p className="mt-1 font-moul text-[14px]">ស្នាមមេដៃស្តាំ</p>
 
               {/* Thumbprint space directly under ស្នាមមេដៃស្តាំ */}
-              <div className="h-[22mm]" />
+              <div className="h-[30mm]" />
 
               {/* Applicant Name(s): if 1 person -> center; if 2 persons -> left & right */}
               {activeApplicants.length >= 2 ? (
@@ -1057,7 +1057,6 @@ export function InheritanceRequestPrint({
                 <div className="flex w-[44mm] shrink-0 items-baseline gap-x-1">
                   <L>អ្នកតែងលិខិត</L>
                   <D grow={1} />
-                  <span className="shrink-0 font-bold text-neutral-800">|</span>
                 </div>
               </div>
             </div>
@@ -1740,7 +1739,7 @@ export function InheritanceRequestPrint({
           <div className="ml-auto mt-2 w-[105mm] text-center">
             <div className="flex justify-center">
               <div className={cn(ROW, "w-[48mm]")}>
-                <L className="font-moul">លេខ៖</L>
+                <L className="font-normal">លេខ</L>
                 <D v={kh(x.heirCertNo)} grow={1} />
               </div>
             </div>
@@ -1883,7 +1882,7 @@ export function InheritanceRequestPrint({
             {/* Left column: Commune chief certification */}
             <div className="w-[82mm] shrink-0 text-center leading-normal">
               <div className={cn(ROW, "w-[48mm]")}>
-                <L className="font-moul text-[14px]">លេខ៖</L>
+                <L className="font-normal text-[16px]">លេខ</L>
                 <D v={kh(x.letterRefNo)} grow={1} />
               </div>
               <p className="mt-1 font-bold">បានឃើញ និង បញ្ជាក់ថា</p>
