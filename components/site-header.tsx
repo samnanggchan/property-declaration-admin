@@ -38,7 +38,12 @@ export function SiteHeader() {
     )
       return t("nav.cis");
     if (path === "/analytics") return t("nav.analytics");
-    if (path === "/projects") return t("nav.projects");
+    if (
+      path === "/projects" ||
+      path === "/required-document" ||
+      path.startsWith("/required-document/")
+    )
+      return t("nav.projects");
     if (path === "/team" || path.startsWith("/team/")) return t("nav.team");
     return t("nav.documents");
   }

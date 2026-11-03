@@ -17,7 +17,7 @@ export const DATE_FIELDS = {
   weekday: { x: 50.2, y: 0, maxW: 26, tweak: "" },
   lunarMonth: { x: 76.6, y: 0, maxW: 14.5, tweak: "" },
   zodiac: { x: 101.1, y: 0, maxW: 20, tweak: "" },
-  be: { x: 130, y: 0, tweak: "" },
+  be: { x: 130.5, y: 0, tweak: "" },
 
   gDay: { x: 80.5, y: 8.5, maxW: 8, tweak: "" },
   gMonth: { x: 94.3, y: 8.5, maxW: 10.5, tweak: "" },

@@ -30,6 +30,7 @@ import {
   DatabaseIcon,
   FileChartColumnIcon,
   FileIcon,
+  FileCheck2Icon,
   CommandIcon,
 } from "lucide-react";
 
@@ -61,9 +62,9 @@ const data = {
       icon: <ChartBarIcon />,
     },
     {
-      title: "Projects",
-      url: "/projects",
-      icon: <FolderIcon />,
+      title: "Required Documents",
+      url: "/required-document",
+      icon: <FileCheck2Icon />,
     },
     {
       title: "Users",
