@@ -17,7 +17,8 @@
     "analytics": "Analytics",
     "projects": "Required Documents",
     "team": "Team",
-    "documents": "Documents"
+    "documents": "Documents",
+    "parcels": "Bulk Parcel Update"
   },
   "sidebar": {
     "account": "Account",

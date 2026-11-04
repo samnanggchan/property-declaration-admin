@@ -37,6 +37,7 @@ export function SiteHeader() {
       path.startsWith("/lifecycle/")
     )
       return t("nav.cis");
+    if (path === "/parcels" || path.startsWith("/parcels/")) return t("nav.parcels");
     if (path === "/analytics") return t("nav.analytics");
     if (
       path === "/projects" ||

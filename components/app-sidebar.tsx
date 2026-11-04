@@ -57,6 +57,11 @@ const data = {
       icon: <FileTextIcon />,
     },
     {
+      title: "Bulk Parcel Update",
+      url: "/parcels",
+      icon: <DatabaseIcon />,
+    },
+    {
       title: "Inheritance",
       url: "/inheritance",
       icon: <ChartBarIcon />,

@@ -107,3 +107,70 @@ export const inheritanceApi = {
       method: "DELETE",
     }),
 };
+
+
+export interface BulkUpdateReport {
+  success: boolean;
+  dryRun: boolean;
+  targetTable: string;
+  targetColumn: string;
+  totalRowsInExcel: number;
+  validMappingRows: number;
+  duplicateOldNumbersInExcel: number;
+  duplicateNewNumbersInExcel: number;
+  existingMatchesInDb: number;
+  missingOldNumbersInDb: number;
+  conflictingNewNumbersInDb: number;
+  updatedCount: number;
+  executionTimeMs: number;
+  sampleMissingOldNumbers: string[];
+  sampleConflictingNewNumbers: string[];
+  sampleDuplicateOldNumbers: string[];
+  sampleDuplicateNewNumbers: string[];
+  message: string;
+}
+
+export interface BulkUpdateOptions {
+  dryRun?: boolean;
+  tableName?: string;
+  columnName?: string;
+  batchSize?: number;
+}
+
+export const parcelsApi = {
+  bulkUpdate: async (
+    file: File,
+    options?: BulkUpdateOptions,
+  ): Promise<BulkUpdateReport> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const q = new URLSearchParams();
+    if (options?.dryRun !== undefined) q.set("dryRun", String(options.dryRun));
+    if (options?.tableName) q.set("tableName", options.tableName);
+    if (options?.columnName) q.set("columnName", options.columnName);
+    if (options?.batchSize) q.set("batchSize", String(options.batchSize));
+
+    const qs = q.toString() ? `?${q.toString()}` : "";
+    const url = `${API_BASE}/parcels/bulk-update${qs}`;
+
+    const res = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      throw new Error(data?.message || `Update failed with status ${res.status}`);
+    }
+    return data as BulkUpdateReport;
+  },
+
+  getTemplateInfo: () =>
+    request<{
+      title: string;
+      expectedColumns: { name: string; type: string; description: string; example: string }[];
+      supportedFormats: string[];
+      features: Record<string, string>;
+    }>(`${API_BASE}/parcels/template-info`),
+};
