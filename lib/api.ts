@@ -122,6 +122,8 @@ export interface BulkUpdateReport {
   missingOldNumbersInDb: number;
   conflictingNewNumbersInDb: number;
   updatedCount: number;
+  insertedCount?: number;
+  operation?: "update" | "upsert" | "seed_old" | "insert_new";
   executionTimeMs: number;
   sampleMissingOldNumbers: string[];
   sampleConflictingNewNumbers: string[];
@@ -135,6 +137,7 @@ export interface BulkUpdateOptions {
   tableName?: string;
   columnName?: string;
   batchSize?: number;
+  operation?: "update" | "upsert" | "seed_old" | "insert_new";
 }
 
 export const parcelsApi = {
@@ -150,6 +153,7 @@ export const parcelsApi = {
     if (options?.tableName) q.set("tableName", options.tableName);
     if (options?.columnName) q.set("columnName", options.columnName);
     if (options?.batchSize) q.set("batchSize", String(options.batchSize));
+    if (options?.operation) q.set("operation", options.operation);
 
     const qs = q.toString() ? `?${q.toString()}` : "";
     const url = `${API_BASE}/parcels/bulk-update${qs}`;

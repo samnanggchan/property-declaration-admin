@@ -52,6 +52,7 @@ export default function ParcelsPage() {
   const [columnName, setColumnName] = React.useState("parcel_number");
   const [batchSize, setBatchSize] = React.useState(5000);
   const [dryRun, setDryRun] = React.useState(true);
+  const [operation, setOperation] = React.useState<"update" | "upsert" | "seed_old" | "insert_new">("update");
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -112,6 +113,7 @@ export default function ParcelsPage() {
         tableName: tableName.trim() || "parcels",
         columnName: columnName.trim() || "parcel_number",
         batchSize: Number(batchSize) || 5000,
+        operation,
       };
 
       const result = await parcelsApi.bulkUpdate(file, options);
@@ -280,6 +282,78 @@ export default function ParcelsPage() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Operation Selector */}
+              <div className="mt-4 p-3 rounded-lg border border-border/80 bg-muted/20 space-y-2">
+                <Label className="text-xs font-bold text-foreground">
+                  ជ្រើសរើសប្រភេទប្រតិបត្តិការ (Operation Mode)
+                </Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setOperation("update")}
+                    className={cn(
+                      "p-2.5 rounded-lg border text-left text-xs transition-all cursor-pointer",
+                      operation === "update"
+                        ? "border-primary bg-primary/10 text-primary font-semibold shadow-2xs"
+                        : "border-border/70 hover:bg-muted/40 text-foreground"
+                    )}
+                  >
+                    <div className="font-bold">កែប្រែលេខចាស់ → ថ្មី (Update)</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      ធ្វើបច្ចុប្បន្នភាពលេខចាស់ដែលមានស្រាប់
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setOperation("upsert")}
+                    className={cn(
+                      "p-2.5 rounded-lg border text-left text-xs transition-all cursor-pointer",
+                      operation === "upsert"
+                        ? "border-primary bg-primary/10 text-primary font-semibold shadow-2xs"
+                        : "border-border/70 hover:bg-muted/40 text-foreground"
+                    )}
+                  >
+                    <div className="font-bold">កែប្រែ ឬបញ្ចូលថ្មី (Upsert)</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      កែប្រែបើមាន ឬបញ្ចូលថ្មីបើមិនទាន់មាន
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setOperation("seed_old")}
+                    className={cn(
+                      "p-2.5 rounded-lg border text-left text-xs transition-all cursor-pointer",
+                      operation === "seed_old"
+                        ? "border-primary bg-primary/10 text-primary font-semibold shadow-2xs"
+                        : "border-border/70 hover:bg-muted/40 text-foreground"
+                    )}
+                  >
+                    <div className="font-bold">បញ្ចូលលេខចាស់ 128k (Seed Old)</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      បញ្ចូលទិន្នន័យចាស់ដំបូងទៅក្នុងតារាង
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setOperation("insert_new")}
+                    className={cn(
+                      "p-2.5 rounded-lg border text-left text-xs transition-all cursor-pointer",
+                      operation === "insert_new"
+                        ? "border-primary bg-primary/10 text-primary font-semibold shadow-2xs"
+                        : "border-border/70 hover:bg-muted/40 text-foreground"
+                    )}
+                  >
+                    <div className="font-bold">បញ្ចូលលេខថ្មីផ្ទាល់ (Insert New)</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      បញ្ចូលលេខក្បាលដីថ្មីទាំងអស់ភ្លាមៗ
+                    </div>
+                  </button>
+                </div>
               </div>
 
               {/* Action Buttons */}
