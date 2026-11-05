@@ -49,6 +49,7 @@ export interface Applicant {
   relationHeirs: string; // និងជា...នៃយើងខ្ញុំ (ឧ. ម្ដាយ / ឪពុក)
   propertyType?: string; // ប្រភេទទ្រព្យ (ឧ. ទ្រព្យផ្ទាល់ខ្លួន / ទ្រព្យរួម)
   gender?: string; // ភេទ: "ប្រុស" | "ស្រី" | ""
+  isSpouse?: boolean; // ជាប្ដី ឬប្រពន្ធនៃមតកជន (ប្ដីពោះម៉ាយ / ប្រពន្ធមេម៉ាយ)
 }
 
 export interface Witness {
@@ -104,6 +105,7 @@ export interface InheritanceRequest {
   letterRefNo: string; // លិខិតតំណាង/ដំណាលលេខ
   letterRefDate: string; // ចុះថ្ងៃទី
   applicantPropertyType?: string; // ប្រភេទទ្រព្យអ្នកស្នើសុំ (ឧ. ទ្រព្យផ្ទាល់ខ្លួន / ទ្រព្យរួម)
+  hasSpouse?: boolean; // បង្ហាញផ្នែកប្ដីពោះម៉ាយ / ប្រពន្ធមេម៉ាយលើទំព័រទី២
 
   deceased: Deceased[];
   applicants: Applicant[];
@@ -128,6 +130,7 @@ export const emptyApplicant = (): Applicant => ({
   relationHeirs: "",
   propertyType: "",
   gender: "",
+  isSpouse: false,
 });
 
 export const emptyWitness = (): Witness => ({
@@ -186,6 +189,7 @@ export const emptyRequest = (): InheritanceRequest => ({
   letterRefNo: "",
   letterRefDate: "",
   applicantPropertyType: "",
+  hasSpouse: false,
   deceased: Array.from({ length: DECEASED_SLOTS }, emptyDeceased),
   applicants: Array.from({ length: APPLICANT_SLOTS }, emptyApplicant),
   witnesses: Array.from({ length: WITNESS_SLOTS }, emptyWitness),
@@ -309,6 +313,7 @@ export function normalizeApplicant(raw: unknown): Applicant {
     relationHeirs: typeof a.relationHeirs === "string" ? a.relationHeirs : "",
     propertyType: typeof a.propertyType === "string" ? a.propertyType : "",
     gender: typeof a.gender === "string" ? a.gender : "",
+    isSpouse: typeof a.isSpouse === "boolean" ? a.isSpouse : undefined,
   };
 }
 
@@ -373,6 +378,7 @@ export function normalizeRequest(raw: unknown): InheritanceRequest {
     heirCertNo: typeof r.heirCertNo === "string" ? r.heirCertNo : "",
     letterRefNo: typeof r.letterRefNo === "string" ? r.letterRefNo : "",
     letterRefDate: typeof r.letterRefDate === "string" ? r.letterRefDate : "",
+    hasSpouse: typeof r.hasSpouse === "boolean" ? r.hasSpouse : undefined,
     applicantPropertyType:
       typeof r.applicantPropertyType === "string"
         ? r.applicantPropertyType
@@ -462,6 +468,7 @@ export function sampleRequest(): InheritanceRequest {
     motherName: "",
     relationDeceased: "ប្រពន្ធ",
     relationHeirs: "ម្ដាយ",
+    isSpouse: true,
     propertyType: "ទ្រព្យផ្ទាល់ខ្លួន",
   };
   r.applicants[1] = {

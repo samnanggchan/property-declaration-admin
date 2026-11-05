@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -1017,6 +1018,60 @@ export function InheritanceRequestForm() {
                         </Button>
                       )}
                     </div>
+                  </div>
+                  {/* Checkbox: ជាប្ដី-ប្រពន្ធនៃមតកជន (Spouse Checkbox for Page 2) */}
+                  <div className="flex items-center justify-between rounded-md border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 dark:border-neutral-800 dark:bg-neutral-900/60 shadow-2xs">
+                    <label
+                      htmlFor={`applicant-${i}-spouse`}
+                      className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-foreground select-none"
+                    >
+                      <Checkbox
+                        id={`applicant-${i}-spouse`}
+                        checked={Boolean(a.isSpouse)}
+                        onCheckedChange={(checked) => {
+                          const isNowSpouse = Boolean(checked);
+                          setData((p) => ({
+                            ...p,
+                            hasSpouse: isNowSpouse,
+                            applicants: p.applicants.map((app, idx) => {
+                              if (idx === i) {
+                                return {
+                                  ...app,
+                                  isSpouse: isNowSpouse,
+                                  ...(isNowSpouse && !app.relationDeceased
+                                    ? {
+                                        relationDeceased:
+                                          app.gender === "ប្រុស"
+                                            ? "ប្ដី"
+                                            : app.gender === "ស្រី"
+                                              ? "ប្រពន្ធ"
+                                              : "ប្ដី/ប្រពន្ធ",
+                                      }
+                                    : {}),
+                                };
+                              }
+                              return isNowSpouse ? { ...app, isSpouse: false } : app;
+                            }),
+                          }));
+                        }}
+                      />
+                      <span className="flex items-center gap-1.5">
+                        <span>
+                          ត្រូវជាប្ដី ឬប្រពន្ធនៃមតកជនទី ១ ({data.deceased[0]?.name || "មតកជន"})
+                        </span>
+                      </span>
+                    </label>
+                    <Badge
+                      variant={a.isSpouse ? "default" : "outline"}
+                      className={cn(
+                        "h-5 text-[10px] font-medium transition-colors",
+                        a.isSpouse
+                          ? "bg-emerald-600 text-white hover:bg-emerald-600"
+                          : "text-muted-foreground border-neutral-300 dark:border-neutral-700"
+                      )}
+                    >
+                      {a.isSpouse ? "បង្ហាញលើទំព័រទី២" : "ទទេ (Blank)"}
+                    </Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <Field

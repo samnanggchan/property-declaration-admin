@@ -546,8 +546,30 @@ export function InheritanceRequestPrint({
   const activeApplicants = data.applicants.filter((a) => a.name?.trim());
   const activeWitnesses = data.witnesses.filter((w) => w.name?.trim());
 
-  /* surviving spouse (page 1) */
+  /* surviving spouse (page 2) */
+  const explicitSpouse = data.applicants.some((a) => a.isSpouse === true);
+  const explicitNonSpouse =
+    data.applicants.length > 0 &&
+    data.applicants.every((a) => a.isSpouse === false);
+
+  const hasSpouse = explicitSpouse
+    ? true
+    : explicitNonSpouse
+      ? false
+      : typeof data.hasSpouse === "boolean"
+        ? data.hasSpouse
+        : Boolean(
+            data.applicants.some(
+              (a) =>
+                a.relationDeceased?.includes("ប្រពន្ធ") ||
+                a.relationDeceased?.includes("ប្ដី"),
+            ) ||
+            data.authorizedRelationDeceased?.includes("ប្រពន្ធ") ||
+            data.authorizedRelationDeceased?.includes("ប្ដី"),
+          );
+
   const spouseApplicant =
+    data.applicants.find((a) => a.isSpouse) ||
     data.applicants.find(
       (a) =>
         a.relationDeceased?.includes("ប្រពន្ធ") ||
@@ -562,20 +584,24 @@ export function InheritanceRequestPrint({
     data.applicants.find((a) => a.name?.trim()) ||
     data.applicants[0];
 
-  const spouseName = (
+  const rawSpouseName = (
     (data as unknown as { spouseName?: string }).spouseName ||
     spouseApplicant?.name ||
     data.authorizedPerson ||
     ""
   ).trim();
 
-  const spouseAge =
+  const rawSpouseAge =
     (data as unknown as { spouseAge?: string }).spouseAge ||
     (spouseApplicant?.dob
       ? ageNumber(spouseApplicant.dob)
       : a1?.dob
         ? ageNumber(a1.dob)
         : "");
+
+  const spouseName = hasSpouse ? rawSpouseName : "";
+  const spouseAge = hasSpouse ? rawSpouseAge : "";
+  const spouseDeceasedName = hasSpouse ? (d1.name || deceasedNames) : "";
 
   /* children */
   const p1Children = data.children.slice(0, FORM.pageOneChildren);
@@ -1154,7 +1180,7 @@ export function InheritanceRequestPrint({
                 <L>ឆ្នាំ ជាប្ដី ឬប្រពន្ធដើមនៃមតកជនឈ្មោះ</L>
               </div>
               <div className={ROW}>
-                <D v={deceasedNames} grow={2} />
+                <D v={spouseDeceasedName} grow={2} />
                 <L>ដូចមានសំបុត្រអាពាហ៍ពិពាហ៍លេខ</L>
                 <D grow={2} />
               </div>
