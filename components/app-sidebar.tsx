@@ -52,6 +52,11 @@ const data = {
       icon: <FileTextIcon />,
     },
     {
+      title: "Transfer Application",
+      url: "/transfer-application",
+      icon: <FileTextIcon />,
+    },
+    {
       title: "Cadastral Information System",
       url: "/cis",
       icon: <FileTextIcon />,
