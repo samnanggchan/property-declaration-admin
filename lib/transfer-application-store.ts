@@ -81,18 +81,32 @@ export const transferApplicationApi = {
       const q = options.search.toLowerCase().trim();
       filtered = filtered.filter((item) => {
         const title = (item.title || "").toLowerCase();
-        const parcel = (item.parcel_and_property.parcel_number || "").toLowerCase();
+        const parcel = (
+          item.parcel_and_property.parcel_number || ""
+        ).toLowerCase();
         const loc = (item.parcel_and_property.location || "").toLowerCase();
         const sNames = item.sellers
-          .map((s) => `${s.husband.full_name} ${s.wife.full_name} ${s.person.full_name} ${s.legal_entity.entity_name}`)
+          .map(
+            (s) =>
+              `${s.husband.full_name} ${s.wife.full_name} ${s.person.full_name} ${s.legal_entity.entity_name}`,
+          )
           .join(" ")
           .toLowerCase();
         const bNames = item.buyers
-          .map((b) => `${b.husband.full_name} ${b.wife.full_name} ${b.person.full_name} ${b.legal_entity.entity_name}`)
+          .map(
+            (b) =>
+              `${b.husband.full_name} ${b.wife.full_name} ${b.person.full_name} ${b.legal_entity.entity_name}`,
+          )
           .join(" ")
           .toLowerCase();
 
-        return title.includes(q) || parcel.includes(q) || loc.includes(q) || sNames.includes(q) || bNames.includes(q);
+        return (
+          title.includes(q) ||
+          parcel.includes(q) ||
+          loc.includes(q) ||
+          sNames.includes(q) ||
+          bNames.includes(q)
+        );
       });
     }
 
@@ -109,7 +123,9 @@ export const transferApplicationApi = {
     return found ? normalizeTransferApplication(found) : null;
   },
 
-  async create(payload: Omit<TransferApplication, "id">): Promise<TransferApplication> {
+  async create(
+    payload: Omit<TransferApplication, "id">,
+  ): Promise<TransferApplication> {
     const all = readRecords();
     const now = new Date().toISOString();
     const id = `transfer_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -124,7 +140,10 @@ export const transferApplicationApi = {
     return created;
   },
 
-  async update(id: string, payload: Partial<TransferApplication>): Promise<TransferApplication> {
+  async update(
+    id: string,
+    payload: Partial<TransferApplication>,
+  ): Promise<TransferApplication> {
     const all = readRecords();
     const idx = all.findIndex((item) => item.id === id);
     const now = new Date().toISOString();
@@ -158,4 +177,3 @@ export const transferApplicationApi = {
     return { success: true };
   },
 };
-

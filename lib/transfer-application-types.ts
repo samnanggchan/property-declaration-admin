@@ -37,11 +37,13 @@ export const PURPOSES = [
   { key: "part", label: "ការផ្ទេរកម្មសិទ្ធិមួយផ្នែក" },
   {
     key: "coWhole",
-    label: "ការផ្ទេរចំណែកកម្មសិទ្ធិអវិភាគទាំងមូលរបស់ម្ចាស់កម្មសិទ្ធិអវិភាគឈ្មោះ",
+    label:
+      "ការផ្ទេរចំណែកកម្មសិទ្ធិអវិភាគទាំងមូលរបស់ម្ចាស់កម្មសិទ្ធិអវិភាគឈ្មោះ",
   },
   {
     key: "coPart",
-    label: "ការផ្ទេរចំណែកកម្មសិទ្ធិអវិភាគមួយផ្នែករបស់ម្ចាស់កម្មសិទ្ធិអវិភាគឈ្មោះ",
+    label:
+      "ការផ្ទេរចំណែកកម្មសិទ្ធិអវិភាគមួយផ្នែករបស់ម្ចាស់កម្មសិទ្ធិអវិភាគឈ្មោះ",
   },
 ] as const;
 
@@ -305,7 +307,8 @@ export function createSampleTransferApplication(): TransferApplication {
     title: "ពាក្យសុំផ្ទេរកម្មសិទ្ធិ - ក្បាលដី 12050605-4575",
     parcel_and_property: {
       parcel_number: "12050605-4575",
-      location: "រាជធានីភ្នំពេញ ខណ្ឌពោធិ៍សែនជ័យ សង្កាត់ចោមចៅទី១ ភូមិត្រពាំងថ្លឹង១",
+      location:
+        "រាជធានីភ្នំពេញ ខណ្ឌពោធិ៍សែនជ័យ សង្កាត់ចោមចៅទី១ ភូមិត្រពាំងថ្លឹង១",
       streetNo: "២១៧",
       village: "ត្រពាំងថ្លឹង១",
       sangkat: "ចោមចៅទី១",
@@ -335,7 +338,8 @@ export function createSampleTransferApplication(): TransferApplication {
     causeDate: "06.11.2026",
     newCoOwnerShare: "",
     date: "06.11.2026",
-    attachments: "វិញ្ញាបនប័ត្រសម្គាល់ម្ចាស់អចលនវត្ថុ, អត្តសញ្ញាណប័ណ្ណ, សៀវភៅគ្រួសារ",
+    attachments:
+      "វិញ្ញាបនប័ត្រសម្គាល់ម្ចាស់អចលនវត្ថុ, អត្តសញ្ញាណប័ណ្ណ, សៀវភៅគ្រួសារ",
     sellers: [
       {
         seller_type: "INDIVIDUAL",
@@ -351,7 +355,8 @@ export function createSampleTransferApplication(): TransferApplication {
           pob: "ឃុំត្រពាំងក្រញូង ស្រុកត្រាំកក់ ខេត្តតាកែវ",
           father_name: "ឈូ ស៊ាន",
           mother_name: "សោម យ៉ាន",
-          current_address: "ភូមិត្រពាំងថ្លឹង១ សង្កាត់ចោមចៅទី១ ខណ្ឌពោធិ៍សែនជ័យ រាជធានីភ្នំពេញ",
+          current_address:
+            "ភូមិត្រពាំងថ្លឹង១ សង្កាត់ចោមចៅទី១ ខណ្ឌពោធិ៍សែនជ័យ រាជធានីភ្នំពេញ",
         },
         wife: {
           full_name: "ណាង គឹមហុង",
@@ -363,7 +368,8 @@ export function createSampleTransferApplication(): TransferApplication {
           pob: "ឃុំត្រពាំងក្រញូង ស្រុកត្រាំកក់ ខេត្តតាកែវ",
           father_name: "ណាង សឿន",
           mother_name: "អ៊ុច សុផាត",
-          current_address: "ភូមិត្រពាំងថ្លឹង១ សង្កាត់ចោមចៅទី១ ខណ្ឌពោធិ៍សែនជ័យ រាជធានីភ្នំពេញ",
+          current_address:
+            "ភូមិត្រពាំងថ្លឹង១ សង្កាត់ចោមចៅទី១ ខណ្ឌពោធិ៍សែនជ័យ រាជធានីភ្នំពេញ",
         },
         person: emptyPersonData(),
         legal_entity: emptyLegalEntityData(),
@@ -384,7 +390,8 @@ export function createSampleTransferApplication(): TransferApplication {
           pob: "សង្កាត់ផ្សារដេប៉ូ ខណ្ឌទួលគោក រាជធានីភ្នំពេញ",
           father_name: "លាង ហេង",
           mother_name: "តន់ សារី",
-          current_address: "ផ្ទះលេខ ៤៥ ផ្លូវលេខ ៣៧១ ភូមិត្នោតជ្រុំ សង្កាត់បឹងទំពន់ទី១ ខណ្ឌមានជ័យ រាជធានីភ្នំពេញ",
+          current_address:
+            "ផ្ទះលេខ ៤៥ ផ្លូវលេខ ៣៧១ ភូមិត្នោតជ្រុំ សង្កាត់បឹងទំពន់ទី១ ខណ្ឌមានជ័យ រាជធានីភ្នំពេញ",
         },
         wife: {
           full_name: "មិត្ត ភាព",
@@ -396,7 +403,8 @@ export function createSampleTransferApplication(): TransferApplication {
           pob: "សង្កាត់ផ្សារដេប៉ូ ខណ្ឌទួលគោក រាជធានីភ្នំពេញ",
           father_name: "មិត្ត គង់",
           mother_name: "ចាន់ ថន",
-          current_address: "ផ្ទះលេខ ៤៥ ផ្លូវលេខ ៣៧១ ភូមិត្នោតជ្រុំ សង្កាត់បឹងទំពន់ទី១ ខណ្ឌមានជ័យ រាជធានីភ្នំពេញ",
+          current_address:
+            "ផ្ទះលេខ ៤៥ ផ្លូវលេខ ៣៧១ ភូមិត្នោតជ្រុំ សង្កាត់បឹងទំពន់ទី១ ខណ្ឌមានជ័យ រាជធានីភ្នំពេញ",
         },
         person: emptyPersonData(),
         legal_entity: emptyLegalEntityData(),
@@ -413,7 +421,8 @@ export function createSampleTransferApplication(): TransferApplication {
         full_name: "ទន់ សុភាព",
         id_card_number: "090 455 823 (02)",
         dob_or_age: "1980-10-23",
-        residence_address: "ភូមិព្រែកតាគង់ សង្កាត់ចាក់អង្រែលើ ខណ្ឌមានជ័យ រាជធានីភ្នំពេញ",
+        residence_address:
+          "ភូមិព្រែកតាគង់ សង្កាត់ចាក់អង្រែលើ ខណ្ឌមានជ័យ រាជធានីភ្នំពេញ",
       },
     ],
   };
@@ -421,20 +430,29 @@ export function createSampleTransferApplication(): TransferApplication {
 
 /* ═════════════════════════ Normalizer ═════════════════════════ */
 
-export function normalizeTransferApplication(raw: unknown): TransferApplication {
+export function normalizeTransferApplication(
+  raw: unknown,
+): TransferApplication {
   const base = emptyTransferApplication();
   if (!raw || typeof raw !== "object") return base;
   const o = raw as Record<string, unknown>;
 
-  const rawP = (o.parcel_and_property && typeof o.parcel_and_property === "object"
-    ? o.parcel_and_property
-    : {}) as Record<string, unknown>;
-  const rawChar = (rawP.property_characteristics && typeof rawP.property_characteristics === "object"
-    ? rawP.property_characteristics
-    : {}) as Record<string, unknown>;
-  const rawBound = (rawP.boundaries && typeof rawP.boundaries === "object"
-    ? rawP.boundaries
-    : {}) as Record<string, unknown>;
+  const rawP = (
+    o.parcel_and_property && typeof o.parcel_and_property === "object"
+      ? o.parcel_and_property
+      : {}
+  ) as Record<string, unknown>;
+  const rawChar = (
+    rawP.property_characteristics &&
+    typeof rawP.property_characteristics === "object"
+      ? rawP.property_characteristics
+      : {}
+  ) as Record<string, unknown>;
+  const rawBound = (
+    rawP.boundaries && typeof rawP.boundaries === "object"
+      ? rawP.boundaries
+      : {}
+  ) as Record<string, unknown>;
 
   const parcel_and_property: ParcelAndProperty = {
     parcel_number: String(rawP.parcel_number || "").trim(),
@@ -445,12 +463,17 @@ export function normalizeTransferApplication(raw: unknown): TransferApplication 
     khan: String(rawP.khan || "").trim(),
     city: String(rawP.city || "រាជធានីភ្នំពេញ").trim(),
     property_characteristics: {
-      property_type: (rawChar.property_type as PropertyType) || "ទ្រព្យរួមប្តីប្រពន្ធ",
+      property_type:
+        (rawChar.property_type as PropertyType) || "ទ្រព្យរួមប្តីប្រពន្ធ",
       size: String(rawChar.size || "").trim(),
       land_use_type: String(rawChar.land_use_type || "សាងសង់").trim(),
       usage_nature: String(rawChar.usage_nature || "ឯកជន").trim(),
-      source_of_acquisition: String(rawChar.source_of_acquisition || "ទិញ").trim(),
-      acquisition_year: String(rawChar.acquisition_year || new Date().getFullYear()).trim(),
+      source_of_acquisition: String(
+        rawChar.source_of_acquisition || "ទិញ",
+      ).trim(),
+      acquisition_year: String(
+        rawChar.acquisition_year || new Date().getFullYear(),
+      ).trim(),
     },
     boundaries: {
       north: String(rawBound.north || "").trim(),
@@ -458,40 +481,46 @@ export function normalizeTransferApplication(raw: unknown): TransferApplication 
       east: String(rawBound.east || "").trim(),
       west: String(rawBound.west || "").trim(),
     },
-    registration_date: String(rawP.registration_date || base.parcel_and_property.registration_date).trim(),
+    registration_date: String(
+      rawP.registration_date || base.parcel_and_property.registration_date,
+    ).trim(),
   };
 
   const cleanPerson = (p?: PersonData): PersonData => {
     if (!p) return emptyPersonData();
     return {
       ...p,
-      full_name: (p.full_name || "").replace(/^([ក-អ]|[A-Za-z0-9]+)\s*[\.\)\-]\s*/, "").trim(),
+      full_name: (p.full_name || "")
+        .replace(/^([ក-អ]|[A-Za-z0-9]+)\s*[\.\)\-]\s*/, "")
+        .trim(),
     };
   };
 
-  const sellers = Array.isArray(o.sellers) && o.sellers.length > 0
-    ? o.sellers.slice(0, MAX_PARTIES).map((s) => ({
-        ...emptySellerParty(),
-        ...(typeof s === "object" && s !== null ? s : {}),
-        husband: cleanPerson((s as any)?.husband),
-        wife: cleanPerson((s as any)?.wife),
-        person: cleanPerson((s as any)?.person),
-        property_classification:
-          (s as any)?.property_classification || "ទ្រព្យរួមប្តីប្រពន្ធ",
-      }))
-    : [emptySellerParty()];
+  const sellers =
+    Array.isArray(o.sellers) && o.sellers.length > 0
+      ? o.sellers.slice(0, MAX_PARTIES).map((s) => ({
+          ...emptySellerParty(),
+          ...(typeof s === "object" && s !== null ? s : {}),
+          husband: cleanPerson((s as any)?.husband),
+          wife: cleanPerson((s as any)?.wife),
+          person: cleanPerson((s as any)?.person),
+          property_classification:
+            (s as any)?.property_classification || "ទ្រព្យរួមប្តីប្រពន្ធ",
+        }))
+      : [emptySellerParty()];
 
-  const buyers = Array.isArray(o.buyers) && o.buyers.length > 0
-    ? o.buyers.slice(0, MAX_PARTIES).map((b) => ({
-        ...emptyBuyerParty(),
-        ...(typeof b === "object" && b !== null ? b : {}),
-        husband: cleanPerson((b as any)?.husband),
-        wife: cleanPerson((b as any)?.wife),
-        person: cleanPerson((b as any)?.person),
-        property_classification:
-          (b as any)?.property_classification || "ទ្រព្យរួមប្តីប្រពន្ធ",
-      }))
-    : [emptyBuyerParty()];
+  const buyers =
+    Array.isArray(o.buyers) && o.buyers.length > 0
+      ? o.buyers.slice(0, MAX_PARTIES).map((b) => ({
+          ...emptyBuyerParty(),
+          ...(typeof b === "object" && b !== null ? b : {}),
+          husband: cleanPerson((b as any)?.husband),
+          wife: cleanPerson((b as any)?.wife),
+          person: cleanPerson((b as any)?.person),
+          property_classification:
+            (b as any)?.property_classification || "ទ្រព្យរួមប្តីប្រពន្ធ",
+        }))
+      : [emptyBuyerParty()];
 
   const rawW = Array.isArray(o.witnesses) ? o.witnesses : [];
   const witnesses: [WitnessData, WitnessData] = [
@@ -519,4 +548,3 @@ export function normalizeTransferApplication(raw: unknown): TransferApplication 
     updatedAt: typeof o.updatedAt === "string" ? o.updatedAt : undefined,
   };
 }
-
