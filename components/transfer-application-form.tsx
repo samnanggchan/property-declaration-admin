@@ -952,23 +952,6 @@ export function TransferApplicationForm() {
           </button>
           <button
             type="button"
-            onClick={() => setPrintPage("annexSellers")}
-            className={cn(
-              "px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1",
-              printPage === "annexSellers"
-                ? "bg-background text-foreground shadow-2xs font-semibold"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <span>ឧបសម្ព័ន្ធអ្នកលក់</span>
-            {data.sellers.length > 1 && (
-              <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">
-                {kh(data.sellers.length)}
-              </Badge>
-            )}
-          </button>
-          <button
-            type="button"
             onClick={() => setPrintPage("annexBuyers")}
             className={cn(
               "px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1",
@@ -981,6 +964,23 @@ export function TransferApplicationForm() {
             {data.buyers.length > 1 && (
               <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">
                 {kh(data.buyers.length)}
+              </Badge>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setPrintPage("annexSellers")}
+            className={cn(
+              "px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1",
+              printPage === "annexSellers"
+                ? "bg-background text-foreground shadow-2xs font-semibold"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <span>ឧបសម្ព័ន្ធអ្នកលក់</span>
+            {data.sellers.length > 1 && (
+              <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">
+                {kh(data.sellers.length)}
               </Badge>
             )}
           </button>
@@ -1905,7 +1905,7 @@ export function TransferApplicationForm() {
                             label="ឈ្មោះពេញ (Full Name) *"
                             value={data.witnesses[0]?.full_name}
                             onChange={(v) => patchWitness(0, { full_name: v })}
-                            placeholder="ឧ. ខ. ឡឺក សុជា"
+                            placeholder="ឧ. ឡឺក សុជា"
                             required
                           />
 

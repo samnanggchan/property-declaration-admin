@@ -342,7 +342,7 @@ export function createSampleTransferApplication(): TransferApplication {
         property_classification: "ទ្រព្យរួមប្តីប្រពន្ធ",
         marital_status: "MARRIED",
         husband: {
-          full_name: "ខ. ឈូ ស៊ីសេង",
+          full_name: "ឈូ ស៊ីសេង",
           id_card_number: "010352372(02)",
           dob: "1973-02-22",
           nationality: "ខ្មែរ",
@@ -404,7 +404,7 @@ export function createSampleTransferApplication(): TransferApplication {
     ],
     witnesses: [
       {
-        full_name: "ខ. ឡឺក សុជា",
+        full_name: "ឡឺក សុជា",
         id_card_number: "090 203 564 (01)",
         dob_or_age: "2004-10-23",
         residence_address: "១ឃុំ ចក្រី ស្រុក រមាសហែក ខេត្ត ស្វាយរៀង",
@@ -461,10 +461,21 @@ export function normalizeTransferApplication(raw: unknown): TransferApplication 
     registration_date: String(rawP.registration_date || base.parcel_and_property.registration_date).trim(),
   };
 
+  const cleanPerson = (p?: PersonData): PersonData => {
+    if (!p) return emptyPersonData();
+    return {
+      ...p,
+      full_name: (p.full_name || "").replace(/^([ក-អ]|[A-Za-z0-9]+)\s*[\.\)\-]\s*/, "").trim(),
+    };
+  };
+
   const sellers = Array.isArray(o.sellers) && o.sellers.length > 0
     ? o.sellers.slice(0, MAX_PARTIES).map((s) => ({
         ...emptySellerParty(),
         ...(typeof s === "object" && s !== null ? s : {}),
+        husband: cleanPerson((s as any)?.husband),
+        wife: cleanPerson((s as any)?.wife),
+        person: cleanPerson((s as any)?.person),
         property_classification:
           (s as any)?.property_classification || "ទ្រព្យរួមប្តីប្រពន្ធ",
       }))
@@ -474,6 +485,9 @@ export function normalizeTransferApplication(raw: unknown): TransferApplication 
     ? o.buyers.slice(0, MAX_PARTIES).map((b) => ({
         ...emptyBuyerParty(),
         ...(typeof b === "object" && b !== null ? b : {}),
+        husband: cleanPerson((b as any)?.husband),
+        wife: cleanPerson((b as any)?.wife),
+        person: cleanPerson((b as any)?.person),
         property_classification:
           (b as any)?.property_classification || "ទ្រព្យរួមប្តីប្រពន្ធ",
       }))

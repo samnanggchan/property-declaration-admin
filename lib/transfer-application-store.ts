@@ -127,14 +127,24 @@ export const transferApplicationApi = {
   async update(id: string, payload: Partial<TransferApplication>): Promise<TransferApplication> {
     const all = readRecords();
     const idx = all.findIndex((item) => item.id === id);
+    const now = new Date().toISOString();
     if (idx === -1) {
-      throw new Error(`Record with id ${id} not found.`);
+      // Upsert: Create record if it doesn't exist yet (e.g. sample data or newly assigned id)
+      const created: TransferApplication = normalizeTransferApplication({
+        ...payload,
+        id,
+        createdAt: (payload as TransferApplication).createdAt || now,
+        updatedAt: now,
+      });
+      all.unshift(created);
+      writeRecords(all);
+      return created;
     }
     const updated: TransferApplication = {
       ...all[idx],
       ...payload,
       id,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     };
     all[idx] = normalizeTransferApplication(updated);
     writeRecords(all);
