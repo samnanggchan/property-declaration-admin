@@ -101,16 +101,57 @@ function parseKhmerAddress(address: string | undefined | null) {
   };
 }
 
-/** Splits date into Day, Month, Year */
+const KHMER_MONTH_NAMES: Record<number, string> = {
+  1: "មករា",
+  2: "កុម្ភៈ",
+  3: "មីនា",
+  4: "មេសា",
+  5: "ឧសភា",
+  6: "មិថុនា",
+  7: "កក្កដា",
+  8: "សីហា",
+  9: "កញ្ញា",
+  10: "តុលា",
+  11: "វិច្ឆិកា",
+  12: "ធ្នូ",
+};
+
+/** Convert month representation (digits 1-12 or Khmer numerals ០១-១២) to Khmer Gregorian month name */
+export function toKhmerMonthName(monthStr: string | undefined | null): string {
+  if (!monthStr) return "";
+  const clean = monthStr.trim();
+  if (Object.values(KHMER_MONTH_NAMES).includes(clean)) return clean;
+  const numStr = toArabicNum(clean).replace(/\D/g, "");
+  const num = parseInt(numStr, 10);
+  if (num >= 1 && num <= 12) {
+    return KHMER_MONTH_NAMES[num];
+  }
+  return clean;
+}
+
+/** Splits date into Day, Month (in Khmer month name, e.g. "វិច្ឆិកា"), Year */
 function parseDateParts(dateStr: string | undefined | null) {
   if (!dateStr) return { day: "", month: "", year: "" };
   const clean = dateStr.trim();
-  const parts = clean.split(/[./\-\s]/);
+  const parts = clean.split(/[./\-\s]+/);
   if (parts.length >= 3) {
+    let day = "";
+    let monthRaw = "";
+    let year = "";
+    // If ISO format YYYY-MM-DD
+    if (parts[0].length === 4) {
+      year = parts[0];
+      monthRaw = parts[1];
+      day = parts[2];
+    } else {
+      day = parts[0];
+      monthRaw = parts[1];
+      year = parts[2];
+    }
     return {
-      day: kh(parts[0]),
-      month: kh(parts[1]),
-      year: kh(parts[2]),
+      day: kh(day),
+      month: toKhmerMonthName(monthRaw),
+      year: kh(year),
     };
   }
   return { day: "", month: "", year: kh(clean) };
@@ -351,12 +392,12 @@ export function TransferApplicationPrint({
       {showP1 && (
         <A4Page
           mode="fixed"
-          className="bg-white text-black font-battambang text-[16px] leading-[1.85] flex flex-col justify-between pt-3 pb-3 px-8 print:shadow-none shadow-md mb-8 print:mb-0 print:border-none"
+          className="bg-white text-black font-battambang text-[15px] leading-[1.85] flex flex-col justify-between pt-3 pb-3 px-8 print:shadow-none shadow-md mb-8 print:mb-0 print:border-none"
         >
           <div className="space-y-2.5">
             {/* Header: Kingdom of Cambodia + Right Department */}
             <div className="relative text-center pt-1">
-              <h1 className="font-moul text-[16px] tracking-wide text-black">
+              <h1 className="font-moul text-[15px] tracking-wide text-black">
                 ព្រះរាជាណាចក្រកម្ពុជា
               </h1>
               <h2 className="font-moul text-[14px] tracking-wide text-black mt-1">
@@ -389,13 +430,13 @@ export function TransferApplicationPrint({
 
             {/* Document Main Title */}
             <div className="pt-2 pb-1 text-center">
-              <h2 className="font-moul text-[16px] text-black tracking-wide">
+              <h2 className="font-moul text-[15px] text-black tracking-wide">
                 ពាក្យសុំចុះបញ្ជីអំពីការផ្ទេរកម្មសិទ្ធិ
               </h2>
             </div>
 
             {/* 7-Line Applicant Paragraph (Exact match to original page 1) */}
-            <div className="w-full space-y-1 text-[16px] leading-[1.85] font-battambang text-black">
+            <div className="w-full space-y-1 text-[15px] leading-[1.85] font-battambang text-black">
               {/* Line 1: Buyer (បុគ្គលមានសិទ្ធិចុះបញ្ជី) */}
               <div className="flex items-baseline w-full">
                 <span className="w-10 shrink-0 inline-block" />
@@ -414,7 +455,7 @@ export function TransferApplicationPrint({
                   value={ageNumber(primaryBuyer.dob)}
                   className="w-14 mx-1 text-center"
                 />
-                <span className="shrink-0 ml-0.5 text-[16px]">
+                <span className="shrink-0 ml-0.5 text-[15px]">
                   ឆ្នាំ
                   <sup className="text-[11px] font-normal leading-none">
                     (១)
@@ -492,7 +533,7 @@ export function TransferApplicationPrint({
                   value={ageNumber(primarySeller.dob)}
                   className="w-14 mx-1 text-center"
                 />
-                <span className="shrink-0 ml-0.5 text-[16px]">ឆ្នាំ</span>
+                <span className="shrink-0 ml-0.5 text-[15px]">ឆ្នាំ</span>
               </div>
 
               {/* Line 5 */}
@@ -570,7 +611,7 @@ export function TransferApplicationPrint({
             </div>
 
             {/* Subject & Reference */}
-            <div className="pt-1 space-y-1 text-[16px] leading-[1.8] font-battambang">
+            <div className="pt-1 space-y-1 text-[15px] leading-[1.8] font-battambang">
               <div className="flex items-start gap-1">
                 <span className="font-moul shrink-0 w-24 underline text-[14px]">
                   កម្មវត្ថុ
@@ -591,7 +632,7 @@ export function TransferApplicationPrint({
                     }
                     className="flex-1 mx-1.5 font-semibold text-black"
                   />
-                  <span className="text-[16px] text-black/80">
+                  <span className="text-[15px] text-black">
                     (កម្មសិទ្ធិទាំងមូល ឬកម្មសិទ្ធិមួយផ្នែក
                     ឬចំណែកកម្មសិទ្ធិអវិភាគទាំងមូល
                     ឬចំណែកកម្មសិទ្ធិអវិភាគមួយផ្នែក)
@@ -638,7 +679,7 @@ export function TransferApplicationPrint({
             </div>
 
             {/* Intro Sentence */}
-            <div className="pt-1 text-[16px] font-battambang">
+            <div className="pt-1 text-[15px] font-battambang">
               <p className="indent-8 font-medium">
                 តាមកម្មវត្ថុ និងយោងខាងលើ
                 យើងខ្ញុំសូមស្នើសុំចុះបញ្ជីអំពីការផ្ទេរកម្មសិទ្ធិដូចខាងក្រោម ៖
@@ -646,7 +687,7 @@ export function TransferApplicationPrint({
             </div>
 
             {/* Section ក: គោលបំណងនៃការចុះបញ្ជី */}
-            <div className="text-[16px] leading-relaxed font-battambang">
+            <div className="text-[15px] leading-relaxed font-battambang">
               <h4 className="text-black">ក- គោលបំណងនៃការចុះបញ្ជី ៖</h4>
               <div className="ml-6 space-y-0.5">
                 <div className="flex items-center gap-2">
@@ -700,7 +741,7 @@ export function TransferApplicationPrint({
             </div>
 
             {/* Section ខ: មូលហេតុ (First 3 on page 1) */}
-            <div className="text-[16px] leading-relaxed font-battambang">
+            <div className="text-[15px] leading-relaxed font-battambang">
               <h4 className="text-black">ខ- មូលហេតុ ៖</h4>
               <div className="ml-6 space-y-0.5">
                 <div className="flex flex-wrap items-baseline gap-1">
@@ -715,7 +756,7 @@ export function TransferApplicationPrint({
                   <span>ខែ</span>
                   <DotLine
                     value={isSale ? transferDate.month : null}
-                    className="w-16 text-center"
+                    className="w-24 text-center"
                   />
                   <span>ឆ្នាំ</span>
                   <DotLine
@@ -737,7 +778,7 @@ export function TransferApplicationPrint({
                   <span>ខែ</span>
                   <DotLine
                     value={isGift ? transferDate.month : null}
-                    className="w-16 text-center"
+                    className="w-24 text-center"
                   />
                   <span>ឆ្នាំ</span>
                   <DotLine
@@ -759,7 +800,7 @@ export function TransferApplicationPrint({
                   <span>ខែ</span>
                   <DotLine
                     value={isExchange ? transferDate.month : null}
-                    className="w-16 text-center"
+                    className="w-24 text-center"
                   />
                   <span>ឆ្នាំ</span>
                   <DotLine
@@ -773,7 +814,20 @@ export function TransferApplicationPrint({
           </div>
 
           {/* Footnotes at Bottom of Page 1 (Exact match to Photo 1) */}
-          <div className="mt-2 pt-1 text-[12px] leading-[1.45] text-neutral-800 space-y-1 border-t border-black/70 font-battambang">
+          <div className="mt-2 pt-1 text-[11px] leading-[1.45] text-neutral-800 space-y-1 font-battambang">
+            {/* Short horizontal separator line above footnotes */}
+            <div className="w-28 border-t-[1.5px] border-black mb-1.5" />
+
+            <div className="flex items-start gap-1">
+              <span className="shrink-0 font-bold">
+                – <sup>(១)</sup> និង <sup>(២)</sup>
+              </span>
+              <span>
+                ក្នុងករណីបុគ្គលមានសិទ្ធិចុះបញ្ជី
+                ឬបុគ្គលមានកាតព្វកិច្ចចុះបញ្ជីជានីតិបុគ្គល ត្រូវសរសេរនាមករណ៍
+                និងអាសយដ្ឋានដែលជាទីស្នាក់ការរបស់នីតិបុគ្គលនោះ។
+              </span>
+            </div>
             <div className="flex items-start gap-1">
               <span className="shrink-0 font-bold">
                 – <sup>(៣)</sup>
@@ -786,7 +840,9 @@ export function TransferApplicationPrint({
               </span>
             </div>
             <div className="flex items-start gap-1">
-              <span className="shrink-0 font-bold underline">ចំណាំ៖</span>
+              <span className="shrink-0 font-bold">
+                – <span className="underline">ចំណាំ៖</span>
+              </span>
               <span className="text-justify">
                 សូមជម្រាបថា
                 ដើម្បីជៀសវាងការយឺតយ៉ាវក្នុងការទទួលបាននូវលំដាប់អាទិភាពដោយសារហេតុ
@@ -806,11 +862,11 @@ export function TransferApplicationPrint({
       {showP2 && (
         <A4Page
           mode="fixed"
-          className="bg-white text-black font-battambang text-[16px] leading-[1.85] flex flex-col justify-between pt-4 pb-4 px-8 print:shadow-none shadow-md mb-8 print:mb-0 print:border-none"
+          className="bg-white text-black font-battambang text-[15px] leading-[1.85] flex flex-col justify-between pt-4 pb-4 px-8 print:shadow-none shadow-md mb-8 print:mb-0 print:border-none"
         >
-          <div className="space-y-3 font-battambang text-[16px]">
+          <div className="space-y-3 font-battambang text-[15px]">
             {/* Continuation of Section ខ from Page 1 (Exact match to Photo 2) */}
-            <div className="text-[16px] leading-relaxed">
+            <div className="text-[15px] leading-relaxed">
               <div className="ml-6 space-y-0.5">
                 <div className="flex flex-wrap items-baseline gap-1">
                   <span className="font-bold w-4 text-center">
@@ -824,7 +880,7 @@ export function TransferApplicationPrint({
                   <span>ខែ</span>
                   <DotLine
                     value={isSuccession ? transferDate.month : null}
-                    className="w-16 text-center"
+                    className="w-24 text-center"
                   />
                   <span>ឆ្នាំ</span>
                   <DotLine
@@ -846,7 +902,7 @@ export function TransferApplicationPrint({
                   <span>ខែ</span>
                   <DotLine
                     value={isInheritanceSplit ? transferDate.month : null}
-                    className="w-16 text-center"
+                    className="w-24 text-center"
                   />
                   <span>ឆ្នាំ</span>
                   <DotLine
@@ -868,7 +924,7 @@ export function TransferApplicationPrint({
                   <span>ខែ</span>
                   <DotLine
                     value={isBequest ? transferDate.month : null}
-                    className="w-16 text-center"
+                    className="w-24 text-center"
                   />
                   <span>ឆ្នាំ</span>
                   <DotLine
@@ -890,7 +946,7 @@ export function TransferApplicationPrint({
                   <span>ខែ</span>
                   <DotLine
                     value={isJudgment ? transferDate.month : null}
-                    className="w-16 text-center"
+                    className="w-24 text-center"
                   />
                   <span>ឆ្នាំ</span>
                   <DotLine
@@ -912,7 +968,7 @@ export function TransferApplicationPrint({
                   <span>ខែ</span>
                   <DotLine
                     value={isCoSplit ? transferDate.month : null}
-                    className="w-16 text-center"
+                    className="w-24 text-center"
                   />
                   <span>ឆ្នាំ</span>
                   <DotLine
@@ -936,7 +992,7 @@ export function TransferApplicationPrint({
                   <span>ខែ</span>
                   <DotLine
                     value={isRenounce ? transferDate.month : null}
-                    className="w-16 text-center"
+                    className="w-24 text-center"
                   />
                   <span>ឆ្នាំ</span>
                   <DotLine
@@ -946,37 +1002,37 @@ export function TransferApplicationPrint({
                   <span>ឬ</span>
                 </div>
 
-                <div className="flex flex-wrap items-baseline gap-1">
-                  <span className="font-bold w-4 text-center">
+                <div className="flex items-baseline gap-1 whitespace-nowrap">
+                  <span className="font-bold w-4 text-center shrink-0">
                     {isOther ? "✓" : "–"}
                   </span>
-                  <span>មូលហេតុផ្សេងទៀត</span>
+                  <span className="shrink-0">មូលហេតុផ្សេងទៀត</span>
                   <DotLine
                     value={data.causeOther || null}
-                    className="w-48 text-center"
+                    className="w-28 text-center"
                   />
-                  <span>ចុះថ្ងៃទី</span>
+                  <span className="shrink-0">ចុះថ្ងៃទី</span>
                   <DotLine
                     value={isOther ? transferDate.day : null}
-                    className="w-14 text-center"
+                    className="w-12 text-center"
                   />
-                  <span>ខែ</span>
+                  <span className="shrink-0">ខែ</span>
                   <DotLine
                     value={isOther ? transferDate.month : null}
-                    className="w-16 text-center"
-                  />
-                  <span>ឆ្នាំ</span>
-                  <DotLine
-                    value={isOther ? transferDate.year : null}
                     className="w-20 text-center"
                   />
-                  <span>។</span>
+                  <span className="shrink-0">ឆ្នាំ</span>
+                  <DotLine
+                    value={isOther ? transferDate.year : null}
+                    className="w-16 text-center"
+                  />
+                  <span className="shrink-0">។</span>
                 </div>
               </div>
             </div>
 
             {/* Section គ: ព័ត៌មានបុគ្គល (Exact match to Photo 2) */}
-            <div className="text-[16px] leading-[1.75]">
+            <div className="text-[15px] leading-[1.75]">
               <h4 className="text-black mb-1">គ- បុគ្គលមានសិទ្ធិចុះបញ្ជី</h4>
 
               {/* Buyer / Transferee (បុគ្គលមានសិទ្ធិចុះបញ្ជី) */}
@@ -1085,7 +1141,7 @@ export function TransferApplicationPrint({
             </div>
 
             {/* Section ឃ: ចំណុចផ្សេងៗទៀតដែលត្រូវចុះបញ្ជី (Exact match to Photo 2) */}
-            <div className="text-[16px] leading-[1.9]">
+            <div className="text-[15px] leading-[1.9]">
               <h4 className=" text-black mb-1">
                 ឃ- ចំណុចផ្សេងៗទៀតដែលត្រូវចុះបញ្ជី
               </h4>
@@ -1105,7 +1161,7 @@ export function TransferApplicationPrint({
             </div>
 
             {/* Section ង: អត្តសញ្ញាណ នៃអចលនវត្ថុ (Exact match to Photo 2) */}
-            <div className="text-[16px] leading-[1.9]">
+            <div className="text-[15px] leading-[1.9]">
               <h4 className="text-black mb-1">ង- អត្តសញ្ញាណ នៃអចលនវត្ថុ</h4>
               <div className="ml-6 space-y-1">
                 <div className="flex items-baseline">
@@ -1133,7 +1189,7 @@ export function TransferApplicationPrint({
             </div>
 
             {/* Closing Request (Exact match to Photo 2) */}
-            <div className="pt-2 text-[16px] text-justify leading-relaxed indent-8 font-battambang">
+            <div className="pt-2 text-[15px] text-justify leading-relaxed indent-8 font-battambang">
               អាស្រ័យហេតុនេះ សូមលោក
               <span className="font-moul text-[14px]">ប្រធានមន្ទីរ</span>{" "}
               មេត្តាពិនិត្យ និងសម្រេចអនុញ្ញាតឱ្យចុះបញ្ជីតាមសំណើខាងលើដោយអនុគ្រោះ។
@@ -1151,9 +1207,9 @@ export function TransferApplicationPrint({
                 </p>
 
                 {/* Clean open space for physical thumbprint */}
-                <div className="h-16 flex items-center justify-center" />
+                <div className="h-20 flex items-center justify-center" />
 
-                <div className="font-semibold text-black text-[16px]">
+                <div className="font-semibold text-black text-[15px]">
                   {cleanPersonName(primaryBuyer.name) || ""}
                   {buyerSpouse?.full_name &&
                     ` និង ${cleanPersonName(buyerSpouse.full_name)}`}
@@ -1187,9 +1243,9 @@ export function TransferApplicationPrint({
                 </p>
 
                 {/* Clean open space for physical thumbprint */}
-                <div className="h-16 flex items-center justify-center" />
+                <div className="h-20 flex items-center justify-center" />
 
-                <div className="font-semibold text-black text-[16px]">
+                <div className="font-semibold text-black text-[15px]">
                   {cleanPersonName(primarySeller.name) || ""}
                   {sellerSpouse?.full_name &&
                     ` និង ${cleanPersonName(sellerSpouse.full_name)}`}
@@ -1221,7 +1277,7 @@ export function TransferApplicationPrint({
                 <span className="text-[13px] block text-neutral-600">
                   ឧបសម្ព័ន្ធភ្ជាប់ជាមួយពាក្យសុំចុះបញ្ជីអំពីការផ្ទេរកម្មសិទ្ធិ
                 </span>
-                <h2 className="font-moul text-[16px] text-black">
+                <h2 className="font-moul text-[15px] text-black">
                   តារាងបញ្ជីឈ្មោះភាគីទទួល (បុគ្គលមានសិទ្ធិចុះបញ្ជី)
                 </h2>
                 <p className="text-[14px] text-neutral-700">
@@ -1332,7 +1388,7 @@ export function TransferApplicationPrint({
                 <span className="text-[13px] block text-neutral-600">
                   ឧបសម្ព័ន្ធភ្ជាប់ជាមួយពាក្យសុំចុះបញ្ជីអំពីការផ្ទេរកម្មសិទ្ធិ
                 </span>
-                <h2 className="font-moul text-[16px] text-black">
+                <h2 className="font-moul text-[15px] text-black">
                   តារាងបញ្ជីឈ្មោះភាគីប្រគល់ (បុគ្គលមានកាតព្វកិច្ចចុះបញ្ជី)
                 </h2>
                 <p className="text-[14px] text-neutral-700">

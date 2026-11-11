@@ -1,5 +1,6 @@
 import { LandDeclaration, PaginatedResponse, PaginationParams } from "./types";
 import { InheritanceRequest } from "./inheritance-request-types";
+import { TransferApplication } from "./transfer-application-types";
 
 const rawBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3003";
 const API_BASE = rawBase.endsWith("/api/v1")
@@ -83,6 +84,29 @@ export const usersApi = {
       `${API_BASE}/users${buildQuery(params)}`,
     ),
   get: (id: string) => request<UserSummary>(`${API_BASE}/users/${id}`),
+};
+
+export const transferApplicationsApi = {
+  list: (params?: PaginationParams) =>
+    request<PaginatedResponse<TransferApplication>>(
+      `${API_BASE}/transfer-applications${buildQuery(params)}`,
+    ),
+  get: (id: string) =>
+    request<TransferApplication>(`${API_BASE}/transfer-applications/${id}`),
+  create: (initial: Partial<TransferApplication>) =>
+    request<TransferApplication>(`${API_BASE}/transfer-applications`, {
+      method: "POST",
+      body: JSON.stringify(initial),
+    }),
+  update: (id: string, input: Partial<TransferApplication>) =>
+    request<TransferApplication>(`${API_BASE}/transfer-applications/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  remove: (id: string) =>
+    request<void>(`${API_BASE}/transfer-applications/${id}`, {
+      method: "DELETE",
+    }),
 };
 
 export const inheritanceApi = {

@@ -78,15 +78,34 @@ import {
   emptyWitnessData,
   emptyTransferApplication,
   createSampleTransferApplication,
+  normalizeTransferApplication,
 } from "@/lib/transfer-application-types";
 
-import {
-  transferApplicationApi,
-  saveTransferDraft,
-  loadTransferDraft,
-} from "@/lib/transfer-application-store";
-
+import { transferApplicationsApi } from "@/lib/api";
 import { TransferApplicationPrint } from "./transfer-application-print";
+
+const STORAGE_KEY = "transfer_application_draft_v1";
+
+function saveDraft(data: TransferApplication) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.warn("Could not save draft:", e);
+  }
+}
+
+function loadDraft(): TransferApplication {
+  if (typeof window === "undefined") return emptyTransferApplication();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return emptyTransferApplication();
+    return normalizeTransferApplication(JSON.parse(raw));
+  } catch (e) {
+    console.warn("Could not load draft:", e);
+    return emptyTransferApplication();
+  }
+}
 
 /* ═════════════════════════ Reusable Field Component ═════════════════════════ */
 
@@ -317,10 +336,10 @@ function PersonCard({
         />
 
         <Field
-          label={ageStr ? `ថ្ងៃខែឆ្នាំកំណើត (${ageStr})` : "ថ្ងៃខែឆ្នាំកំណើត (YYYY-MM-DD)"}
+          label={ageStr ? `ថ្ងៃខែឆ្នាំកំណើត (${ageStr})` : "ថ្ងៃខែឆ្នាំកំណើត (dd.mm.yyyy)"}
           value={person.dob}
           onChange={(v) => patch({ dob: v })}
-          placeholder="1973-02-22"
+          placeholder="12.05.1988"
         />
 
         {showGenderSelect ? (
@@ -467,10 +486,10 @@ function LegalEntityCard({ entity, onChange }: LegalEntityCardProps) {
           />
 
           <Field
-            label="ថ្ងៃខែឆ្នាំកំណើត (YYYY-MM-DD)"
+            label="ថ្ងៃខែឆ្នាំកំណើត (dd.mm.yyyy)"
             value={entity.representative_dob}
             onChange={(v) => patch({ representative_dob: v })}
-            placeholder="1973-02-22"
+            placeholder="12.05.1988"
           />
 
           <Field
@@ -545,7 +564,7 @@ export function TransferApplicationForm() {
 
   React.useEffect(() => {
     try {
-      const draft = loadTransferDraft();
+      const draft = loadDraft();
       setData(draft);
     } catch (e) {
       console.warn("Failed to load draft:", e);
@@ -556,7 +575,7 @@ export function TransferApplicationForm() {
 
   React.useEffect(() => {
     if (!hydrated) return;
-    saveTransferDraft(data);
+    saveDraft(data);
   }, [data, hydrated]);
 
   /* ────────────────── Step 1 Helpers ────────────────── */
@@ -574,11 +593,26 @@ export function TransferApplicationForm() {
         patch.city !== undefined
       ) {
         const parts = [
-          updated.city || "រាជធានីភ្នំពេញ",
-          updated.khan ? `ខណ្ឌ${updated.khan}` : "",
-          updated.sangkat ? `សង្កាត់${updated.sangkat}` : "",
-          updated.village ? `ភូមិ${updated.village}` : "",
           updated.streetNo ? `ផ្លូវលេខ ${updated.streetNo}` : "",
+          updated.village
+            ? updated.village.startsWith("ភូមិ")
+              ? updated.village
+              : `ភូមិ${updated.village}`
+            : "",
+          updated.sangkat
+            ? updated.sangkat.startsWith("សង្កាត់") ||
+              updated.sangkat.startsWith("ឃុំ")
+              ? updated.sangkat
+              : `សង្កាត់${updated.sangkat}`
+            : "",
+          updated.khan
+            ? updated.khan.startsWith("ខណ្ឌ") ||
+              updated.khan.startsWith("ស្រុក") ||
+              updated.khan.startsWith("ក្រុង")
+              ? updated.khan
+              : `ខណ្ឌ${updated.khan}`
+            : "",
+          updated.city || "រាជធានីភ្នំពេញ",
         ]
           .filter(Boolean)
           .join(" ");
@@ -730,19 +764,20 @@ export function TransferApplicationForm() {
 
       let res: TransferApplication;
       if (data.id) {
-        res = await transferApplicationApi.update(data.id, {
+        res = await transferApplicationsApi.update(data.id, {
           ...data,
           title,
         });
         toast.success("បានធ្វើបច្ចុប្បន្នភាពពាក្យសុំជោគជ័យ");
       } else {
-        res = await transferApplicationApi.create({
+        res = await transferApplicationsApi.create({
           ...data,
           title,
         });
         setData(res);
         toast.success("បានរក្សាទុកពាក្យសុំថ្មីជោគជ័យ");
       }
+      saveDraft(res);
     } catch (err) {
       console.error(err);
       toast.error("បរាជ័យក្នុងការរក្សាទុក");
@@ -755,7 +790,7 @@ export function TransferApplicationForm() {
     if (confirm("តើអ្នកពិតជាចង់បង្កើតពាក្យសុំថ្មីមែនទេ? ទិន្នន័យចាស់នឹងត្រូវជម្រះ។")) {
       const fresh = emptyTransferApplication();
       setData(fresh);
-      saveTransferDraft(fresh);
+      saveDraft(fresh);
       setActiveStep(1);
       toast.info("បានបង្កើតទម្រង់ថ្មី");
     }
@@ -764,14 +799,14 @@ export function TransferApplicationForm() {
   const handleSample = () => {
     const sample = createSampleTransferApplication();
     setData(sample);
-    saveTransferDraft(sample);
+    saveDraft(sample);
     toast.success("បានផ្ទុកទិន្នន័យគំរូសាកល្បង");
   };
 
   const handleOpenList = async () => {
     try {
-      const res = await transferApplicationApi.list();
-      setDbList(res.data);
+      const res = await transferApplicationsApi.list();
+      setDbList(res.data || []);
       setIsDbListOpen(true);
     } catch {
       toast.error("មិនអាចទាញយកបញ្ជីដែលបានរក្សាទុក");
@@ -780,7 +815,7 @@ export function TransferApplicationForm() {
 
   const handleLoadRecord = (item: TransferApplication) => {
     setData(item);
-    saveTransferDraft(item);
+    saveDraft(item);
     setIsDbListOpen(false);
     toast.success(`បានបើក "${item.title || "ពាក្យសុំ"}"`);
   };
@@ -789,7 +824,7 @@ export function TransferApplicationForm() {
     e.stopPropagation();
     if (!confirm("តើអ្នកពិតជាចង់លុបពាក្យសុំនេះមែនទេ?")) return;
     try {
-      await transferApplicationApi.remove(id);
+      await transferApplicationsApi.remove(id);
       setDbList((prev) => prev.filter((r) => r.id !== id));
       if (data.id === id) {
         setData((prev) => ({ ...prev, id: undefined }));
@@ -1133,10 +1168,10 @@ export function TransferApplicationForm() {
                           required
                         />
                         <Field
-                          label="កាលបរិច្ឆេទចុះបញ្ជី (Registration Date)"
-                          type="date"
+                          label="កាលបរិច្ឆេទចុះបញ្ជី (dd.mm.yyyy)"
                           value={data.parcel_and_property.registration_date}
                           onChange={(v) => updateParcelAndProperty({ registration_date: v })}
+                          placeholder="06.11.2026"
                         />
                         <Field
                           label="ផ្លូវលេខ"
@@ -1920,7 +1955,7 @@ export function TransferApplicationForm() {
                               label="ថ្ងៃខែឆ្នាំកំណើត / អាយុ"
                               value={data.witnesses[0]?.dob_or_age}
                               onChange={(v) => patchWitness(0, { dob_or_age: v })}
-                              placeholder="2004-10-23"
+                              placeholder="12.05.1988"
                             />
                           </div>
 
@@ -1965,7 +2000,7 @@ export function TransferApplicationForm() {
                               label="ថ្ងៃខែឆ្នាំកំណើត / អាយុ"
                               value={data.witnesses[1]?.dob_or_age}
                               onChange={(v) => patchWitness(1, { dob_or_age: v })}
-                              placeholder="1980-10-23"
+                              placeholder="12.05.1988"
                             />
                           </div>
 

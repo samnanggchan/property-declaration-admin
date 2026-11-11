@@ -308,7 +308,7 @@ export function createSampleTransferApplication(): TransferApplication {
     parcel_and_property: {
       parcel_number: "12050605-4575",
       location:
-        "រាជធានីភ្នំពេញ ខណ្ឌពោធិ៍សែនជ័យ សង្កាត់ចោមចៅទី១ ភូមិត្រពាំងថ្លឹង១",
+        "ភូមិត្រពាំងថ្លឹង១ សង្កាត់ចោមចៅទី១ ខណ្ឌពោធិ៍សែនជ័យ រាជធានីភ្នំពេញ",
       streetNo: "២១៧",
       village: "ត្រពាំងថ្លឹង១",
       sangkat: "ចោមចៅទី១",
@@ -328,7 +328,7 @@ export function createSampleTransferApplication(): TransferApplication {
         east: "ផ្លូវលេខ ២១៧",
         west: "ដីឡូត៍លេខ ១២០៥០៦០៥-៤៥៦០",
       },
-      registration_date: "2026-11-06",
+      registration_date: "06.11.2026",
     },
     purpose: "whole",
     coOwnerName: "",
@@ -348,7 +348,7 @@ export function createSampleTransferApplication(): TransferApplication {
         husband: {
           full_name: "ឈូ ស៊ីសេង",
           id_card_number: "010352372(02)",
-          dob: "1973-02-22",
+          dob: "22.02.1973",
           nationality: "ខ្មែរ",
           gender: "ប្រុស",
           marital_status: "មានប្តីប្រពន្ធ",
@@ -361,7 +361,7 @@ export function createSampleTransferApplication(): TransferApplication {
         wife: {
           full_name: "ណាង គឹមហុង",
           id_card_number: "010488219(01)",
-          dob: "1976-05-18",
+          dob: "18.05.1976",
           nationality: "ខ្មែរ",
           gender: "ស្រី",
           marital_status: "មានប្តីប្រពន្ធ",
@@ -383,7 +383,7 @@ export function createSampleTransferApplication(): TransferApplication {
         husband: {
           full_name: "លាង ពៅ",
           id_card_number: "010887766(01)",
-          dob: "1985-08-14",
+          dob: "14.08.1985",
           nationality: "ខ្មែរ",
           gender: "ប្រុស",
           marital_status: "មានប្តីប្រពន្ធ",
@@ -396,7 +396,7 @@ export function createSampleTransferApplication(): TransferApplication {
         wife: {
           full_name: "មិត្ត ភាព",
           id_card_number: "010998877(02)",
-          dob: "1988-12-05",
+          dob: "12.05.1988",
           nationality: "ខ្មែរ",
           gender: "ស្រី",
           marital_status: "មានប្តីប្រពន្ធ",
@@ -414,13 +414,13 @@ export function createSampleTransferApplication(): TransferApplication {
       {
         full_name: "ឡឺក សុជា",
         id_card_number: "090 203 564 (01)",
-        dob_or_age: "2004-10-23",
+        dob_or_age: "23.10.2004",
         residence_address: "១ឃុំ ចក្រី ស្រុក រមាសហែក ខេត្ត ស្វាយរៀង",
       },
       {
         full_name: "ទន់ សុភាព",
         id_card_number: "090 455 823 (02)",
-        dob_or_age: "1980-10-23",
+        dob_or_age: "23.10.1980",
         residence_address:
           "ភូមិព្រែកតាគង់ សង្កាត់ចាក់អង្រែលើ ខណ្ឌមានជ័យ រាជធានីភ្នំពេញ",
       },
