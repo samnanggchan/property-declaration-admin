@@ -83,11 +83,13 @@ export interface InheritanceRequest {
   updatedAt?: string;
   title: string;
   refNo: string; // លេខយោង
+  titleDeedDate?: string; // កាលបរិច្ឆេទចេញប័ណ្ណ
   location: string; // ទីតាំង
   area: string; // ទំហំ
   propertyType: string; // ប្រភេទដី (ឧ. លំនៅឋាន)
   date: string; // dd.mm.yyyy – date printed above the signatures
   deceasedSangkat: string; // នៅសង្កាត់
+  deceasedKhan?: string; // នៅខណ្ឌ (នៃសំបុត្របញ្ជាក់ទាយាទ)
 
   // Specific land & authority details for pages 3, 4, 5
   titleDeedNo: string; // ប័ណ្ណសម្គាល់សិទ្ធិកាន់កាប់អចលនវត្ថុលេខ
@@ -169,11 +171,13 @@ export const emptyDeceased = (): Deceased => ({
 export const emptyRequest = (): InheritanceRequest => ({
   title: "ពាក្យស្នើសុំផ្ទេរសិទ្ធិកាន់កាប់អចលនវត្ថុជាមរតក",
   refNo: "",
+  titleDeedDate: "",
   location: "",
   area: "",
   propertyType: "លំនៅដ្ឋាន",
   date: "",
   deceasedSangkat: "",
+  deceasedKhan: "",
   titleDeedNo: "",
   plotNo: "",
   streetNo: "",
@@ -349,6 +353,12 @@ export function normalizeRequest(raw: unknown): InheritanceRequest {
     updatedAt: typeof r.updatedAt === "string" ? r.updatedAt : undefined,
     title,
     refNo: typeof r.refNo === "string" ? r.refNo : "",
+    titleDeedDate:
+      typeof r.titleDeedDate === "string" && r.titleDeedDate
+        ? r.titleDeedDate
+        : typeof r.refNo === "string" && looksLikeDate(r.refNo)
+          ? r.refNo
+          : "",
     location,
     area: typeof r.area === "string" ? r.area : "",
     propertyType:
@@ -356,6 +366,13 @@ export function normalizeRequest(raw: unknown): InheritanceRequest {
     date: typeof r.date === "string" ? r.date : "",
     deceasedSangkat:
       typeof r.deceasedSangkat === "string" ? r.deceasedSangkat : "",
+    deceasedKhan:
+      typeof r.deceasedKhan === "string"
+        ? r.deceasedKhan
+        : Array.isArray(r.deceased) &&
+            typeof (r.deceased[0] as any)?.khan === "string"
+          ? (r.deceased[0] as any).khan
+          : "",
     titleDeedNo: deed,
     plotNo,
     streetNo,
@@ -406,10 +423,23 @@ export function toKhmerDigits(value: string | number | undefined | null) {
   return String(value).replace(/[0-9]/g, (d) => KHMER_DIGITS[Number(d)]);
 }
 
+/** Check if string looks like a date (e.g. 08.10.2026, 08-10-2026, 2026-10-08) */
+export function looksLikeDate(s?: string | null): boolean {
+  if (!s) return false;
+  const t = s.trim();
+  return (
+    /^\d{1,2}[./\-]\d{1,2}[./\-]\d{2,4}$/.test(t) ||
+    /^\d{4}[./\-]\d{1,2}[./\-]\d{1,2}$/.test(t)
+  );
+}
+
 /** "08.10.2026" → { day: "08", month: "10", year: "2026" } */
 export function parseDateParts(date: string) {
   const parts = (date || "").trim().split(/[./\-\s]+/);
   if (parts.length >= 3) {
+    if (parts[0].length === 4) {
+      return { day: parts[2], month: parts[1], year: parts[0] };
+    }
     return { day: parts[0], month: parts[1], year: parts[2] };
   }
   return { day: "", month: "", year: "" };
@@ -423,10 +453,12 @@ export const countNamed = (list: { name: string }[]) =>
 export function sampleRequest(): InheritanceRequest {
   const r = emptyRequest();
   r.refNo = "០០១/២៦";
+  r.titleDeedDate = "08.10.2026";
   r.area = "58 (ម២)";
   r.propertyType = "លំនៅដ្ឋាន";
   r.date = "08.10.2026";
   r.deceasedSangkat = "បឹងទំពុនទី១";
+  r.deceasedKhan = "មានជ័យ";
   r.titleDeedNo = "12060201-1608";
   r.plotNo = "1608";
   r.streetNo = "១៩៣";

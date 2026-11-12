@@ -14,6 +14,7 @@ import {
   emptyRelative,
   extractPlotNo,
   InheritanceRequest,
+  looksLikeDate,
   parseDateParts,
   RELATIVE_SLOTS,
   toKhmerDigits as kh,
@@ -31,7 +32,7 @@ const FORM = {
   defaults: {
     relationToDeceased: "ប្រពន្ធ",
     relationToHeirs: "ម្ដាយ",
-    action: "ផ្ទេរសិទ្ធិ",
+    action: "កាន់កាប់/ផ្ទេរសិទ្ធិ",
     landKind: "លំនៅដ្ឋាន",
   },
 };
@@ -266,10 +267,11 @@ function formatLandArea(raw: string | undefined | null): string {
 
 /** "08.10.2026" → day / Khmer month name / year (in Khmer digits) */
 function dateParts(value: string) {
-  const p = parseDateParts(value);
+  const raw = toArabicNum(value || "");
+  const p = parseDateParts(raw);
   const m = Number(p.month);
   return {
-    day: kh(p.day),
+    day: kh(p.day ? (p.day.length === 1 ? `0${p.day}` : p.day) : ""),
     month: m >= 1 && m <= 12 ? KHMER_GREGORIAN_MONTHS[m] : kh(p.month),
     year: kh(p.year),
   };
@@ -601,7 +603,7 @@ export function InheritanceRequestPrint({
 
   const spouseName = hasSpouse ? rawSpouseName : "";
   const spouseAge = hasSpouse ? rawSpouseAge : "";
-  const spouseDeceasedName = hasSpouse ? (d1.name || deceasedNames) : "";
+  const spouseDeceasedName = hasSpouse ? d1.name || deceasedNames : "";
 
   /* children */
   const p1Children = data.children.slice(0, FORM.pageOneChildren);
@@ -734,6 +736,7 @@ export function InheritanceRequestPrint({
   const hasDeceased2 = Boolean(d2.name?.trim());
   const deathSangkat = data.deceasedSangkat || sangkat;
   const deathSangkat2 = hasDeceased2 ? data.deceasedSangkat || sangkat : "";
+  const deathKhan = data.deceasedKhan || khan;
   const certNumbers = [d1.deathCertNo, d2.deathCertNo]
     .filter(Boolean)
     .map(kh)
@@ -795,8 +798,9 @@ export function InheritanceRequestPrint({
   const a2BirthYear = getBirthYear(a2?.dob);
 
   const deedDate = dateParts(
-    (x as unknown as { titleDeedDate?: string }).titleDeedDate ||
-      x.letterRefDate ||
+    x.titleDeedDate ||
+      (x as unknown as { titleDeedDate?: string }).titleDeedDate ||
+      (looksLikeDate(data.refNo) ? data.refNo : "") ||
       "",
   );
 
@@ -1074,7 +1078,10 @@ export function InheritanceRequestPrint({
                   <L className="font-moul text-[12pt] underline decoration-2 underline-offset-[2px]">
                     លេខ
                   </L>
-                  <D v={kh(data.refNo)} grow={1} />
+                  <D
+                    v={looksLikeDate(data.refNo) ? "" : kh(data.refNo)}
+                    grow={1}
+                  />
                 </div>
               </div>
 
@@ -1437,7 +1444,7 @@ export function InheritanceRequestPrint({
               <D v={FORM.defaults.action} grow={1.5} />
             </div>
             <div className={ROW}>
-              <L>អចលនវត្ថុដែលមានក្នុងប័ណ្ណសម្គាល់សិទ្ធិកាន់កាប់អចលនវត្ថុលេខ</L>
+              <L>អចលនវត្ថុដែលមានក្នុងប័ណ្ណកម្មសិទ្ធិលេខ</L>
               <D v={titleDeedNo} grow={1} />
             </div>
             <div className={ROW}>
@@ -1517,13 +1524,6 @@ export function InheritanceRequestPrint({
               <L className="pl-[16mm]">នៃមតកជន (នាង)</L>
               <D v={deceasedNames} grow={1} />
             </div>
-            <div className={cn(ROW, "text-[16px]")}>
-              <L>(លិខិតដំណាលរបស់លិខិតសញ្ញាលក់ផ្ដាច់លេខ</L>
-              <D v={kh(x.letterRefNo)} grow={1.5} />
-              <L>ចុះថ្ងៃទី</L>
-              <D v={kh(x.letterRefDate)} grow={1.2} />
-              <L>)</L>
-            </div>
           </div>
 
           <p className="my-2 text-center font-moul text-[16px]">
@@ -1563,7 +1563,7 @@ export function InheritanceRequestPrint({
               <D v={area} grow={1} />
             </div>
             <div className={ROW}>
-              <L>តាមប័ណ្ណសម្គាល់សិទ្ធិកាន់កាប់អចលនវត្ថុលេខ(២)</L>
+              <L>តាមប័ណ្ណកម្មសិទ្ធិលេខ(២)</L>
               <D v={titleDeedNo} grow={1.5} />
               <L>ស្ថិតនៅក្បាលដីលេខ</L>
               <D v={plotNo} grow={1} />
@@ -1651,7 +1651,7 @@ export function InheritanceRequestPrint({
               <p className="font-normal">រាជធានីភ្នំពេញ</p>
               <div className={ROW}>
                 <L>ខណ្ឌ :</L>
-                <D v={khan} grow={1} />
+                <D v={deathKhan} grow={1} />
               </div>
               <div className={ROW}>
                 <L>សង្កាត់ :</L>
@@ -1930,7 +1930,7 @@ export function InheritanceRequestPrint({
 
             {/* Right column: Thumbprint stamp area and applicant name */}
             <div className="flex w-[82mm] shrink-0 flex-col items-center text-center leading-normal">
-              <div className="h-[18mm]" />
+              <div className="h-[30mm]" />
               <p className="font-semibold text-center text-[16px]">
                 {a1.name || "\u00A0"}
               </p>

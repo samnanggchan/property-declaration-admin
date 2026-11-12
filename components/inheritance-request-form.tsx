@@ -13,6 +13,16 @@ import {
   CheckIcon,
   Loader2Icon,
   SearchIcon,
+  PencilIcon,
+  CopyIcon,
+  EllipsisVerticalIcon,
+  EyeIcon,
+  ChevronsLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronsRightIcon,
+  XIcon,
+  RefreshCwIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -26,6 +36,29 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { inheritanceApi } from "@/lib/api";
 import { InheritanceRequestPrint } from "@/components/inheritance-request-print";
 import { printCleanDocument } from "@/lib/print-service";
@@ -51,6 +84,7 @@ import {
   emptyRequest,
   emptyWitness,
   extractPlotNo,
+  looksLikeDate,
   normalizeRequest,
   PROPERTY_TYPES,
   sampleRequest,
@@ -151,7 +185,8 @@ function PropertyTypeSelect({
     <div ref={containerRef} className="space-y-1.5">
       <div className="flex items-center justify-between">
         <Label className="text-[11px] text-muted-foreground flex items-center gap-1">
-          <span className="text-destructive font-bold">*</span> ជ្រើសរើសប្រភេទទ្រព្យ
+          <span className="text-destructive font-bold">*</span>{" "}
+          ជ្រើសរើសប្រភេទទ្រព្យ
         </Label>
         {value && (
           <button
@@ -516,8 +551,11 @@ export function InheritanceRequestForm() {
     toast.success("បានបើកឯកសារជោគជ័យ!");
   };
 
-  const handleDeleteDb = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const [dbPage, setDbPage] = React.useState(1);
+  const [dbPageSize, setDbPageSize] = React.useState(10);
+
+  const handleDeleteDb = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (!confirm("តើអ្នកពិតជាចង់លុបឯកសារនេះពី DB ឬ?")) return;
     try {
       await inheritanceApi.remove(id);
@@ -532,6 +570,44 @@ export function InheritanceRequestForm() {
     }
   };
 
+  const handleDuplicateDb = async (
+    item: InheritanceRequest,
+    e?: React.MouseEvent,
+  ) => {
+    if (e) e.stopPropagation();
+    try {
+      const clone: Partial<InheritanceRequest> = {
+        ...item,
+        id: undefined,
+        createdAt: undefined,
+        updatedAt: undefined,
+        title: item.title
+          ? `${item.title} (ចម្លង)`
+          : "ពាក្យស្នើសុំផ្ទេរសិទ្ធិកាន់កាប់អចលនវត្ថុជាមរតក (ចម្លង)",
+      };
+      const res = await inheritanceApi.create(clone);
+      toast.success("បានចម្លងទិន្នន័យដោយជោគជ័យ!");
+      handleLoad(res);
+      fetchDbList();
+    } catch (err) {
+      console.error(err);
+      toast.error("មិនអាចចម្លងទិន្នន័យបានទេ!");
+    }
+  };
+
+  const handlePrintDb = (item: InheritanceRequest, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    handleLoad(item);
+    setTimeout(() => {
+      printCleanDocument("printable-document");
+    }, 400);
+  };
+
+  const handleEditDb = (item: InheritanceRequest, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    handleLoad(item);
+  };
+
   const filteredDbList = React.useMemo(() => {
     if (!searchFilter.trim()) return dbList;
     const term = searchFilter.toLowerCase();
@@ -543,6 +619,9 @@ export function InheritanceRequestForm() {
         a.name?.toLowerCase().includes(term),
       );
       return (
+        item.titleDeedNo?.toLowerCase().includes(term) ||
+        item.plotNo?.toLowerCase().includes(term) ||
+        item.titleDeedDate?.toLowerCase().includes(term) ||
         item.refNo?.toLowerCase().includes(term) ||
         item.title?.toLowerCase().includes(term) ||
         item.authorizedPerson?.toLowerCase().includes(term) ||
@@ -552,6 +631,16 @@ export function InheritanceRequestForm() {
       );
     });
   }, [dbList, searchFilter]);
+
+  React.useEffect(() => {
+    setDbPage(1);
+  }, [searchFilter, dbPageSize]);
+
+  const totalPages = Math.ceil(filteredDbList.length / dbPageSize) || 1;
+  const paginatedDbList = React.useMemo(() => {
+    const start = (dbPage - 1) * dbPageSize;
+    return filteredDbList.slice(start, start + dbPageSize);
+  }, [filteredDbList, dbPage, dbPageSize]);
 
   // Sync browser document title dynamically based on form title & refNo
   React.useEffect(() => {
@@ -738,9 +827,17 @@ export function InheritanceRequestForm() {
           <Card title="ព័ត៌មានទូទៅ" hint="ព័ត៌មានលិខិត, និងអចលនវត្ថុ/ដី">
             <div className="grid grid-cols-2 gap-3">
               <Field
-                label="លេខយោង"
-                value={data.refNo}
-                onChange={(v) => setField("refNo", v)}
+                label="កាលបរិច្ឆេទចេញប័ណ្ណ"
+                value={
+                  data.titleDeedDate ||
+                  (looksLikeDate(data.refNo) ? data.refNo : "") ||
+                  ""
+                }
+                onChange={(v) => {
+                  setField("titleDeedDate", v);
+                  setField("refNo", v);
+                }}
+                placeholder="08.10.2026"
               />
               <Field
                 label="កាលបរិច្ឆេទ (ថ្ងៃ.ខែ.ឆ្នាំ)"
@@ -871,12 +968,28 @@ export function InheritanceRequestForm() {
             hint="ព័ត៌មានឪពុក-ម្តាយ ឬអ្នកចែកឋាន"
           >
             <div className="space-y-3">
-              <Field
-                label="នៅសង្កាត់ (នៃសំបុត្រមរណៈភាព)"
-                value={data.deceasedSangkat}
-                onChange={(v) => setField("deceasedSangkat", v)}
-                placeholder="សង្កាត់..."
-              />
+              <div className="grid grid-cols-2 gap-3">
+                <Field
+                  label="នៅសង្កាត់ (នៃសំបុត្រមរណៈភាព)"
+                  value={data.deceasedSangkat}
+                  onChange={(v) => setField("deceasedSangkat", v)}
+                  placeholder="សង្កាត់..."
+                />
+                <Field
+                  label="នៅខណ្ឌ (នៃសំបុត្របញ្ជាក់ទាយាទ)"
+                  value={data.deceasedKhan || ""}
+                  onChange={(v) => {
+                    setData((p) => ({
+                      ...p,
+                      deceasedKhan: v,
+                      deceased: p.deceased.map((d, idx) =>
+                        idx === 0 ? { ...d, khan: v } : d,
+                      ),
+                    }));
+                  }}
+                  placeholder="ខណ្ឌ..."
+                />
+              </div>
 
               {data.deceased.slice(0, visibleDeceased).map((d, i) => (
                 <div
@@ -1050,14 +1163,17 @@ export function InheritanceRequestForm() {
                                     : {}),
                                 };
                               }
-                              return isNowSpouse ? { ...app, isSpouse: false } : app;
+                              return isNowSpouse
+                                ? { ...app, isSpouse: false }
+                                : app;
                             }),
                           }));
                         }}
                       />
                       <span className="flex items-center gap-1.5">
                         <span>
-                          ត្រូវជាប្ដី ឬប្រពន្ធនៃមតកជនទី ១ ({data.deceased[0]?.name || "មតកជន"})
+                          ត្រូវជាប្ដី ឬប្រពន្ធនៃមតកជនទី ១ (
+                          {data.deceased[0]?.name || "មតកជន"})
                         </span>
                       </span>
                     </label>
@@ -1067,7 +1183,7 @@ export function InheritanceRequestForm() {
                         "h-5 text-[10px] font-medium transition-colors",
                         a.isSpouse
                           ? "bg-emerald-600 text-white hover:bg-emerald-600"
-                          : "text-muted-foreground border-neutral-300 dark:border-neutral-700"
+                          : "text-muted-foreground border-neutral-300 dark:border-neutral-700",
                       )}
                     >
                       {a.isSpouse ? "បង្ហាញលើទំព័រទី២" : "ទទេ (Blank)"}
@@ -1579,123 +1695,383 @@ export function InheritanceRequestForm() {
 
       {/* ── Modal Dialog: List of Saved DB Records ── */}
       <Dialog open={isDbListOpen} onOpenChange={setIsDbListOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-6">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base font-semibold">
-              <FolderOpenIcon className="size-5 text-blue-600" />
-              បញ្ជីពាក្យស្នើសុំដែលបានរក្សាទុកក្នុង DB ({dbList.length})
-            </DialogTitle>
+        <DialogContent className="max-w-[96vw] xl:max-w-7xl max-h-[90vh] flex flex-col p-6 rounded-2xl overflow-hidden">
+          <DialogHeader className="pb-3 border-b flex flex-row items-center justify-between">
+            <div className="space-y-0.5">
+              <DialogTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+                <FolderOpenIcon className="size-5 text-blue-600" />
+                <span>
+                  បញ្ជីពាក្យស្នើសុំផ្ទេរសិទ្ធិជាមរតកក្នុង DB (
+                  {kh(filteredDbList.length)})
+                </span>
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground">
+                គ្រប់គ្រង ស្វែងរក បើកកែសម្រួល ឬបោះពុម្ពឯកសារដែលបានរក្សាទុក
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchDbList}
+                disabled={loadingDbList}
+                className="h-8 gap-1.5 text-xs cursor-pointer"
+              >
+                <RefreshCwIcon
+                  className={cn("size-3.5", loadingDbList && "animate-spin")}
+                />
+                <span>Refresh</span>
+              </Button>
+            </div>
           </DialogHeader>
 
-          <div className="relative mt-2">
-            <SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-            <Input
-              value={searchFilter}
-              onChange={(e) => setSearchFilter(e.target.value)}
-              placeholder="ស្វែងរកតាមលេខយោង, ឈ្មោះអ្នកស្នើសុំ, ឈ្មោះមតកជន, ឬទីតាំង..."
-              className="h-9 pl-9 text-xs"
-            />
+          {/* Search bar & filter */}
+          <div className="flex items-center justify-between gap-3 pt-3 pb-2">
+            <div className="relative flex-1 max-w-md">
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+                placeholder="ស្វែងរកតាមលេខប័ណ្ណ, ឈ្មោះមតកជន, ឈ្មោះអ្នកស្នើសុំ, ឬទីតាំង..."
+                className="h-9 pl-9 pr-8 text-xs rounded-xl bg-muted/40"
+              />
+              {searchFilter && (
+                <button
+                  type="button"
+                  onClick={() => setSearchFilter("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <XIcon className="size-3.5" />
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="mt-3 flex-1 overflow-y-auto space-y-2 pr-1 min-h-[250px] max-h-[450px]">
-            {loadingDbList ? (
-              <div className="flex h-32 items-center justify-center text-xs text-muted-foreground gap-2">
-                <Loader2Icon className="size-4 animate-spin text-blue-600" />
-                កំពុងទាញយកទិន្នន័យពី DB...
-              </div>
-            ) : filteredDbList.length === 0 ? (
-              <div className="flex h-32 flex-col items-center justify-center text-xs text-muted-foreground">
-                <FolderOpenIcon className="size-8 text-muted-foreground/40 mb-2" />
-                ពុំមានឯកសារនៅក្នុង DB ទេ
-              </div>
-            ) : (
-              filteredDbList.map((item) => {
-                const isCurrent = item.id === data.id;
-                const decNames = (item.deceased || [])
-                  .map((d) => d.name)
-                  .filter(Boolean)
-                  .join(", ");
-                const appNames = (item.applicants || [])
-                  .map((a) => a.name)
-                  .filter(Boolean)
-                  .join(", ");
+          {/* Main Table */}
+          <div className="flex-1 overflow-auto rounded-xl border bg-card shadow-xs min-h-[300px]">
+            <Table>
+              <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                <TableRow>
+                  <TableHead className="min-w-[180px]">
+                    ព័ត៌មានក្បាលដីលេខ (Parcel No.)
+                  </TableHead>
+                  <TableHead className="min-w-[180px]">
+                    ភាគីមតកជន (Deceased Party)
+                  </TableHead>
+                  <TableHead className="min-w-[180px]">
+                    ភាគីអ្នកស្នើសុំ (Applicant Party)
+                  </TableHead>
+                  <TableHead className="w-[130px]">ស្ថានភាព (Status)</TableHead>
+                  <TableHead className="text-right w-[110px]">
+                    ក្រឡាផ្ទៃ (Area)
+                  </TableHead>
+                  <TableHead className="text-right w-[130px]">
+                    កាលបរិច្ឆេទ (Date)
+                  </TableHead>
+                  <TableHead className="min-w-[180px]">
+                    ទីតាំង (Location)
+                  </TableHead>
+                  <TableHead className="w-16 text-right">សកម្មភាព</TableHead>
+                </TableRow>
+              </TableHeader>
 
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => handleLoad(item)}
-                    className={cn(
-                      "flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer text-xs hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-950/20",
-                      isCurrent &&
-                        "border-blue-600 bg-blue-50/50 dark:bg-blue-950/30",
-                    )}
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-foreground">
-                          {item.refNo ? `លេខយោង៖ ${item.refNo}` : "គ្មានលេខយោង"}
-                        </span>
-                        {isCurrent && (
-                          <Badge
-                            variant="default"
-                            className="text-[10px] bg-blue-600 py-0"
-                          >
-                            បច្ចុប្បន្ន
-                          </Badge>
-                        )}
-                        {item.date && (
-                          <span className="text-[11px] text-muted-foreground">
-                            ចុះថ្ងៃ៖ {item.date}
-                          </span>
-                        )}
+              <TableBody>
+                {loadingDbList ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="h-32 text-center text-xs text-muted-foreground"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2Icon className="size-4 animate-spin text-blue-600" />
+                        កំពុងទាញយកទិន្នន័យពី DB...
                       </div>
-                      <div className="text-[11px] text-muted-foreground flex flex-wrap gap-x-3">
-                        {appNames && (
-                          <span>
-                            អ្នកស្នើសុំ៖{" "}
-                            <strong className="text-foreground">
-                              {appNames}
-                            </strong>
-                          </span>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredDbList.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="h-32 text-center text-xs text-muted-foreground"
+                    >
+                      <FolderOpenIcon className="size-8 mx-auto opacity-40 text-muted-foreground mb-2" />
+                      <p>ពុំមានឯកសារនៅក្នុង DB ត្រូវនឹងការស្វែងរកឡើយ</p>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedDbList.map((item) => {
+                    const isCurrent = item.id === data.id;
+                    const decNames =
+                      (item.deceased || [])
+                        .map((d) => d.name)
+                        .filter(Boolean)
+                        .join(" & ") || "មិនទាន់មាន";
+                    const appNames =
+                      (item.applicants || [])
+                        .map((a) => a.name)
+                        .filter(Boolean)
+                        .join(" & ") || "មិនទាន់មាន";
+                    const parcelOrDeed =
+                      item.titleDeedNo ||
+                      (item.plotNo
+                        ? `ក្បាលដី ${kh(item.plotNo)}`
+                        : item.refNo || "—");
+                    const dateDisplay =
+                      item.titleDeedDate ||
+                      item.date ||
+                      (item.createdAt
+                        ? new Date(item.createdAt).getFullYear()
+                        : "—");
+                    const locationDisplay =
+                      item.location ||
+                      [item.village, item.sangkat, item.khan, item.city]
+                        .filter(Boolean)
+                        .join(" ") ||
+                      "—";
+
+                    return (
+                      <TableRow
+                        key={item.id}
+                        data-state={isCurrent ? "selected" : undefined}
+                        className={cn(
+                          "cursor-pointer transition-colors hover:bg-muted/50 group text-xs",
+                          isCurrent && "bg-blue-50/40 dark:bg-blue-950/20",
                         )}
-                        {decNames && (
-                          <span>
-                            មតកជន៖{" "}
-                            <strong className="text-foreground">
+                        onClick={() => handleLoad(item)}
+                      >
+                        <TableCell>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-semibold text-sm text-foreground font-mono group-hover:text-primary transition-colors flex items-center gap-1.5">
+                              {parcelOrDeed}
+                              <EyeIcon className="size-3.5 opacity-0 group-hover:opacity-70 transition-opacity text-primary" />
+                            </span>
+                            <span className="text-[11px] text-muted-foreground">
+                              {item.propertyType || "លំនៅដ្ឋាន"}
+                            </span>
+                          </div>
+                        </TableCell>
+
+                        {/* Deceased Party */}
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <Badge
+                              variant="outline"
+                              className="px-1.5 py-0 text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                            >
+                              មតកជន
+                            </Badge>
+                            <span className="text-xs font-medium text-foreground truncate max-w-[160px]">
                               {decNames}
-                            </strong>
-                          </span>
-                        )}
-                        {item.location && <span>ទីតាំង៖ {item.location}</span>}
-                      </div>
-                    </div>
+                            </span>
+                          </div>
+                        </TableCell>
 
-                    <div className="flex items-center gap-2 pl-3">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs px-2.5 cursor-pointer hover:bg-blue-600 hover:text-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLoad(item);
-                        }}
-                      >
-                        បើក
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 text-xs px-2 text-destructive hover:bg-destructive/10 cursor-pointer"
-                        title="លុបចេញពី DB"
-                        onClick={(e) => item.id && handleDeleteDb(item.id, e)}
-                      >
-                        <Trash2Icon className="size-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
+                        {/* Applicant Party */}
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <Badge
+                              variant="outline"
+                              className="px-1.5 py-0 text-[10px] bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20"
+                            >
+                              អ្នកស្នើសុំ
+                            </Badge>
+                            <span className="text-xs font-medium text-foreground truncate max-w-[160px]">
+                              {appNames}
+                            </span>
+                          </div>
+                        </TableCell>
+
+                        {/* Status */}
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className="gap-1.5 px-2 py-0.5 text-xs font-normal text-muted-foreground bg-emerald-500/5 border-emerald-500/20"
+                          >
+                            <span className="size-2 rounded-full bg-emerald-500 inline-block" />
+                            រួចរាល់ (Done)
+                          </Badge>
+                        </TableCell>
+
+                        {/* Area */}
+                        <TableCell className="text-right font-mono text-xs">
+                          {item.area ? `${kh(item.area)} m²` : "—"}
+                        </TableCell>
+
+                        {/* Date */}
+                        <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                          {dateDisplay}
+                        </TableCell>
+
+                        {/* Location */}
+                        <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
+                          {locationDisplay}
+                        </TableCell>
+
+                        {/* Action Menu (3 dots) */}
+                        <TableCell
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-right"
+                        >
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              render={
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="size-8 text-muted-foreground hover:text-foreground cursor-pointer"
+                                />
+                              }
+                            >
+                              <EllipsisVerticalIcon className="size-4" />
+                              <span className="sr-only">Open menu</span>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="end"
+                              className="w-48 text-xs shadow-lg"
+                            >
+                              <DropdownMenuItem
+                                onClick={() => handlePrintDb(item)}
+                                className="gap-2 cursor-pointer font-medium"
+                              >
+                                <PrinterIcon className="size-4" />
+                                បោះពុម្ពឯកសារ (Print)
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleEditDb(item)}
+                                className="gap-2 cursor-pointer font-medium"
+                              >
+                                <PencilIcon className="size-4" />
+                                កែសម្រួល (Edit)
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDuplicateDb(item)}
+                                className="gap-2 cursor-pointer font-medium"
+                              >
+                                <CopyIcon className="size-4" />
+                                ចម្លង (Duplicate)
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() =>
+                                  item.id && handleDeleteDb(item.id)
+                                }
+                                className="gap-2 text-destructive cursor-pointer font-medium"
+                              >
+                                <Trash2Icon className="size-4" />
+                                លុប (Delete)
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Table Footer with Pagination matching declarations table */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t text-sm">
+            <div className="text-xs text-muted-foreground">
+              <span>
+                សរុប {kh(filteredDbList.length)} ឯកសារ (Total{" "}
+                {filteredDbList.length} records)
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 lg:gap-6">
+              <div className="flex items-center gap-2">
+                <Label
+                  htmlFor="rows-per-page"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Rows per page
+                </Label>
+                <Select
+                  value={`${dbPageSize}`}
+                  onValueChange={(val) => {
+                    setDbPageSize(Number(val));
+                    setDbPage(1);
+                  }}
+                  items={[10, 20, 30, 50].map((size) => ({
+                    label: `${size}`,
+                    value: `${size}`,
+                  }))}
+                >
+                  <SelectTrigger
+                    size="sm"
+                    className="h-8 w-20 text-xs"
+                    id="rows-per-page"
+                  >
+                    <SelectValue placeholder={dbPageSize} />
+                  </SelectTrigger>
+                  <SelectContent side="top">
+                    <SelectGroup>
+                      {[10, 20, 30, 50].map((size) => (
+                        <SelectItem
+                          key={size}
+                          value={`${size}`}
+                          className="text-xs"
+                        >
+                          {size}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-center text-xs font-medium">
+                Page {dbPage} of {totalPages || 1}
+              </div>
+
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="hidden size-8 lg:flex cursor-pointer"
+                  onClick={() => setDbPage(1)}
+                  disabled={dbPage <= 1 || loadingDbList}
+                  aria-label="First page"
+                >
+                  <ChevronsLeftIcon className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8 cursor-pointer"
+                  onClick={() => setDbPage((p) => Math.max(1, p - 1))}
+                  disabled={dbPage <= 1 || loadingDbList}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeftIcon className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8 cursor-pointer"
+                  onClick={() =>
+                    setDbPage((p) => Math.min(totalPages || 1, p + 1))
+                  }
+                  disabled={dbPage >= (totalPages || 1) || loadingDbList}
+                  aria-label="Next page"
+                >
+                  <ChevronRightIcon className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="hidden size-8 lg:flex cursor-pointer"
+                  onClick={() => setDbPage(totalPages || 1)}
+                  disabled={dbPage >= (totalPages || 1) || loadingDbList}
+                  aria-label="Last page"
+                >
+                  <ChevronsRightIcon className="size-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
