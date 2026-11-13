@@ -149,9 +149,9 @@ const data = {
   ],
   documents: [
     {
-      name: "Data Library",
-      url: "#",
-      icon: <DatabaseIcon />,
+      name: "Final Sale Deed",
+      url: "/final-sale-deed",
+      icon: <FileTextIcon />,
     },
     {
       name: "Reports",

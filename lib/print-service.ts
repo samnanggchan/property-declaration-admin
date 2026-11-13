@@ -8,13 +8,31 @@ export function sanitizePrintTitle(title: string): string {
     .trim();
 }
 
+export interface PrintCleanDocumentOptions {
+  documentTitle?: string;
+  pageSize?: string;
+  pageWidth?: string;
+  pageHeight?: string;
+  pagePadding?: string;
+}
+
 export function printCleanDocument(
   elementId: string = "printable-document",
-  documentTitle?: string,
+  optionsOrTitle?: string | PrintCleanDocumentOptions,
 ) {
-  const sanitizedTitle = documentTitle
-    ? sanitizePrintTitle(documentTitle)
+  const options: PrintCleanDocumentOptions =
+    typeof optionsOrTitle === "string"
+      ? { documentTitle: optionsOrTitle }
+      : optionsOrTitle || {};
+
+  const sanitizedTitle = options.documentTitle
+    ? sanitizePrintTitle(options.documentTitle)
     : undefined;
+
+  const pageSize = options.pageSize || "A4 portrait";
+  const pageWidth = options.pageWidth || "210mm";
+  const pageHeight = options.pageHeight || "297mm";
+  const pagePadding = options.pagePadding || "10mm 20mm 10mm 22mm";
   const target =
     document.getElementById(elementId) ||
     document.querySelector(".printable-area");
@@ -41,8 +59,8 @@ export function printCleanDocument(
   iframe.style.position = "fixed";
   iframe.style.top = "-99999px";
   iframe.style.left = "-99999px";
-  iframe.style.width = "210mm";
-  iframe.style.height = "297mm";
+  iframe.style.width = pageWidth;
+  iframe.style.height = pageHeight;
   iframe.style.border = "none";
   iframe.style.opacity = "0";
   iframe.style.pointerEvents = "none";
@@ -50,9 +68,9 @@ export function printCleanDocument(
 
   const iframeDoc = iframe.contentWindow?.document;
   if (!iframeDoc) {
-    if (documentTitle) {
+    if (sanitizedTitle) {
       const prevTitle = document.title;
-      document.title = documentTitle;
+      document.title = sanitizedTitle;
       window.print();
       document.title = prevTitle;
     } else {
@@ -92,7 +110,7 @@ export function printCleanDocument(
     ${styleElements}
     <style>
       @page {
-        size: A4 portrait;
+        size: ${pageSize};
         margin: 0;
       }
       *, *::before, *::after {
@@ -104,8 +122,8 @@ export function printCleanDocument(
         background: #ffffff !important;
         background-color: #ffffff !important;
         color: #000000 !important;
-        width: 210mm !important;
-        min-height: 297mm !important;
+        width: ${pageWidth} !important;
+        min-height: ${pageHeight} !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
@@ -115,23 +133,23 @@ export function printCleanDocument(
       #printable-document,
       .printable-area {
         display: block !important;
-        width: 210mm !important;
-        max-width: 210mm !important;
-        min-width: 210mm !important;
+        width: ${pageWidth} !important;
+        max-width: ${pageWidth} !important;
+        min-width: ${pageWidth} !important;
         margin: 0 auto !important;
         padding: 0 !important;
         background: #ffffff !important;
         border: none !important;
         box-shadow: none !important;
       }
-      .a4-sheet {
+      .a4-sheet, .custom-sheet {
         box-sizing: border-box !important;
-        width: 210mm !important;
-        max-width: 210mm !important;
-        min-width: 210mm !important;
-        min-height: calc(297mm - 1mm) !important;
+        width: ${pageWidth} !important;
+        max-width: ${pageWidth} !important;
+        min-width: ${pageWidth} !important;
+        min-height: calc(${pageHeight} - 1mm) !important;
         margin: 0 auto !important;
-        padding: 10mm 20mm 10mm 22mm !important;
+        padding: ${pagePadding} !important;
         border: none !important;
         border-radius: 0 !important;
         box-shadow: none !important;
@@ -142,7 +160,9 @@ export function printCleanDocument(
         break-after: page !important;
       }
       .a4-sheet:last-of-type,
-      .a4-sheet:last-child {
+      .a4-sheet:last-child,
+      .custom-sheet:last-of-type,
+      .custom-sheet:last-child {
         page-break-after: auto !important;
         break-after: auto !important;
       }
@@ -170,7 +190,7 @@ export function printCleanDocument(
       window.print();
     } finally {
       setTimeout(() => {
-        if (documentTitle) {
+        if (sanitizedTitle) {
           document.title = prevTitle;
         }
         iframe.remove();
