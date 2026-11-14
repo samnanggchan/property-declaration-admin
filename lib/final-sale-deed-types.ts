@@ -54,10 +54,19 @@ export interface FinalSaleDeed {
   seller: PersonAddress;
   sellerExtraLine?: string;
   sellerCapacityNote?: string;
+  seller1IdNumber?: string;
+  seller1IdDate?: string;
+  sellerCapacityText?: string;
+  seller2IdNumber?: string;
+  seller2IdDate?: string;
 
   // Page 1 Buyer (អ្នកទិញ)
   buyer: PersonAddress;
   buyerCapacityNote?: string;
+  buyerIdNumber?: string;
+  buyerIdDate?: string;
+  buyerCapacityText?: string;
+  buyerStatusText?: string;
 
   // Page 1 Civil Status (អត្រានុកូលដ្ឋាន)
   husband: CivilStatusPerson;
@@ -103,9 +112,18 @@ export interface FinalSaleDeed {
   // Page 2 Witnesses (សាក្សី)
   witness1: WitnessItem;
   witness1IdCard?: string;
+  witness1IdNumber?: string;
+  witness1IdDate?: string;
   witness2: WitnessItem;
   witness2IdCard?: string;
+  witness2IdNumber?: string;
+  witness2IdDate?: string;
   certRegistrationNo: string;
+
+  // Page 2 Signatures Block Names
+  sellerSignatureNames?: string;
+  buyerSignatureNames?: string;
+  witnessSignatureNames?: string;
 }
 
 export const emptyFinalSaleDeed = (): FinalSaleDeed => ({
@@ -127,6 +145,11 @@ export const emptyFinalSaleDeed = (): FinalSaleDeed => ({
   },
   sellerExtraLine: "",
   sellerCapacityNote: "",
+  seller1IdNumber: "",
+  seller1IdDate: "",
+  sellerCapacityText: "• បំពេញកិច្ចនូវទ្រព្យរួមជាម្ចាស់សិទ្ធិអវិភាគ",
+  seller2IdNumber: "",
+  seller2IdDate: "",
 
   buyer: {
     name: "",
@@ -138,6 +161,10 @@ export const emptyFinalSaleDeed = (): FinalSaleDeed => ({
     province: "",
   },
   buyerCapacityNote: "",
+  buyerIdNumber: "",
+  buyerIdDate: "",
+  buyerCapacityText: "• បំពេញកិច្ចនូវទ្រព្យផ្ទាល់ខ្លួន",
+  buyerStatusText: "",
 
   husband: {
     birthYear: "",
@@ -209,6 +236,8 @@ export const emptyFinalSaleDeed = (): FinalSaleDeed => ({
     province: "",
   },
   witness1IdCard: "",
+  witness1IdNumber: "",
+  witness1IdDate: "",
   witness2: {
     name: "",
     age: "",
@@ -217,7 +246,13 @@ export const emptyFinalSaleDeed = (): FinalSaleDeed => ({
     province: "",
   },
   witness2IdCard: "",
+  witness2IdNumber: "",
+  witness2IdDate: "",
   certRegistrationNo: "",
+
+  sellerSignatureNames: "",
+  buyerSignatureNames: "",
+  witnessSignatureNames: "",
 });
 
 export const sampleFinalSaleDeed = (): FinalSaleDeed => ({
@@ -242,6 +277,11 @@ export const sampleFinalSaleDeed = (): FinalSaleDeed => ({
     "(២) ឈ្មោះ នាង ស៊ិន ស៊ីថាវាត អាយុ ២៦ ឆ្នាំ ជាតិ ខ្មែរ ទីលំនៅភូមិ១៣ សង្កាត់ទឹកល្អក់ទី២ ខណ្ឌទួលគោក រាជធានីភ្នំពេញ",
   sellerCapacityNote:
     "(១) អត្ត: ០១០៥៤៧៥៩ (០១) / ០៦.១០.២០២០    បំពេញកិច្ចនូវទ្រព្យរួមជាម្ចាស់សិទ្ធិអវិភាគ    (២) អត្ត: ០១០៣៣៣៣៦ (០២) / ០២.០៩.២០២២",
+  seller1IdNumber: "០១០៥៤៧៥៩ (០១)",
+  seller1IdDate: "០៦.១០.២០២០",
+  sellerCapacityText: "• បំពេញកិច្ចនូវទ្រព្យរួមជាម្ចាស់សិទ្ធិអវិភាគ",
+  seller2IdNumber: "០១០៣៣៣៣៦ (០២)",
+  seller2IdDate: "០២.០៩.២០២២",
 
   buyer: {
     name: "ជង់ វិទូរ",
@@ -254,12 +294,16 @@ export const sampleFinalSaleDeed = (): FinalSaleDeed => ({
   },
   buyerCapacityNote:
     "អត្ត: ១៩០៥០០៧១៤ / ០២.០៥.២០១៩    បំពេញកិច្ចនូវទ្រព្យផ្ទាល់ខ្លួន    (ពោះម៉ាយលែងលះពីនាង លឹម ស៊ីវ៉ី)",
+  buyerIdNumber: "១៩០៥០០៧១៤",
+  buyerIdDate: "០២.០៥.២០១៩",
+  buyerCapacityText: "• បំពេញកិច្ចនូវទ្រព្យផ្ទាល់ខ្លួន",
+  buyerStatusText: "(ពោះម៉ាយលែងលះពីនាង លឹម ស៊ីវ៉ី)",
 
   husband: {
     birthYear: "១៩៨៤",
-    birthCommune: "ឬស្សីកែវ",
-    fatherName: "ជង់ ប៊ុនធួន",
-    motherName: "លឹម សិរិវិច្ឆិកា",
+    birthCommune: "ឫស្សីកែវ",
+    fatherName: "ជង់ ប៊ុនសួរ",
+    motherName: "លឹម សិរិចិន្តា",
   },
 
   wife: {
@@ -276,23 +320,23 @@ export const sampleFinalSaleDeed = (): FinalSaleDeed => ({
     certDistrict: "",
   },
 
-  priceKhmer: "ហាសិបប្រាំបួនលានរៀលគត់ (៥៩,០០០,០០០ ៛.00)",
+  priceKhmer: "ហាសិបប្រាំបួនលានរៀលគត់ (៥៩,០០០,០០០ ៛.០០)",
   priceNumber: "",
 
-  stampFee: "",
-  registrationFee: "",
-  taxReceiptNo: "",
-  taxReceiptDate: "",
-  cadastralFee: "",
-  cadastralFeeD1: "",
-  cadastralFeeD2: "",
-  surveyFee: "",
-  surveyFeeD1: "",
-  surveyFeeD2: "",
-  totalFee: "",
+  stampFee: "២,០០០ រៀល",
+  registrationFee: "៤,០០០,០០០ រៀល",
+  taxReceiptNo: "០៤៤៥២១",
+  taxReceiptDate: "១៤.១០.២០២៦",
+  cadastralFee: "២០,០០០",
+  cadastralFeeD1: "១០,០០០",
+  cadastralFeeD2: "១០,០០០",
+  surveyFee: "១០,០០០",
+  surveyFeeD1: "៥,០០០",
+  surveyFeeD2: "៥,០០០",
+  totalFee: "៤,០៤២,០០០ រៀល",
 
-  receivedDate: "",
-  receiverName: "",
+  receivedDate: "២០ តុលា ២០២៦",
+  receiverName: "ឡឹក សុផា",
 
   propertyCommune: "សង្កាត់គោកឃ្លាង",
   propertyDistrict: "សែនសុខ",
@@ -310,21 +354,23 @@ export const sampleFinalSaleDeed = (): FinalSaleDeed => ({
     },
   ],
 
-  contractDateDay: "",
-  contractDateMonth: "",
-  contractDateYear: "",
+  contractDateDay: "២០",
+  contractDateMonth: "តុលា",
+  contractDateYear: "២០២៦",
   officialTitleAndName: "ប្រធានការិយាល័យ ដែនសក ខណ្ឌសែនសុខ",
   sellerVerifiedNames: "ស៊ិន វិសិដ្ឋ និងនាង ស៊ិន ស៊ីថាវាត (ម្ចាស់សិទ្ធិអវិភាគ)",
   buyerVerifiedNames: "ជង់ វិទូរ (ពោះម៉ាយលែងលះពីនាង លឹម ស៊ីវ៉ី)",
 
   witness1: {
-    name: "នាង ឃុន សុជាតា",
+    name: "នាង យុន សុជាតា",
     age: "៣៧",
     commune: "ទឹកល្អក់ទី២",
     district: "ទួលគោក",
     province: "ភ្នំពេញ",
   },
   witness1IdCard: "អត្ត: ០១០៦៥៤៧០៦ (០១) / ០១.១២.២០២៥",
+  witness1IdNumber: "០១០៦៥៤៧០៦ (០១)",
+  witness1IdDate: "០១.១២.២០២៥",
 
   witness2: {
     name: "សុខ សឿន",
@@ -334,8 +380,14 @@ export const sampleFinalSaleDeed = (): FinalSaleDeed => ({
     province: "ភ្នំពេញ",
   },
   witness2IdCard: "អត្ត: ០១១១៥២៩០២ (០១) / ២០.០២.២០២៦",
+  witness2IdNumber: "០១១១៥២៩០២ (០១)",
+  witness2IdDate: "២០.០២.២០២៦",
 
-  certRegistrationNo: "",
+  certRegistrationNo: "១០៨/២៦",
+
+  sellerSignatureNames: "ស៊ិន វិសិដ្ឋ   ស៊ិន ស៊ីថាវាត",
+  buyerSignatureNames: "ជង់ វិទូរ",
+  witnessSignatureNames: "នាង យុន សុជាតា   សុខ សឿន",
 });
 
 const DRAFT_KEY = "final_sale_deed_draft_v1";

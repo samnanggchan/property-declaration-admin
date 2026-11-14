@@ -196,7 +196,7 @@ export function FinalSaleDeedForm() {
       pageSize: isOriginal ? "195mm 297mm" : "A4 portrait",
       pageWidth: isOriginal ? "195mm" : "210mm",
       pageHeight: "297mm",
-      pagePadding: isOriginal ? "8mm 14mm 8mm 14mm" : "12mm 18mm 12mm 18mm",
+      pagePadding: "0",
     });
   };
 
@@ -233,7 +233,7 @@ export function FinalSaleDeedForm() {
         {
           indexOrSheet: "",
           area: "",
-          landType: "លំនៅដ្ឋាន",
+          landType: "លំនៅឋាន",
           boundaryNorth: "",
           boundarySouth: "",
           boundaryEast: "",
@@ -534,8 +534,60 @@ export function FinalSaleDeedForm() {
                     }
                     placeholder="ឧ. (២) ឈ្មោះ នាង ស៊ិន ស៊ីថាវាត អាយុ ២៦ ឆ្នាំ..."
                   />
+
+                  {/* Seller Stacked National IDs & Capacity */}
+                  <div className="rounded-lg border bg-muted/20 p-2.5 space-y-2.5">
+                    <span className="text-xs font-bold text-foreground">
+                      អត្តសញ្ញាណប័ណ្ណ & កិច្ចសន្យាអ្នកលក់ (Stacked IDs)
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Field
+                        label="(១) អត្ត: លេខប័ណ្ណ"
+                        value={data.seller1IdNumber || ""}
+                        onChange={(v) =>
+                          setData((p) => ({ ...p, seller1IdNumber: v }))
+                        }
+                        placeholder="០១០៥៤៧៥៩ (០១)"
+                      />
+                      <Field
+                        label="ចុះថ្ងៃ (Date)"
+                        value={data.seller1IdDate || ""}
+                        onChange={(v) =>
+                          setData((p) => ({ ...p, seller1IdDate: v }))
+                        }
+                        placeholder="០៦.១០.២០២០"
+                      />
+                    </div>
+                    <Field
+                      label="កំណត់សម្គាល់សិទ្ធិអ្នកលក់ (កណ្តាល)"
+                      value={data.sellerCapacityText || ""}
+                      onChange={(v) =>
+                        setData((p) => ({ ...p, sellerCapacityText: v }))
+                      }
+                      placeholder="• បំពេញកិច្ចនូវទ្រព្យរួមជាម្ចាស់សិទ្ធិអវិភាគ"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Field
+                        label="(២) អត្ត: លេខប័ណ្ណ"
+                        value={data.seller2IdNumber || ""}
+                        onChange={(v) =>
+                          setData((p) => ({ ...p, seller2IdNumber: v }))
+                        }
+                        placeholder="០១០៣៣៣៣៦ (០២)"
+                      />
+                      <Field
+                        label="ចុះថ្ងៃ (Date)"
+                        value={data.seller2IdDate || ""}
+                        onChange={(v) =>
+                          setData((p) => ({ ...p, seller2IdDate: v }))
+                        }
+                        placeholder="០២.០៩.២០២២"
+                      />
+                    </div>
+                  </div>
+
                   <Field
-                    label="លេខអត្តសញ្ញាណប័ណ្ណ និងកំណត់សម្គាល់សិទ្ធិអ្នកលក់"
+                    label="កំណត់សម្គាល់សិទ្ធិអ្នកលក់ (ជម្រើសទូទៅ/អត្ថបទផ្ទាល់)"
                     value={data.sellerCapacityNote || ""}
                     onChange={(v) =>
                       setData((p) => ({ ...p, sellerCapacityNote: v }))
@@ -631,8 +683,51 @@ export function FinalSaleDeedForm() {
                       placeholder="ខេត្ត/រាជធានី..."
                     />
                   </div>
+                  {/* Buyer Stacked National ID & Status */}
+                  <div className="rounded-lg border bg-muted/20 p-2.5 space-y-2.5">
+                    <span className="text-xs font-bold text-foreground">
+                      អត្តសញ្ញាណប័ណ្ណ & ស្ថានភាពអ្នកទិញ (Stacked ID & Status)
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Field
+                        label="អត្ត: លេខប័ណ្ណ"
+                        value={data.buyerIdNumber || ""}
+                        onChange={(v) =>
+                          setData((p) => ({ ...p, buyerIdNumber: v }))
+                        }
+                        placeholder="១៩០៥០០៧១៤"
+                      />
+                      <Field
+                        label="ចុះថ្ងៃ (Date)"
+                        value={data.buyerIdDate || ""}
+                        onChange={(v) =>
+                          setData((p) => ({ ...p, buyerIdDate: v }))
+                        }
+                        placeholder="០២.០៥.២០១៩"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Field
+                        label="កិច្ចសន្យាអ្នកទិញ"
+                        value={data.buyerCapacityText || ""}
+                        onChange={(v) =>
+                          setData((p) => ({ ...p, buyerCapacityText: v }))
+                        }
+                        placeholder="• បំពេញកិច្ចនូវទ្រព្យផ្ទាល់ខ្លួន"
+                      />
+                      <Field
+                        label="ស្ថានភាព (ពោះម៉ាយ/លែងលះ...)"
+                        value={data.buyerStatusText || ""}
+                        onChange={(v) =>
+                          setData((p) => ({ ...p, buyerStatusText: v }))
+                        }
+                        placeholder="(ពោះម៉ាយលែងលះពីនាង លឹម ស៊ីវ៉ី)"
+                      />
+                    </div>
+                  </div>
+
                   <Field
-                    label="លេខអត្តសញ្ញាណប័ណ្ណ និងស្ថានភាពអ្នកទិញ (បង្ហាញនៅក្បែរអត្រានុកូលដ្ឋាន)"
+                    label="កំណត់សម្គាល់ស្ថានភាពអ្នកទិញ (ជម្រើសទូទៅ/អត្ថបទផ្ទាល់)"
                     value={data.buyerCapacityNote || ""}
                     onChange={(v) =>
                       setData((p) => ({ ...p, buyerCapacityNote: v }))
@@ -1033,7 +1128,7 @@ export function FinalSaleDeedForm() {
                           onChange={(v) =>
                             handleParcelRowChange(idx, "landType", v)
                           }
-                          placeholder="លំនៅដ្ឋាន"
+                          placeholder="លំនៅឋាន"
                         />
                       </div>
 
@@ -1227,8 +1322,26 @@ export function FinalSaleDeedForm() {
                       placeholder="ខេត្ត..."
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field
+                      label="អត្ត: លេខប័ណ្ណ (Stacked)"
+                      value={data.witness1IdNumber || ""}
+                      onChange={(v) =>
+                        setData((p) => ({ ...p, witness1IdNumber: v }))
+                      }
+                      placeholder="០១០៦៥៤៧០៦ (០១)"
+                    />
+                    <Field
+                      label="ចុះថ្ងៃ (Date)"
+                      value={data.witness1IdDate || ""}
+                      onChange={(v) =>
+                        setData((p) => ({ ...p, witness1IdDate: v }))
+                      }
+                      placeholder="០១.១២.២០២៥"
+                    />
+                  </div>
                   <Field
-                    label="អត្តសញ្ញាណប័ណ្ណសាក្សីទី១ (អត្ត:...)"
+                    label="អត្តសញ្ញាណប័ណ្ណសាក្សីទី១ (ជម្រើសទូទៅ/អត្ថបទផ្ទាល់)"
                     value={data.witness1IdCard || ""}
                     onChange={(v) =>
                       setData((p) => ({ ...p, witness1IdCard: v }))
@@ -1301,8 +1414,26 @@ export function FinalSaleDeedForm() {
                       placeholder="ខេត្ត..."
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field
+                      label="អត្ត: លេខប័ណ្ណ (Stacked)"
+                      value={data.witness2IdNumber || ""}
+                      onChange={(v) =>
+                        setData((p) => ({ ...p, witness2IdNumber: v }))
+                      }
+                      placeholder="០១១១៥២៩០២ (០១)"
+                    />
+                    <Field
+                      label="ចុះថ្ងៃ (Date)"
+                      value={data.witness2IdDate || ""}
+                      onChange={(v) =>
+                        setData((p) => ({ ...p, witness2IdDate: v }))
+                      }
+                      placeholder="២០.០២.២០២៦"
+                    />
+                  </div>
                   <Field
-                    label="អត្តសញ្ញាណប័ណ្ណសាក្សីទី២ (អត្ត:...)"
+                    label="អត្តសញ្ញាណប័ណ្ណសាក្សីទី២ (ជម្រើសទូទៅ/អត្ថបទផ្ទាល់)"
                     value={data.witness2IdCard || ""}
                     onChange={(v) =>
                       setData((p) => ({ ...p, witness2IdCard: v }))
@@ -1318,6 +1449,37 @@ export function FinalSaleDeedForm() {
                     setData((p) => ({ ...p, certRegistrationNo: v }))
                   }
                   placeholder="១០៨/២៦"
+                />
+              </EditorCard>
+
+              {/* Page 2 Signatures Block Names */}
+              <EditorCard
+                title="ហត្ថលេខា និងឈ្មោះនៅខាងក្រោម (ទំព័រទី២)"
+                hint="ឈ្មោះបោះពុម្ពក្រោមស្នាមមេដៃ/ហត្ថលេខា"
+              >
+                <Field
+                  label="ឈ្មោះក្រោមអ្នកលក់ (Seller Names)"
+                  value={data.sellerSignatureNames || ""}
+                  onChange={(v) =>
+                    setData((p) => ({ ...p, sellerSignatureNames: v }))
+                  }
+                  placeholder="ស៊ិន វិសិដ្ឋ   ស៊ិន ស៊ីថាវាត"
+                />
+                <Field
+                  label="ឈ្មោះក្រោមអ្នកទិញ (Buyer Names)"
+                  value={data.buyerSignatureNames || ""}
+                  onChange={(v) =>
+                    setData((p) => ({ ...p, buyerSignatureNames: v }))
+                  }
+                  placeholder="ជង់ វិទូរ"
+                />
+                <Field
+                  label="ឈ្មោះក្រោមសាក្សី (Witness Names)"
+                  value={data.witnessSignatureNames || ""}
+                  onChange={(v) =>
+                    setData((p) => ({ ...p, witnessSignatureNames: v }))
+                  }
+                  placeholder="នាង យុន សុជាតា   សុខ សឿន"
                 />
               </EditorCard>
             </div>
