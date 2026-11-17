@@ -108,7 +108,7 @@ export function FinalSaleDeedForm() {
   const [paperSize, setPaperSize] = React.useState<"original" | "a4">(
     "original",
   );
-  const [fillOnly, setFillOnly] = React.useState<boolean>(false);
+  const [fillOnly, setFillOnly] = React.useState<boolean>(true);
   const [activeTab, setActiveTab] = React.useState<
     "parties" | "civil" | "fees" | "property" | "cert"
   >("parties");
@@ -1497,7 +1497,10 @@ export function FinalSaleDeedForm() {
               </span>
               <button
                 type="button"
-                onClick={() => setPaperSize("original")}
+                onClick={() => {
+                  setPaperSize("original");
+                  setFillOnly(true);
+                }}
                 className={cn(
                   "rounded px-2 py-1 text-[11px] font-medium transition-colors",
                   paperSize === "original"
@@ -1509,7 +1512,10 @@ export function FinalSaleDeedForm() {
               </button>
               <button
                 type="button"
-                onClick={() => setPaperSize("a4")}
+                onClick={() => {
+                  setPaperSize("a4");
+                  setFillOnly(false);
+                }}
                 className={cn(
                   "rounded px-2 py-1 text-[11px] font-medium transition-colors",
                   paperSize === "a4"

@@ -147,7 +147,7 @@ export const emptyFinalSaleDeed = (): FinalSaleDeed => ({
   sellerCapacityNote: "",
   seller1IdNumber: "",
   seller1IdDate: "",
-  sellerCapacityText: "• បំពេញកិច្ចនូវទ្រព្យរួមជាម្ចាស់សិទ្ធិអវិភាគ",
+  sellerCapacityText: "- បំពេញកិច្ចនូវទ្រព្យរួមជាម្ចាស់សិទ្ធិអវិភាគ",
   seller2IdNumber: "",
   seller2IdDate: "",
 
@@ -163,7 +163,7 @@ export const emptyFinalSaleDeed = (): FinalSaleDeed => ({
   buyerCapacityNote: "",
   buyerIdNumber: "",
   buyerIdDate: "",
-  buyerCapacityText: "• បំពេញកិច្ចនូវទ្រព្យផ្ទាល់ខ្លួន",
+  buyerCapacityText: "- បំពេញកិច្ចនូវទ្រព្យផ្ទាល់ខ្លួន",
   buyerStatusText: "",
 
   husband: {
@@ -279,7 +279,7 @@ export const sampleFinalSaleDeed = (): FinalSaleDeed => ({
     "(១) អត្ត: ០១០៥៤៧៥៩ (០១) / ០៦.១០.២០២០    បំពេញកិច្ចនូវទ្រព្យរួមជាម្ចាស់សិទ្ធិអវិភាគ    (២) អត្ត: ០១០៣៣៣៣៦ (០២) / ០២.០៩.២០២២",
   seller1IdNumber: "០១០៥៤៧៥៩ (០១)",
   seller1IdDate: "០៦.១០.២០២០",
-  sellerCapacityText: "• បំពេញកិច្ចនូវទ្រព្យរួមជាម្ចាស់សិទ្ធិអវិភាគ",
+  sellerCapacityText: "- បំពេញកិច្ចនូវទ្រព្យរួមជាម្ចាស់សិទ្ធិអវិភាគ",
   seller2IdNumber: "០១០៣៣៣៣៦ (០២)",
   seller2IdDate: "០២.០៩.២០២២",
 
@@ -296,7 +296,7 @@ export const sampleFinalSaleDeed = (): FinalSaleDeed => ({
     "អត្ត: ១៩០៥០០៧១៤ / ០២.០៥.២០១៩    បំពេញកិច្ចនូវទ្រព្យផ្ទាល់ខ្លួន    (ពោះម៉ាយលែងលះពីនាង លឹម ស៊ីវ៉ី)",
   buyerIdNumber: "១៩០៥០០៧១៤",
   buyerIdDate: "០២.០៥.២០១៩",
-  buyerCapacityText: "• បំពេញកិច្ចនូវទ្រព្យផ្ទាល់ខ្លួន",
+  buyerCapacityText: "- បំពេញកិច្ចនូវទ្រព្យផ្ទាល់ខ្លួន",
   buyerStatusText: "(ពោះម៉ាយលែងលះពីនាង លឹម ស៊ីវ៉ី)",
 
   husband: {
